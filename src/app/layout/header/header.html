@@ -1,0 +1,152 @@
+<header class="shrink-0 border-b border-[var(--border-color)] bg-[var(--bg-secondary)]/90 backdrop-blur-md transition-colors duration-200">
+  <div class="h-16 px-3 sm:px-4 lg:px-6 flex items-center justify-between gap-2 sm:gap-4">
+    <!-- Left side: Logo & Brand (acts as sidebar toggle on mobile/tablet <lg) -->
+    <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+      <button
+        type="button"
+        (click)="store.toggleSidebar()"
+        class="flex items-center gap-2.5 sm:gap-3 min-w-0 text-left p-1 -m-1 rounded-xl transition-all cursor-pointer lg:cursor-default hover:bg-[var(--bg-tertiary)]/60 lg:hover:bg-transparent group"
+        [title]="'Abrir menú de navegación'"
+      >
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-600 via-cyan-500 to-teal-400 p-0.5 flex items-center justify-center shadow-md shrink-0 group-hover:scale-105 lg:group-hover:scale-100 transition-transform">
+          <div class="w-full h-full bg-[var(--bg-secondary)] rounded-[10px] flex items-center justify-center">
+            <svg lucideLayoutGrid class="w-5 h-5 text-cyan-500"></svg>
+          </div>
+        </div>
+        <div class="hidden sm:block min-w-0">
+          <div class="flex items-center gap-1.5 sm:gap-2">
+            <span class="font-bold tracking-tight text-sm sm:text-base text-[var(--text-primary)] truncate">
+              Sistema de Control
+            </span>
+            <span class="text-[10px] font-semibold px-1.5 sm:px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-500 border border-cyan-500/20 shrink-0">
+              PRO
+            </span>
+          </div>
+          <p class="hidden sm:flex text-xs text-[var(--text-muted)] items-center gap-2 truncate">
+            <span>Bienvenido, Sr. Freddy Potes</span>
+            <span class="inline-block w-1 h-1 rounded-full bg-emerald-500 shrink-0"></span>
+            <span class="hidden md:inline">10:30 am - 15 de febrero</span>
+          </p>
+        </div>
+      </button>
+    </div>
+
+    <!-- Center: Desktop Global Search Bar -->
+    <div class="hidden md:flex items-center flex-1 max-w-md mx-4 lg:mx-8">
+      <div class="relative w-full">
+        <svg lucideSearch class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]"></svg>
+        <input
+          type="text"
+          placeholder="Buscar por SKU, Cliente, Transacción o Pedido... (ALT+F)"
+          class="w-full pl-9 pr-12 py-1.5 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all placeholder:text-[var(--text-muted)]"
+        />
+        <kbd class="absolute right-2.5 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[10px] font-mono text-[var(--text-muted)] bg-[var(--bg-primary)] rounded border border-[var(--border-color)]">
+          ⌘K
+        </kbd>
+      </div>
+    </div>
+
+    <!-- Right side: Actions, Theme toggle & Profile -->
+    <div class="flex items-center gap-1.5 sm:gap-2 lg:gap-3 shrink-0">
+      <!-- Mobile Search Toggle Button -->
+      <button
+        type="button"
+        (click)="toggleMobileSearch()"
+        class="md:hidden p-2 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border-color)] text-[var(--text-primary)] transition-all cursor-pointer"
+        aria-label="Abrir buscador móvil"
+      >
+        @if (mobileSearchOpen()) {
+          <svg lucideX class="w-4 h-4 text-[var(--text-secondary)]"></svg>
+        } @else {
+          <svg lucideSearch class="w-4 h-4 text-[var(--text-secondary)]"></svg>
+        }
+      </button>
+    <!-- Status Indicator -->
+    <div class="hidden lg:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs font-medium">
+      <svg lucideShieldCheck class="w-3.5 h-3.5"></svg>
+      <span>Sistema En Línea</span>
+    </div>
+
+    <!-- Theme Toggle Button -->
+    <button
+      type="button"
+      (click)="store.toggleTheme()"
+      [title]="'Switch to ' + (store.theme() === 'light' ? 'Dark' : 'Light') + ' Mode'"
+      class="p-2 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border-color)] text-[var(--text-primary)] transition-all cursor-pointer relative group"
+    >
+      @if (store.theme() === 'light') {
+        <svg lucideMoon class="w-4 h-4 text-slate-700"></svg>
+      } @else {
+        <svg lucideSun class="w-4 h-4 text-amber-400"></svg>
+      }
+    </button>
+
+    <!-- Notification Bell -->
+    <button
+      type="button"
+      class="p-2 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border-color)] text-[var(--text-primary)] transition-all relative cursor-pointer"
+    >
+      <svg lucideBell class="w-4 h-4 text-[var(--text-secondary)]"></svg>
+      <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-cyan-500 ring-2 ring-[var(--bg-secondary)] animate-pulse"></span>
+    </button>
+
+    <!-- User Profile Menu -->
+    <div class="relative">
+      <button
+        type="button"
+        (click)="toggleUserMenu()"
+        class="flex items-center gap-2.5 pl-2 pr-2 py-1 rounded-xl hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer border border-transparent hover:border-[var(--border-color)]"
+      >
+        <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shadow-sm ring-2 ring-cyan-500/20">
+          FP
+        </div>
+        <div class="hidden sm:block text-left">
+          <p class="text-xs font-semibold text-[var(--text-primary)] leading-tight">Freddy60</p>
+          <p class="text-[10px] text-[var(--text-muted)] font-mono">Admin</p>
+        </div>
+        <svg lucideChevronDown class="w-3.5 h-3.5 text-[var(--text-muted)]"></svg>
+      </button>
+
+      @if (userMenuOpen()) {
+        <div class="absolute right-0 mt-2 w-56 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+          <div class="px-4 py-2 border-b border-[var(--border-color)]">
+            <p class="text-xs font-semibold text-[var(--text-primary)]">Freddy Potes</p>
+            <p class="text-[11px] text-[var(--text-muted)]">freddy@plastyfreddy.com</p>
+          </div>
+          <button
+            type="button"
+            (click)="goToProfile()"
+            class="w-full text-left px-4 py-2 text-xs text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] flex items-center gap-2 transition-colors cursor-pointer"
+          >
+            <svg lucideUser class="w-3.5 h-3.5 text-cyan-500"></svg>
+            <span>Perfil de Usuario (Angelly)</span>
+          </button>
+          <button
+            type="button"
+            (click)="logOut()"
+            class="w-full text-left px-4 py-2 text-xs text-rose-500 hover:bg-rose-500/10 flex items-center gap-2 transition-colors cursor-pointer"
+          >
+            <svg lucideLogOut class="w-3.5 h-3.5"></svg>
+            <span>Cerrar Sesión</span>
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+  </div>
+
+  <!-- Expandable Mobile Search Bar (md:hidden) -->
+  @if (mobileSearchOpen()) {
+    <div class="md:hidden px-3 sm:px-4 pb-3 pt-1 border-t border-[var(--border-color)]/60 animate-in fade-in slide-in-from-top-2 duration-150">
+      <div class="relative w-full">
+        <svg lucideSearch class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]"></svg>
+        <input
+          type="text"
+          placeholder="Buscar SKU, cliente, transacción..."
+          class="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all placeholder:text-[var(--text-muted)]"
+          autofocus
+        />
+      </div>
+    </div>
+  }
+</header>

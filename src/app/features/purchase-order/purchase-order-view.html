@@ -1,0 +1,327 @@
+<div class="h-full flex flex-col min-h-0 animate-in fade-in duration-200">
+  <!-- Header with back button (FIJO) -->
+  <div class="shrink-0 p-4 lg:p-8 pb-6 border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <button
+          type="button"
+          (click)="store.navigate('purchase-orders')"
+          class="text-xs font-semibold text-cyan-500 hover:underline flex items-center gap-1 mb-2 cursor-pointer"
+        >
+          <svg lucideArrowLeft class="w-3.5 h-3.5"></svg>
+          <span>BACK TO ORDERS</span>
+        </button>
+        <h1 class="text-2xl font-extrabold tracking-tight text-[var(--text-primary)]">
+          Purchase Order
+        </h1>
+        <p class="text-xs text-[var(--text-muted)]">
+          Draft and authorize new supplier supply chains.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button
+          type="button"
+          class="px-4 py-2 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border-color)] text-[var(--text-primary)] text-xs font-semibold border border-[var(--border-color)] flex items-center gap-2 transition-all cursor-pointer"
+        >
+          <svg lucideClock class="w-3.5 h-3.5 text-cyan-500"></svg>
+          <span>Schedule Order</span>
+        </button>
+
+        <button
+          type="button"
+          (click)="notify('Purchase Order ' + orderNumber() + ' created successfully for ' + supplier() + '!')"
+          class="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white text-xs font-semibold shadow-lg shadow-cyan-500/20 flex items-center gap-2 transition-all cursor-pointer"
+        >
+          <svg lucideFileCheck class="w-4 h-4"></svg>
+          <span>Create Order</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenido principal con scroll vertical -->
+  <div class="flex-1 min-h-0 overflow-y-auto p-4 lg:p-8 space-y-8 pb-20">
+    <!-- ORDER INFORMATION DETAILS -->
+  <div class="bg-[var(--bg-card)] rounded-3xl border border-[var(--border-color)] p-6 shadow-sm space-y-6">
+    <div
+      class="flex items-center gap-2 text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider border-b border-[var(--border-color)] pb-3"
+    >
+      <svg lucideSparkles class="w-4 h-4 text-cyan-500"></svg>
+      <span>ORDER INFORMATION DETAILS</span>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="space-y-1">
+        <label for="po-number" class="text-[10px] font-mono font-bold text-[var(--text-muted)] uppercase">
+          # ORDER NUMBER
+        </label>
+        <input
+          id="po-number"
+          name="orderNumber"
+          type="text"
+          [ngModel]="orderNumber()"
+          (ngModelChange)="orderNumber.set($event)"
+          class="w-full px-3 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] font-mono font-bold"
+        />
+      </div>
+
+      <div class="space-y-1">
+        <label class="text-[10px] font-mono font-bold text-[var(--text-muted)] uppercase">
+          CURRENT STATUS
+        </label>
+        <select
+          name="poStatus"
+          class="w-full px-3 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-cyan-500 border border-[var(--border-color)] font-semibold"
+        >
+          <option value="Draft">Draft (Editing)</option>
+          <option value="Submitted">Submitted</option>
+          <option value="Approved">Approved</option>
+        </select>
+      </div>
+
+      <div class="space-y-1">
+        <label for="po-creation-date" class="text-[10px] font-mono font-bold text-[var(--text-muted)] uppercase">
+          CREATION DATE
+        </label>
+        <input
+          id="po-creation-date"
+          name="creationDate"
+          type="date"
+          [ngModel]="creationDate()"
+          (ngModelChange)="creationDate.set($event)"
+          class="w-full px-3 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] font-mono"
+        />
+      </div>
+
+      <div class="space-y-1">
+        <label for="po-supplier" class="text-[10px] font-mono font-bold text-[var(--text-muted)] uppercase">
+          SUPPLIER
+        </label>
+        <select
+          id="po-supplier"
+          name="supplier"
+          [ngModel]="supplier()"
+          (ngModelChange)="supplier.set($event)"
+          class="w-full px-3 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)]"
+        >
+          <option value="Global Logistics S.A.">Global Logistics S.A.</option>
+          <option value="Plásticos del Norte Ltda">Plásticos del Norte Ltda</option>
+          <option value="Empaques Especiales">Empaques Especiales</option>
+        </select>
+      </div>
+
+      <div class="space-y-1">
+        <label class="text-[10px] font-mono font-bold text-[var(--text-muted)] uppercase">
+          PREPARED BY
+        </label>
+        <input
+          name="preparedBy"
+          type="text"
+          value="Sr. Freddy Potes"
+          readonly
+          class="w-full px-3 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)]"
+        />
+      </div>
+
+      <div class="space-y-1">
+        <label for="po-department" class="text-[10px] font-mono font-bold text-[var(--text-muted)] uppercase">
+          AREA / DEPARTMENT
+        </label>
+        <select
+          id="po-department"
+          name="department"
+          [ngModel]="department()"
+          (ngModelChange)="department.set($event)"
+          class="w-full px-3 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)]"
+        >
+          <option value="Operations">Operations</option>
+          <option value="Logistics">Logistics</option>
+          <option value="Sales">Sales</option>
+        </select>
+      </div>
+
+      <div class="space-y-1">
+        <label for="po-payment" class="text-[10px] font-mono font-bold text-[var(--text-muted)] uppercase">
+          PAYMENT METHOD
+        </label>
+        <select
+          id="po-payment"
+          name="paymentMethod"
+          [ngModel]="paymentMethod()"
+          (ngModelChange)="paymentMethod.set($event)"
+          class="w-full px-3 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)]"
+        >
+          <option value="Bank Transfer">Bank Transfer</option>
+          <option value="Credit Card">Credit Card</option>
+          <option value="Net 30 Days">Net 30 Days</option>
+        </select>
+      </div>
+
+      <div class="space-y-1">
+        <label class="text-[10px] font-mono font-bold text-[var(--text-muted)] uppercase">
+          RECEPTION DATE
+        </label>
+        <input
+          name="receptionDate"
+          type="date"
+          value="2022-02-28"
+          class="w-full px-3 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] font-mono"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- SELECT PRODUCTS GRID -->
+  <div class="space-y-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h2 class="text-base font-bold text-[var(--text-primary)]">Select Products</h2>
+        <p class="text-xs text-[var(--text-muted)]">INVENTORY CATALOG SEARCH</p>
+      </div>
+
+      <!-- Filters -->
+      <div class="flex flex-wrap items-center gap-2">
+        <select
+          name="poCategory"
+          class="px-3 py-1.5 text-xs rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-primary)]"
+        >
+          <option>Category</option>
+        </select>
+        <input
+          name="poSku"
+          type="text"
+          placeholder="Code / SKU"
+          class="px-3 py-1.5 text-xs rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-primary)] w-32"
+        />
+        <select
+          name="poStockStatus"
+          class="px-3 py-1.5 text-xs rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-primary)]"
+        >
+          <option>Stock Status</option>
+        </select>
+        <button
+          type="button"
+          class="p-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-primary)] cursor-pointer"
+        >
+          <svg lucideFilter class="w-3.5 h-3.5 text-[var(--text-muted)]"></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Catalog Cards Row -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+      @for (p of availableProducts(); track p.id) {
+        <div
+          (click)="addProductToPO(p)"
+          class="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm hover:border-cyan-500 transition-all cursor-pointer text-center space-y-2 group"
+        >
+          <div
+            class="w-10 h-10 rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-muted)] group-hover:text-cyan-500 mx-auto flex items-center justify-center"
+          >
+            <svg lucidePackage class="w-5 h-5"></svg>
+          </div>
+          <p class="font-bold text-xs text-[var(--text-primary)] truncate">{{ p.name }}</p>
+          <span
+            [class]="
+              'inline-block px-2 py-0.5 text-[9px] font-mono font-bold rounded-full ' +
+              (p.stock === 0
+                ? 'bg-rose-500/10 text-rose-500'
+                : p.stock < 5
+                  ? 'bg-amber-500/10 text-amber-500'
+                  : 'bg-emerald-500/10 text-emerald-500')
+            "
+          >
+            {{ p.stockText }}
+          </span>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- ORDER LIST TABLE (#PO-003) -->
+  <div class="bg-[var(--bg-card)] rounded-3xl border border-[var(--border-color)] p-6 shadow-sm space-y-6">
+    <div class="flex items-center justify-between border-b border-[var(--border-color)] pb-4">
+      <div>
+        <h3 class="text-base font-bold text-[var(--text-primary)]">Order List: #{{ orderNumber() }}</h3>
+        <p class="text-xs text-[var(--text-muted)] font-mono">DATE: {{ creationDate() }}</p>
+      </div>
+      <button
+        type="button"
+        (click)="notify('Selection finalized and locked.')"
+        class="px-3.5 py-1.5 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border-color)] text-[var(--text-primary)] border border-[var(--border-color)] text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+      >
+        <svg lucideCheck class="w-3.5 h-3.5 text-cyan-500"></svg>
+        <span>Finalize Selection</span>
+      </button>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr
+            class="border-b border-[var(--border-color)] text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]"
+          >
+            <th class="py-3 px-4">PRODUCT DESCRIPTION</th>
+            <th class="py-3 px-4 text-center">QUANTITY TO ORDER</th>
+            <th class="py-3 px-4 text-right">UNIT PRICE</th>
+            <th class="py-3 px-4 text-right">TOTAL AMOUNT</th>
+            <th class="py-3 px-4 text-center">ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[var(--border-color)] text-xs">
+          @for (item of lineItems(); track item.id) {
+            <tr class="hover:bg-[var(--bg-tertiary)]/50 transition-colors">
+              <td class="py-3.5 px-4 font-semibold text-[var(--text-primary)] flex items-center gap-2">
+                <svg lucidePackage class="w-4 h-4 text-cyan-500"></svg>
+                <span>{{ item.description }}</span>
+              </td>
+              <td class="py-3.5 px-4 text-center">
+                <input
+                  type="number"
+                  [ngModel]="item.quantity"
+                  (ngModelChange)="changeQuantity(item.id, +$event || 0)"
+                  class="w-16 py-1 px-2 text-center text-xs font-mono font-bold rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-color)] focus:outline-none focus:border-cyan-500 text-[var(--text-primary)]"
+                />
+              </td>
+              <td class="py-3.5 px-4 text-right font-mono text-[var(--text-secondary)]">
+                ${{ item.unitPrice }}
+              </td>
+              <td class="py-3.5 px-4 text-right font-mono font-bold text-[var(--text-primary)]">
+                ${{ item.quantity * item.unitPrice }}
+              </td>
+              <td class="py-3.5 px-4 text-center">
+                <button
+                  type="button"
+                  (click)="removeItem(item.id)"
+                  class="p-1 text-rose-500 hover:bg-rose-500/10 rounded transition-colors cursor-pointer"
+                >
+                  <svg lucideTrash2 class="w-4 h-4 mx-auto"></svg>
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Total Summary Footer -->
+    <div
+      class="pt-4 border-t border-[var(--border-color)] flex flex-col sm:flex-row items-center justify-between gap-4"
+    >
+      <div class="text-[10px] font-mono text-[var(--text-muted)] space-y-1">
+        <p class="flex items-center gap-1.5 text-emerald-500">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          <span>SYSTEM: SUPPLY CHAIN SYNC ACTIVE</span>
+        </p>
+        <p>INVENTORY: REAL-TIME DELTA TRACKED</p>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <span class="text-xs font-bold uppercase text-[var(--text-muted)]">Total Order Estimate:</span>
+        <span class="text-2xl font-black font-mono text-cyan-500">${{ totalEstimate().toLocaleString() }}</span>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>

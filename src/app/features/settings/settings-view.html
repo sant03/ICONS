@@ -1,0 +1,119 @@
+<div class="h-full flex flex-col min-h-0 animate-in fade-in duration-200">
+  <!-- Header (FIJO) -->
+  <div class="shrink-0 p-4 lg:p-8 pb-4 border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
+    <div class="max-w-3xl">
+      <h1 class="text-2xl font-bold">Ajustes del Sistema</h1>
+    </div>
+  </div>
+
+  <!-- Contenido principal con scroll vertical -->
+  <div class="flex-1 min-h-0 overflow-y-auto p-4 lg:p-8 pb-20">
+    <div class="max-w-3xl space-y-6">
+      <!-- Configuraciones de Infraestructura -->
+  <div class="p-6 bg-[var(--bg-card)] rounded-3xl border border-[var(--border-color)] space-y-4">
+    <p class="text-sm text-[var(--text-muted)]">Configuraciones de la infraestructura PlastyFreddy</p>
+    <div class="flex items-center justify-between py-2 border-b border-[var(--border-color)] text-xs">
+      <span>Modo Visual por Defecto</span>
+      <span class="font-bold uppercase text-cyan-500">{{ store.theme() }} Theme</span>
+    </div>
+    <div class="flex items-center justify-between py-2 border-b border-[var(--border-color)] text-xs">
+      <span>Sincronización en Tiempo Real</span>
+      <span class="font-bold text-emerald-500">Activado (AES-256)</span>
+    </div>
+    <div class="flex items-center justify-between py-2 text-xs">
+      <span>Versión del Software</span>
+      <span class="font-mono text-[var(--text-muted)]">v2.4.0 — PROD_STABLE</span>
+    </div>
+  </div>
+
+  <!-- Ajustes del Sistema (formulario migrado de ICONS COMPLETE/SettingsView.tsx) -->
+  <div class="p-6 bg-[var(--bg-card)] rounded-3xl border border-[var(--border-color)] shadow-sm space-y-6">
+    <p class="text-xs text-[var(--text-muted)] font-medium">Configuración general de ICONS para PlastyFreddy</p>
+
+    <form (ngSubmit)="handleSave()" class="space-y-6 text-xs">
+      <!-- Company Profile -->
+      <div class="p-5 bg-[var(--bg-tertiary)]/60 rounded-2xl border border-[var(--border-color)] space-y-4">
+        <span class="font-extrabold text-[10px] uppercase tracking-wider text-[var(--text-secondary)] block">
+          Perfil de Empresa
+        </span>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="space-y-1">
+            <label class="block font-bold text-[var(--text-primary)] mb-1">Nombre de la Empresa</label>
+            <input
+              name="companyName"
+              type="text"
+              [ngModel]="companyName()"
+              (ngModelChange)="companyName.set($event)"
+              class="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] font-semibold focus:outline-none focus:border-cyan-500"
+            />
+          </div>
+          <div class="space-y-1">
+            <label class="block font-bold text-[var(--text-primary)] mb-1">Moneda del Sistema</label>
+            <input
+              name="currency"
+              type="text"
+              [ngModel]="currency()"
+              (ngModelChange)="currency.set($event)"
+              class="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] font-semibold focus:outline-none focus:border-cyan-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Inventory Thresholds -->
+      <div class="p-5 bg-[var(--bg-tertiary)]/60 rounded-2xl border border-[var(--border-color)] space-y-4">
+        <span class="font-extrabold text-[10px] uppercase tracking-wider text-[var(--text-secondary)] block">
+          Parámetros de Inventario
+        </span>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="space-y-1">
+            <label class="block font-bold text-[var(--text-primary)] mb-1">
+              Umbral Mínimo por Agotarse (Unidades)
+            </label>
+            <input
+              name="minStockAlert"
+              type="number"
+              min="0"
+              [ngModel]="minStockAlert()"
+              (ngModelChange)="minStockAlert.set(+$event)"
+              class="w-full px-3 py-2 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl text-[var(--text-primary)] font-semibold focus:outline-none focus:border-cyan-500"
+            />
+            <p class="text-[10px] text-[var(--text-muted)] mt-1">
+              Muestra un indicador amarillo cuando las unidades sean menores a esta cifra.
+            </p>
+          </div>
+          <div class="flex items-center gap-3 pt-4">
+            <input
+              id="emailAlerts"
+              name="enableEmailAlerts"
+              type="checkbox"
+              [ngModel]="enableEmailAlerts()"
+              (ngModelChange)="enableEmailAlerts.set($event)"
+              class="rounded border-[var(--border-color)] text-cyan-500 focus:ring-cyan-500/30 w-4 h-4 cursor-pointer"
+            />
+            <label for="emailAlerts" class="font-bold text-[var(--text-primary)] cursor-pointer">
+              Activar alertas automáticas por correo electrónico
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-2 flex items-center justify-end gap-3">
+        <button
+          type="submit"
+          class="px-6 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-white font-bold text-xs rounded-xl shadow-md shadow-cyan-500/20 flex items-center gap-2 transition-all cursor-pointer"
+        >
+          @if (saved()) {
+            <svg lucideCheck class="w-4 h-4 text-emerald-400"></svg>
+            Ajustes Guardados
+          } @else {
+            <svg lucideSave class="w-4 h-4"></svg>
+            Guardar Ajustes
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+  </div>
+  </div>
+</div>

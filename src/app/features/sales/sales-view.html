@@ -1,0 +1,834 @@
+<!-- Ported 1:1 from "ICONS UI V.2/src/components/SalesView.tsx" (layout) and "ICONS COMPLETE/src/views/SalesView.tsx" (pago, acciones, agrupar, ordenar).
+  Base layout: KPI cards + filter/search bar + both tables.
+  From the second source: the "ESTADO DE PAGO" and "ACCIONES" columns
+  (edit / delete), the row selection with "Agrupar en Pedido" + "Crear Pedido"
+  modal, and the "Ordenar Por" modal.
+  Only the source's Spanish labels are kept in the ported controls; the module
+  keeps its English column headers.
+-->
+<div class="h-full flex flex-col min-h-0 animate-in fade-in duration-200 relative">
+  <!-- Header (FIJO) -->
+  <div class="shrink-0 p-4 lg:p-8 pb-6 border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-extrabold tracking-tight text-[var(--text-primary)]">Sales</h1>
+        <p class="text-xs text-[var(--text-muted)]">Comprehensive record of transactions and orders.</p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button
+          type="button"
+          (click)="store.navigate('orders')"
+          title="Ver Pedidos Agrupados"
+          class="px-3.5 py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 text-xs font-semibold border border-cyan-500/30 flex items-center gap-2 transition-all cursor-pointer"
+        >
+          <svg lucideFolderPlus class="w-3.5 h-3.5"></svg>
+          <span>Grouped Orders</span>
+        </button>
+
+        <button
+          type="button"
+          (click)="exportCsv()"
+          class="px-3.5 py-2 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border-color)] text-[var(--text-primary)] text-xs font-medium border border-[var(--border-color)] flex items-center gap-2 transition-all cursor-pointer"
+        >
+          <svg lucideDownload class="w-3.5 h-3.5 text-cyan-500"></svg>
+          <span>Export CSV</span>
+        </button>
+
+        <button
+          type="button"
+          (click)="store.openNewSaleModal()"
+          class="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white text-xs font-semibold shadow-lg shadow-cyan-500/20 flex items-center gap-2 transition-all cursor-pointer"
+        >
+          <svg lucidePlus class="w-4 h-4"></svg>
+          <span>+ New Sale</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenido principal con scroll vertical -->
+  <div class="flex-1 min-h-0 overflow-y-auto p-4 lg:p-8 space-y-8 pb-24">
+
+  <!-- Top 4 Metrics -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm space-y-2">
+      <div class="flex items-center justify-between">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+          TOTAL REVENUE
+        </span>
+        <svg lucideDollarSign class="w-4 h-4 text-cyan-500"></svg>
+      </div>
+      <p class="text-2xl font-black text-[var(--text-primary)]">$12,450.00</p>
+      <p class="text-[10px] font-semibold text-emerald-500">+8.2% vs last month</p>
+    </div>
+
+    <div class="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm space-y-2">
+      <div class="flex items-center justify-between">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+          TRANSACTIONS
+        </span>
+        <svg lucideShoppingBag class="w-4 h-4 text-cyan-500"></svg>
+      </div>
+      <p class="text-2xl font-black text-[var(--text-primary)]">142</p>
+      <p class="text-[10px] font-semibold text-emerald-500">+12 vs last month</p>
+    </div>
+
+    <div class="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm space-y-2">
+      <div class="flex items-center justify-between">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+          AVG. TICKET
+        </span>
+        <svg lucideTrendingUp class="w-4 h-4 text-cyan-500"></svg>
+      </div>
+      <p class="text-2xl font-black text-[var(--text-primary)]">$87.60</p>
+      <p class="text-[10px] font-semibold text-rose-500">-2.4% vs last month</p>
+    </div>
+
+    <div class="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm space-y-2">
+      <div class="flex items-center justify-between">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+          ACTIVE ITEMS
+        </span>
+        <svg lucideTag class="w-4 h-4 text-cyan-500"></svg>
+      </div>
+      <p class="text-2xl font-black text-[var(--text-primary)]">45</p>
+      <p class="text-[10px] font-semibold text-[var(--text-muted)]">Stable vs last month</p>
+    </div>
+  </div>
+
+  <!-- Filter and Search Bar -->
+  <div class="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm flex flex-col lg:flex-row items-center justify-between gap-4">
+    <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+      <!-- Date Picker Button -->
+      <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] cursor-pointer">
+        <svg lucideCalendar class="w-3.5 h-3.5 text-cyan-500"></svg>
+        <span>September 27, 2026</span>
+        <svg lucideChevronDown class="w-3 h-3 text-[var(--text-muted)]"></svg>
+      </div>
+
+      <!-- Checkboxes matching reference design -->
+      <div class="flex items-center gap-3 text-xs text-[var(--text-secondary)]">
+        <label class="flex items-center gap-1.5 cursor-pointer">
+          <input name="colDate" type="checkbox" [ngModel]="true" class="rounded text-cyan-500 focus:ring-cyan-500" />
+          <span>Date</span>
+        </label>
+        <label class="flex items-center gap-1.5 cursor-pointer">
+          <input name="colProduct" type="checkbox" [ngModel]="true" class="rounded text-cyan-500 focus:ring-cyan-500" />
+          <span>Product</span>
+        </label>
+        <label class="flex items-center gap-1.5 cursor-pointer">
+          <input name="colClient" type="checkbox" [ngModel]="false" class="rounded text-cyan-500 focus:ring-cyan-500" />
+          <span>Client</span>
+        </label>
+        <label class="flex items-center gap-1.5 cursor-pointer">
+          <input name="colOrder" type="checkbox" [ngModel]="false" class="rounded text-cyan-500 focus:ring-cyan-500" />
+          <span>Order</span>
+        </label>
+        <label class="flex items-center gap-1.5 cursor-pointer">
+          <input name="colCode" type="checkbox" [ngModel]="false" class="rounded text-cyan-500 focus:ring-cyan-500" />
+          <span>Code</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Search & Filter Trigger -->
+    <div class="flex items-center gap-2 w-full lg:w-auto">
+      <div class="relative flex-1 lg:w-64">
+        <svg lucideSearch class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-muted)]"></svg>
+        <input
+          name="searchTerm"
+          type="text"
+          [ngModel]="searchTerm()"
+          (ngModelChange)="searchTerm.set($event)"
+          placeholder="Search sales records..."
+          class="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] focus:outline-none focus:border-cyan-500"
+        />
+      </div>
+      <button
+        type="button"
+        title="Filtrar"
+        class="p-2 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border-color)] border border-[var(--border-color)] text-[var(--text-primary)] cursor-pointer"
+      >
+        <svg lucideFilter class="w-3.5 h-3.5 text-[var(--text-muted)]"></svg>
+      </button>
+      <button
+        type="button"
+        title="Ordenar"
+        (click)="isSortModalOpen.set(true)"
+        class="p-2 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border-color)] border border-[var(--border-color)] text-[var(--text-primary)] cursor-pointer"
+      >
+        <svg lucideArrowUpDown class="w-3.5 h-3.5 text-cyan-500"></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- TODAY'S SALES SECTION -->
+  <div class="space-y-3">
+    <div class="flex items-center justify-between">
+      <h2 class="text-base font-bold text-[var(--text-primary)] flex items-center gap-2">
+        <span>Today, September 27, 2026</span>
+        <span class="px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-500 text-[10px] font-mono font-semibold">
+          {{ sortedTodaySales().length }} records found
+        </span>
+      </h2>
+    </div>
+
+    <div class="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-color)] shadow-sm overflow-hidden">
+      <div class="overflow-x-auto max-h-[380px] overflow-y-auto">
+        <table class="w-full text-left border-collapse">
+          <thead class="sticky top-0 bg-[var(--bg-card)] z-10 shadow-xs">
+            <tr class="border-b border-[var(--border-color)] text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+              <th class="py-3 px-3 text-center w-10"></th>
+              <th class="py-3 px-4">ID</th>
+              <th class="py-3 px-4">CLIENT</th>
+              <th class="py-3 px-4">PRODUCT</th>
+              <th class="py-3 px-4 text-center">QUANTITY</th>
+              <th class="py-3 px-4 text-right">TOTAL</th>
+              <th class="py-3 px-4 text-center">ESTADO DE PAGO</th>
+              <th class="py-3 px-4 text-right">ACCIONES</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[var(--border-color)] text-xs">
+            @for (item of sortedTodaySales(); track item.id) {
+              <tr
+                class="hover:bg-[var(--bg-tertiary)]/50 transition-colors"
+                [class.bg-cyan-500/10]="isSelected(item.id)"
+              >
+                <td class="py-3.5 px-3 text-center">
+                  <input
+                    type="checkbox"
+                    [checked]="isSelected(item.id)"
+                    (change)="toggleSelectSale(item.id)"
+                    class="rounded border-[var(--border-color)] text-cyan-500 focus:ring-cyan-500"
+                  />
+                </td>
+                <td class="py-3.5 px-4 font-mono font-bold text-cyan-500">{{ item.id }}</td>
+                <td class="py-3.5 px-4 font-medium text-[var(--text-primary)]">{{ item.client }}</td>
+                <td class="py-3.5 px-4 text-[var(--text-secondary)]">{{ item.product }}</td>
+                <td class="py-3.5 px-4 text-center font-mono font-semibold">{{ item.quantity }}</td>
+                <td class="py-3.5 px-4 text-right font-mono font-bold text-[var(--text-primary)]">
+                  ${{ item.total }}
+                </td>
+                <td class="py-3.5 px-4 text-center">
+                  @if (item.paymentStatus === 'Pagado') {
+                    <span
+                      class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/30"
+                    >
+                      Pagado
+                    </span>
+                  } @else {
+                    <span
+                      class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/30"
+                    >
+                      Debe ${{ item.amountDue || item.total }}
+                    </span>
+                  }
+                </td>
+                <td class="py-3.5 px-4 text-right whitespace-nowrap">
+                  <button
+                    type="button"
+                    title="Editar Registro"
+                    (click)="openEditModal(item)"
+                    class="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] cursor-pointer"
+                  >
+                    <svg lucideEdit class="w-3.5 h-3.5"></svg>
+                  </button>
+                  <button
+                    type="button"
+                    title="Eliminar Registro"
+                    (click)="askDelete(item.id)"
+                    class="p-1.5 rounded-lg text-rose-500 hover:bg-rose-500/10 cursor-pointer"
+                  >
+                    <svg lucideTrash2 class="w-3.5 h-3.5"></svg>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALL HISTORICAL RECORDS SECTION -->
+  <div class="space-y-3 pt-4">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <h2 class="text-base font-bold text-[var(--text-primary)]">All Historical Records</h2>
+        @if (selectedSaleIds().length > 0) {
+          <span class="px-2.5 py-0.5 rounded-full bg-cyan-500 text-white text-xs font-bold">
+            {{ selectedSaleIds().length }} seleccionados
+          </span>
+        }
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          title="View All Archives"
+          class="px-3 py-1.5 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-color)] text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--border-color)] cursor-pointer"
+        >
+          View All Archives
+        </button>
+        <button
+          type="button"
+          (click)="openGroupModal()"
+          class="px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border border-cyan-500/30"
+          [class.bg-cyan-500]="selectedSaleIds().length > 0"
+          [class.text-white]="selectedSaleIds().length > 0"
+          [class.bg-[var(--bg-tertiary)]]="selectedSaleIds().length === 0"
+          [class.text-[var(--text-secondary)]]="selectedSaleIds().length === 0"
+        >
+          <svg lucideLayers class="w-3.5 h-3.5"></svg>
+          Agrupar en Pedido
+        </button>
+      </div>
+    </div>
+
+    @if (isGroupAlertVisible()) {
+      <div
+        class="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs font-semibold flex items-center justify-between gap-3"
+      >
+        <div class="flex items-center gap-2">
+          <svg lucideAlertCircle class="w-4 h-4 shrink-0"></svg>
+          <span>Marque los registros que desea agrupar en un mismo pedido usando las casillas de verificación.</span>
+        </div>
+        <button type="button" (click)="dismissGroupAlert()" class="font-bold hover:underline cursor-pointer">
+          OK
+        </button>
+      </div>
+    }
+
+    <div class="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-color)] shadow-sm overflow-hidden">
+      <div class="overflow-x-auto max-h-[420px] overflow-y-auto">
+        <table class="w-full text-left border-collapse">
+          <thead class="sticky top-0 bg-[var(--bg-card)] z-10 shadow-xs">
+            <tr class="border-b border-[var(--border-color)] text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+              <th class="py-3 px-3 text-center w-10">
+                <input
+                  type="checkbox"
+                  title="Seleccionar todo"
+                  [checked]="isAllSelected(sortedHistoricalSales())"
+                  (change)="toggleSelectAll(sortedHistoricalSales())"
+                  class="rounded border-[var(--border-color)] text-cyan-500 focus:ring-cyan-500"
+                />
+              </th>
+              <th class="py-3 px-4">DATE</th>
+              <th class="py-3 px-4">CLIENT</th>
+              <th class="py-3 px-4">CODE</th>
+              <th class="py-3 px-4">PRODUCT</th>
+              <th class="py-3 px-4 text-center">QTY</th>
+              <th class="py-3 px-4 text-right">TOTAL</th>
+              <th class="py-3 px-4 text-center">ESTADO DE PAGO</th>
+              <th class="py-3 px-4 text-right">ACCIONES</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[var(--border-color)] text-xs">
+            @for (item of sortedHistoricalSales(); track item.id) {
+              <tr
+                class="hover:bg-[var(--bg-tertiary)]/50 transition-colors"
+                [class.bg-cyan-500/10]="isSelected(item.id)"
+              >
+                <td class="py-3.5 px-3 text-center">
+                  <input
+                    type="checkbox"
+                    [checked]="isSelected(item.id)"
+                    (change)="toggleSelectSale(item.id)"
+                    class="rounded border-[var(--border-color)] text-cyan-500 focus:ring-cyan-500"
+                  />
+                </td>
+                <td class="py-3.5 px-4 font-mono text-[var(--text-muted)]">{{ item.date }}</td>
+                <td class="py-3.5 px-4 font-medium text-[var(--text-primary)]">{{ item.client }}</td>
+                <td class="py-3.5 px-4 font-mono text-[11px] text-[var(--text-muted)]">{{ item.code }}</td>
+                <td class="py-3.5 px-4 text-[var(--text-secondary)]">{{ item.product }}</td>
+                <td class="py-3.5 px-4 text-center font-mono font-semibold">{{ item.quantity }}</td>
+                <td class="py-3.5 px-4 text-right font-mono font-bold text-[var(--text-primary)]">
+                  ${{ item.total }}
+                </td>
+                <td class="py-3.5 px-4 text-center">
+                  @if (item.paymentStatus === 'Pagado') {
+                    <span
+                      class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/30"
+                    >
+                      Pagado
+                    </span>
+                  } @else {
+                    <span
+                      class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/30"
+                    >
+                      Debe ${{ item.amountDue || item.total }}
+                    </span>
+                  }
+                </td>
+                <td class="py-3.5 px-4 text-right whitespace-nowrap">
+                  <button
+                    type="button"
+                    title="Editar Registro"
+                    (click)="openEditModal(item)"
+                    class="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] cursor-pointer"
+                  >
+                    <svg lucideEdit class="w-3.5 h-3.5"></svg>
+                  </button>
+                  <button
+                    type="button"
+                    title="Eliminar Registro"
+                    (click)="askDelete(item.id)"
+                    class="p-1.5 rounded-lg text-rose-500 hover:bg-rose-500/10 cursor-pointer"
+                  >
+                    <svg lucideTrash2 class="w-3.5 h-3.5"></svg>
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="9" class="py-8 text-center text-[var(--text-muted)]">
+                  No se encontraron registros de venta.
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Legend at bottom -->
+  <div class="flex flex-wrap items-center gap-4 text-[10px] font-mono text-[var(--text-muted)] uppercase">
+    <span class="flex items-center gap-1.5">
+      <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+      <span>COMPLETED TRANSACTIONS</span>
+    </span>
+    <span class="flex items-center gap-1.5">
+      <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+      <span>PENDING DELIVERY</span>
+    </span>
+    <span class="flex items-center gap-1.5">
+      <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+      <span>REFUNDED / VOIDED</span>
+    </span>
+  </div>
+  </div>
+
+  <!-- Floating selection bar + action button (+) matching PDF pages 9 & 13 -->
+  <div class="fixed bottom-6 right-6 z-40 flex items-center gap-3">
+    @if (selectedSaleIds().length > 0) {
+      <div
+        class="bg-[var(--text-primary)] text-[var(--bg-card)] px-4 py-2.5 rounded-2xl shadow-xl border border-[var(--border-color)] flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2"
+      >
+        <span class="text-xs font-bold">{{ selectedSaleIds().length }} Ventas seleccionadas</span>
+        <button
+          type="button"
+          (click)="openGroupModal()"
+          class="px-3 py-1 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+        >
+          <svg lucideLayers class="w-3.5 h-3.5"></svg>
+          Agrupar
+        </button>
+      </div>
+    }
+
+    <button
+      type="button"
+      (click)="store.openNewSaleModal()"
+      class="w-14 h-14 rounded-full bg-cyan-500 hover:bg-cyan-600 text-white shadow-2xl shadow-cyan-500/50 flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-pointer z-40 border-2 border-white/20"
+      title="Record New Sale"
+    >
+      <svg lucidePlus class="w-7 h-7"></svg>
+    </button>
+  </div>
+
+  <!-- MODAL: EDITAR REGISTRO, VENTAS -->
+  @if (editForm(); as form) {
+    <div class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div
+        class="bg-[var(--bg-card)] rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-[var(--border-color)] animate-in fade-in zoom-in-95"
+      >
+        <div class="flex items-center justify-between pb-4 border-b border-[var(--border-color)]">
+          <div>
+            <h3 class="text-lg font-bold text-[var(--text-primary)]">Editar Registro, Ventas</h3>
+            <p class="text-xs text-[var(--text-muted)]">Modifique el campo deseado</p>
+          </div>
+          <span
+            class="text-xs font-mono font-bold bg-[var(--bg-tertiary)] text-[var(--text-primary)] px-3 py-1 rounded-full"
+          >
+            ID venta: {{ form.id }}
+          </span>
+        </div>
+
+        <form class="mt-4 space-y-4" (ngSubmit)="saveEdit()">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-[var(--text-secondary)] mb-1">Cliente</label>
+              <input
+                type="text"
+                name="editClient"
+                required
+                [ngModel]="form.client"
+                (ngModelChange)="patchEditForm({ client: $event })"
+                class="w-full px-3 py-2 border border-[var(--border-color)] rounded-xl text-xs font-medium bg-[var(--bg-tertiary)] text-[var(--text-primary)] focus:outline-hidden focus:border-cyan-500"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-[var(--text-secondary)] mb-1">Producto</label>
+              <input
+                type="text"
+                name="editProduct"
+                required
+                [ngModel]="form.product"
+                (ngModelChange)="patchEditForm({ product: $event })"
+                class="w-full px-3 py-2 border border-[var(--border-color)] rounded-xl text-xs font-medium bg-[var(--bg-tertiary)] text-[var(--text-primary)] focus:outline-hidden focus:border-cyan-500"
+              />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-[var(--text-secondary)] mb-1">Fecha</label>
+              <input
+                type="text"
+                name="editDate"
+                [ngModel]="form.date"
+                (ngModelChange)="patchEditForm({ date: $event })"
+                class="w-full px-3 py-2 border border-[var(--border-color)] rounded-xl text-xs font-medium bg-[var(--bg-tertiary)] text-[var(--text-primary)]"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-[var(--text-secondary)] mb-1">Cantidad</label>
+              <input
+                type="number"
+                min="1"
+                name="editQuantity"
+                [ngModel]="form.quantity"
+                (ngModelChange)="patchEditForm({ quantity: +$event })"
+                class="w-full px-3 py-2 border border-[var(--border-color)] rounded-xl text-xs font-medium bg-[var(--bg-tertiary)] text-[var(--text-primary)]"
+              />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-[var(--text-secondary)] mb-1">Estado de pago</label>
+              <select
+                name="editPaymentStatus"
+                [ngModel]="form.paymentStatus"
+                (ngModelChange)="patchEditForm({ paymentStatus: $event })"
+                class="w-full px-3 py-2 border border-[var(--border-color)] rounded-xl text-xs font-semibold bg-[var(--bg-tertiary)] text-[var(--text-primary)]"
+              >
+                <option value="Pagado">Pagado</option>
+                <option value="Debe">Debe</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-[var(--text-secondary)] mb-1">Precio unidad ($)</label>
+              <input
+                type="number"
+                name="editUnitPrice"
+                [ngModel]="form.unitPrice"
+                (ngModelChange)="patchEditForm({ unitPrice: +$event })"
+                class="w-full px-3 py-2 border border-[var(--border-color)] rounded-xl text-xs font-medium bg-[var(--bg-tertiary)] text-[var(--text-primary)]"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-[var(--text-secondary)] mb-1">Comentarios</label>
+            <textarea
+              name="editNotes"
+              rows="2"
+              [ngModel]="form.notes ?? ''"
+              (ngModelChange)="patchEditForm({ notes: $event })"
+              placeholder="Notas adicionales..."
+              class="w-full px-3 py-2 border border-[var(--border-color)] rounded-xl text-xs font-medium bg-[var(--bg-tertiary)] text-[var(--text-primary)]"
+            ></textarea>
+          </div>
+
+          <div
+            class="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl flex items-center justify-between"
+          >
+            <span class="font-extrabold text-xs text-emerald-500 uppercase">TOTAL</span>
+            <span class="font-mono font-black text-xl text-emerald-500">${{ form.quantity * form.unitPrice }}</span>
+          </div>
+
+          <div class="pt-2 flex items-center justify-end gap-3">
+            <button
+              type="button"
+              (click)="editForm.set(null)"
+              class="px-5 py-2.5 rounded-xl border border-[var(--border-color)] text-[var(--text-secondary)] font-bold text-xs cursor-pointer"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="px-6 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white font-bold text-xs shadow-md cursor-pointer"
+            >
+              Guardar cambios
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL: CONFIRMAR ELIMINAR -->
+  @if (deleteSaleId(); as saleId) {
+    <div class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div
+        class="bg-[var(--bg-card)] rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-[var(--border-color)] text-center animate-in fade-in zoom-in-95"
+      >
+        <div class="w-12 h-12 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center mx-auto mb-4">
+          <svg lucideTrash2 class="w-6 h-6"></svg>
+        </div>
+        <h3 class="text-base font-bold text-[var(--text-primary)] mb-1">
+          ¿Seguro que desea eliminar este registro?
+        </h3>
+        <p class="text-xs text-[var(--text-muted)] mb-6">Se eliminará definitivamente el registro del sistema.</p>
+
+        <div class="flex items-center justify-center gap-3">
+          <button
+            type="button"
+            (click)="deleteSaleId.set(null)"
+            class="px-5 py-2.5 rounded-xl border border-[var(--border-color)] text-[var(--text-secondary)] font-bold text-xs cursor-pointer"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            (click)="confirmDelete()"
+            class="px-5 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs shadow-md cursor-pointer"
+          >
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL: ORDENAR POR -->
+  @if (isSortModalOpen()) {
+    <div class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div
+        class="bg-[var(--bg-card)] rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-[var(--border-color)] animate-in fade-in zoom-in-95"
+      >
+        <div class="flex items-center justify-between pb-4 border-b border-[var(--border-color)]">
+          <div class="flex items-center gap-2">
+            <svg lucideArrowUpDown class="w-5 h-5 text-cyan-500"></svg>
+            <h3 class="text-lg font-bold text-[var(--text-primary)]">Ordenar Por</h3>
+          </div>
+          <button
+            type="button"
+            title="Cerrar"
+            (click)="isSortModalOpen.set(false)"
+            class="p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer"
+          >
+            <svg lucideX class="w-5 h-5"></svg>
+          </button>
+        </div>
+
+        <div class="mt-4 space-y-4 text-xs">
+          <div>
+            <span class="font-bold text-[var(--text-primary)] block mb-2">Fecha</span>
+            <label class="flex items-center gap-2 py-1 cursor-pointer font-medium text-[var(--text-secondary)]">
+              <input
+                type="radio"
+                name="sortOption"
+                value="date_desc"
+                class="text-cyan-500"
+                [checked]="sortOption() === 'date_desc'"
+                (change)="sortOption.set('date_desc')"
+              />
+              Más recientes primero
+            </label>
+            <label class="flex items-center gap-2 py-1 cursor-pointer font-medium text-[var(--text-secondary)]">
+              <input
+                type="radio"
+                name="sortOption"
+                value="date_asc"
+                class="text-cyan-500"
+                [checked]="sortOption() === 'date_asc'"
+                (change)="sortOption.set('date_asc')"
+              />
+              Más antiguos primero
+            </label>
+          </div>
+
+          <div>
+            <span class="font-bold text-[var(--text-primary)] block mb-2">Orden alfabético</span>
+            <label class="flex items-center gap-2 py-1 cursor-pointer font-medium text-[var(--text-secondary)]">
+              <input
+                type="radio"
+                name="sortOption"
+                value="alpha_asc"
+                class="text-cyan-500"
+                [checked]="sortOption() === 'alpha_asc'"
+                (change)="sortOption.set('alpha_asc')"
+              />
+              a - z
+            </label>
+            <label class="flex items-center gap-2 py-1 cursor-pointer font-medium text-[var(--text-secondary)]">
+              <input
+                type="radio"
+                name="sortOption"
+                value="alpha_desc"
+                class="text-cyan-500"
+                [checked]="sortOption() === 'alpha_desc'"
+                (change)="sortOption.set('alpha_desc')"
+              />
+              z - a
+            </label>
+          </div>
+
+          <div>
+            <span class="font-bold text-[var(--text-primary)] block mb-2">Cantidad / Total</span>
+            <label class="flex items-center gap-2 py-1 cursor-pointer font-medium text-[var(--text-secondary)]">
+              <input
+                type="radio"
+                name="sortOption"
+                value="amount_desc"
+                class="text-cyan-500"
+                [checked]="sortOption() === 'amount_desc'"
+                (change)="sortOption.set('amount_desc')"
+              />
+              Mayor a menor
+            </label>
+            <label class="flex items-center gap-2 py-1 cursor-pointer font-medium text-[var(--text-secondary)]">
+              <input
+                type="radio"
+                name="sortOption"
+                value="amount_asc"
+                class="text-cyan-500"
+                [checked]="sortOption() === 'amount_asc'"
+                (change)="sortOption.set('amount_asc')"
+              />
+              Menor a mayor
+            </label>
+          </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-[var(--border-color)] flex items-center justify-end gap-3">
+          <button
+            type="button"
+            (click)="isSortModalOpen.set(false)"
+            class="px-5 py-2.5 rounded-xl border border-[var(--border-color)] text-[var(--text-secondary)] font-bold text-xs cursor-pointer"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            (click)="isSortModalOpen.set(false)"
+            class="px-6 py-2.5 rounded-xl bg-cyan-500 text-white font-bold text-xs shadow-md cursor-pointer"
+          >
+            Listo
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL: CREAR PEDIDO (AGRUPAR VENTAS) -->
+  @if (isGroupModalOpen()) {
+    <div class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div
+        class="bg-[var(--bg-card)] rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-[var(--border-color)] animate-in fade-in zoom-in-95"
+      >
+        <div class="flex items-center justify-between pb-4 border-b border-[var(--border-color)]">
+          <div>
+            <h3 class="text-lg font-bold text-[var(--text-primary)]">Crear Pedido</h3>
+            <p class="text-xs text-[var(--text-muted)]">Agrupar los registros seleccionados en un único pedido</p>
+          </div>
+          <button
+            type="button"
+            title="Cerrar"
+            (click)="isGroupModalOpen.set(false)"
+            class="p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer"
+          >
+            <svg lucideX class="w-5 h-5"></svg>
+          </button>
+        </div>
+
+        <form class="mt-4 space-y-4" (ngSubmit)="saveGroupedOrder()">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-[var(--text-secondary)] mb-1">Cliente</label>
+              <input
+                type="text"
+                name="groupClient"
+                required
+                [ngModel]="groupClient()"
+                (ngModelChange)="groupClient.set($event)"
+                class="w-full px-3 py-2 border border-[var(--border-color)] rounded-xl text-xs font-medium bg-[var(--bg-tertiary)] text-[var(--text-primary)] focus:outline-hidden focus:border-cyan-500"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-[var(--text-secondary)] mb-1">Fecha Pedido</label>
+              <input
+                type="text"
+                name="groupDate"
+                disabled
+                [ngModel]="todayLabel"
+                class="w-full px-3 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-xl text-xs font-medium text-[var(--text-muted)]"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-[var(--text-secondary)] mb-1">
+              Productos a agrupar ({{ selectedSales().length }})
+            </label>
+            <div
+              class="border border-[var(--border-color)] rounded-xl p-3 bg-[var(--bg-tertiary)] space-y-2 max-h-40 overflow-y-auto"
+            >
+              @for (item of selectedSales(); track item.id) {
+                <div class="flex items-center justify-between text-xs font-semibold text-[var(--text-secondary)]">
+                  <span>{{ item.product }}</span>
+                  <span class="font-mono text-[var(--text-muted)]">
+                    {{ item.quantity }} x ${{ item.unitPrice }} = ${{ item.total }}
+                  </span>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-[var(--text-secondary)] mb-1">Estado de pago</label>
+              <select
+                name="groupPaymentStatus"
+                [ngModel]="groupPaymentStatus()"
+                (ngModelChange)="groupPaymentStatus.set($event)"
+                class="w-full px-3 py-2 border border-[var(--border-color)] rounded-xl text-xs font-semibold bg-[var(--bg-tertiary)] text-[var(--text-primary)]"
+              >
+                <option value="Pagado">Pagado</option>
+                <option value="Debe">Debe</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-[var(--text-secondary)] mb-1">TOTAL DEL PEDIDO</label>
+              <div
+                class="px-3 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-500 font-mono font-black text-base"
+              >
+                ${{ selectedTotal() }}
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-2 flex items-center justify-end gap-3">
+            <button
+              type="button"
+              (click)="isGroupModalOpen.set(false)"
+              class="px-5 py-2.5 rounded-xl border border-[var(--border-color)] text-[var(--text-secondary)] font-bold text-xs cursor-pointer"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="px-6 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white font-bold text-xs shadow-md cursor-pointer"
+            >
+              Guardar Pedido
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>

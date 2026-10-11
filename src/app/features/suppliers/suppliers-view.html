@@ -1,0 +1,299 @@
+<div class="h-full flex flex-col min-h-0 p-4 lg:p-8 space-y-6 animate-in fade-in duration-200">
+  <!-- Tab bar + primary action (FIJO) -->
+  <div
+    class="shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+  >
+    <div class="flex items-center gap-6">
+      <button
+        type="button"
+        (click)="store.navigate('clients')"
+        class="text-2xl font-extrabold tracking-tight text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors cursor-pointer"
+      >
+        Clientes
+      </button>
+      <button
+        type="button"
+        (click)="store.navigate('suppliers')"
+        aria-current="page"
+        class="text-2xl font-extrabold tracking-tight text-[var(--text-primary)] underline decoration-2 underline-offset-4 cursor-pointer"
+      >
+        Proveedores
+      </button>
+    </div>
+
+    <button
+      type="button"
+      (click)="openCreate()"
+      class="self-start sm:self-auto px-5 py-3 rounded-xl bg-[var(--text-primary)] text-[var(--bg-card)] hover:opacity-90 text-sm font-bold flex items-center gap-2 transition-opacity cursor-pointer shadow-md"
+    >
+      <svg lucidePlus class="w-4 h-4"></svg>
+      <span>Añadir nuevo proveedor</span>
+    </button>
+  </div>
+
+  <div class="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+    <!-- Supplier list -->
+    <div class="lg:col-span-8 h-full min-h-0 flex flex-col space-y-4">
+      <h2 class="shrink-0 text-lg font-bold text-[var(--text-primary)]">Todos los Proveedores</h2>
+
+      <!-- SOLO ESTE CONTENEDOR HACE SCROLL -->
+      <div class="flex-1 min-h-0 overflow-y-auto space-y-3 pr-2">
+        @for (supplier of store.suppliers(); track supplier.id) {
+          <button
+            type="button"
+            (click)="select(supplier.id)"
+            [class]="
+              'w-full p-4 rounded-2xl border-2 flex items-center gap-4 text-left transition-all duration-150 cursor-pointer ' +
+              (selected().id === supplier.id
+                ? 'border-cyan-500 bg-[var(--bg-card)] shadow-md'
+                : 'border-[var(--border-color)] bg-[var(--bg-card)] hover:border-cyan-500/40 hover:shadow-sm')
+            "
+          >
+            <div
+              class="w-11 h-11 shrink-0 rounded-full bg-[var(--bg-tertiary)] border border-[var(--border-color)] flex items-center justify-center text-[var(--text-muted)]"
+            >
+              <svg lucideBuilding class="w-5 h-5"></svg>
+            </div>
+
+            <div class="flex-1 min-w-0 space-y-0.5">
+              <p class="text-sm font-bold text-[var(--text-primary)] truncate">
+                {{ supplier.name }}
+              </p>
+              <p class="text-xs text-[var(--text-muted)]">Código Prov: {{ supplier.code }}</p>
+            </div>
+
+            <span class="shrink-0 text-sm font-semibold font-mono text-cyan-600">
+              {{ supplier.phone }}
+            </span>
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Detail card (SIEMPRE A LA VISTA) -->
+    <div class="lg:col-span-4 h-full min-h-0 overflow-y-auto">
+      <div
+        class="p-6 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm relative"
+      >
+        <button
+          type="button"
+          (click)="openEdit()"
+          aria-label="Editar proveedor"
+          class="absolute top-5 right-5 p-2 rounded-xl text-[var(--text-muted)] hover:text-cyan-500 hover:bg-cyan-500/10 transition-colors cursor-pointer"
+        >
+          <svg lucideSquarePen class="w-4 h-4"></svg>
+        </button>
+
+        <div class="flex flex-col items-center text-center pt-2">
+          <div
+            class="w-32 h-32 rounded-full overflow-hidden bg-[var(--bg-tertiary)] border border-[var(--border-color)] flex items-center justify-center text-[var(--text-muted)]"
+          >
+            @if (selected().avatarUrl) {
+              <img
+                [src]="selected().avatarUrl"
+                [alt]="selected().name"
+                class="w-full h-full object-cover"
+              />
+            } @else {
+              <svg lucideBuilding class="w-12 h-12"></svg>
+            }
+          </div>
+          <h3 class="mt-4 text-xl font-extrabold text-[var(--text-primary)]">
+            {{ selected().name }}
+          </h3>
+          <p class="text-xs text-[var(--text-muted)]">
+            ID / Código Prov: {{ selected().code }}
+          </p>
+        </div>
+
+        <div class="mt-6 space-y-4 relative pr-10">
+          <div class="flex items-start gap-3">
+            <svg lucideMapPin class="w-4 h-4 mt-0.5 shrink-0 text-[var(--text-muted)]"></svg>
+            <div class="min-w-0">
+              <p class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                Dirección
+              </p>
+              <p class="text-sm font-semibold text-[var(--text-primary)]">
+                {{ selected().address }}
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-3">
+            <svg lucidePhone class="w-4 h-4 mt-0.5 shrink-0 text-[var(--text-muted)]"></svg>
+            <div class="min-w-0">
+              <p class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                Teléfono
+              </p>
+              <p class="text-sm font-semibold font-mono text-[var(--text-primary)]">
+                {{ selected().phone }}
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-3">
+            <svg lucideMail class="w-4 h-4 mt-0.5 shrink-0 text-[var(--text-muted)]"></svg>
+            <div class="min-w-0">
+              <p class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                Email
+              </p>
+              <p class="text-sm font-semibold text-[var(--text-primary)] break-all">
+                {{ selected().email }}
+              </p>
+            </div>
+          </div>
+
+          <a
+            [href]="chatHref()"
+            target="_blank"
+            rel="noopener"
+            aria-label="Abrir chat"
+            class="absolute right-0 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-emerald-500/15 text-emerald-600 border border-emerald-500/30 flex items-center justify-center hover:bg-emerald-500/25 transition-colors cursor-pointer"
+          >
+            <svg lucideMessageCircle class="w-4 h-4"></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create / edit modal -->
+@if (modalOpen()) {
+  <div
+    class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-150"
+  >
+    <div
+      class="bg-[var(--bg-card)] rounded-3xl border border-[var(--border-color)] shadow-2xl w-full max-w-md p-6 space-y-5"
+    >
+      <div class="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
+        <div class="flex items-center gap-2">
+          <svg lucideBuilding class="w-5 h-5 text-cyan-500"></svg>
+          <h3 class="text-lg font-bold text-[var(--text-primary)]">{{ modalTitle() }}</h3>
+        </div>
+        <button
+          type="button"
+          (click)="closeModal()"
+          aria-label="Cerrar"
+          class="text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer"
+        >
+          <svg lucideX class="w-5 h-5"></svg>
+        </button>
+      </div>
+
+      <form (ngSubmit)="save()" class="space-y-4">
+        <div class="space-y-1">
+          <label class="text-xs font-semibold text-[var(--text-primary)]" for="supplier-name">
+            Nombre del proveedor
+          </label>
+          <div class="relative">
+            <svg
+              lucideBuilding
+              class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]"
+            ></svg>
+            <input
+              id="supplier-name"
+              name="name"
+              type="text"
+              [ngModel]="draft().name"
+              (ngModelChange)="updateDraft({ name: $event })"
+              placeholder="Nombre del proveedor"
+              class="w-full pl-10 pr-3.5 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] focus:outline-none focus:border-cyan-500"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="space-y-1">
+            <label class="text-xs font-semibold text-[var(--text-primary)]" for="supplier-code">
+              Código Prov
+            </label>
+            <input
+              id="supplier-code"
+              name="code"
+              type="text"
+              [ngModel]="draft().code"
+              (ngModelChange)="updateDraft({ code: $event })"
+              placeholder="1234"
+              class="w-full px-3.5 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] focus:outline-none focus:border-cyan-500 font-mono"
+              required
+            />
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-xs font-semibold text-[var(--text-primary)]" for="supplier-phone">
+              Teléfono
+            </label>
+            <input
+              id="supplier-phone"
+              name="phone"
+              type="tel"
+              [ngModel]="draft().phone"
+              (ngModelChange)="updateDraft({ phone: $event })"
+              placeholder="304567894"
+              class="w-full px-3.5 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] focus:outline-none focus:border-cyan-500 font-mono"
+            />
+          </div>
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-xs font-semibold text-[var(--text-primary)]" for="supplier-email">
+            Email
+          </label>
+          <input
+            id="supplier-email"
+            name="email"
+            type="email"
+            [ngModel]="draft().email"
+            (ngModelChange)="updateDraft({ email: $event })"
+            placeholder="proveedor@gmail.com"
+            class="w-full px-3.5 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] focus:outline-none focus:border-cyan-500"
+          />
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-xs font-semibold text-[var(--text-primary)]" for="supplier-address">
+            Dirección
+          </label>
+          <input
+            id="supplier-address"
+            name="address"
+            type="text"
+            [ngModel]="draft().address"
+            (ngModelChange)="updateDraft({ address: $event })"
+            placeholder="Carrera 34 # 80 - 50"
+            class="w-full px-3.5 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] focus:outline-none focus:border-cyan-500"
+          />
+        </div>
+
+        <div class="pt-2 flex gap-3">
+          <button
+            type="button"
+            (click)="closeModal()"
+            class="flex-1 py-2.5 rounded-xl border border-[var(--border-color)] text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] cursor-pointer"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            class="flex-1 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white text-xs font-semibold shadow-md shadow-cyan-500/20 flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <svg lucideCheckCircle2 class="w-4 h-4"></svg>
+            <span>Guardar proveedor</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- FAB -->
+<button
+  type="button"
+  (click)="openCreate()"
+  aria-label="Añadir nuevo proveedor"
+  class="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-cyan-500 hover:bg-cyan-600 text-white shadow-2xl shadow-cyan-500/50 flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-pointer z-40 border-2 border-white/20"
+>
+  <svg lucidePlus class="w-6 h-6"></svg>
+</button>

@@ -1,0 +1,31 @@
+<!-- Ported 1:1 from the main return block of "ICONS UI V.2/src/App.tsx" -->
+<div
+  [class]="
+    'h-screen max-h-screen h-dvh overflow-hidden bg-[var(--bg-primary)] text-[var(--text-primary)] flex flex-col font-sans transition-colors duration-200 ' +
+    store.themeClass()
+  "
+>
+  <!-- Fixed Header with high z-index to allow popovers over main area -->
+  <app-header class="shrink-0 relative z-30" />
+
+  <!-- Main Workspace with Sidebar & Content Area -->
+  <div class="flex-1 min-h-0 flex overflow-hidden relative">
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    @if (store.sidebarOpen()) {
+      <div
+        class="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs lg:hidden transition-opacity"
+        (click)="store.closeSidebar()"
+        aria-hidden="true"
+      ></div>
+    }
+
+    <app-sidebar class="contents lg:block lg:h-full lg:w-64 lg:shrink-0" />
+
+    <main class="flex-1 min-h-0 flex flex-col overflow-hidden bg-[var(--bg-primary)] w-full">
+      <router-outlet />
+    </main>
+  </div>
+
+  <!-- Global Modal for New Sale -->
+  <app-new-sale-modal />
+</div>

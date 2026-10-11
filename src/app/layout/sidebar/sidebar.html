@@ -1,0 +1,114 @@
+<aside
+  [class]="
+    'fixed inset-y-0 left-0 z-50 w-72 lg:static lg:w-64 lg:z-auto border-r border-[var(--border-color)] bg-[var(--bg-secondary)] flex flex-col justify-between p-4 shrink-0 transition-transform lg:transition-none duration-300 ease-in-out h-full overflow-y-auto shadow-2xl lg:shadow-none ' +
+    (store.sidebarOpen() ? 'translate-x-0' : '-translate-x-full lg:translate-x-0')
+  "
+>
+  <div class="space-y-6">
+    <!-- Mobile header with app logo, title and close button (lg:hidden) -->
+    <div class="flex items-center justify-between px-2 lg:hidden pb-3 border-b border-[var(--border-color)]">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-sky-600 via-cyan-500 to-teal-400 p-0.5 flex items-center justify-center shadow-md shrink-0">
+          <div class="w-full h-full bg-[var(--bg-secondary)] rounded-[10px] flex items-center justify-center">
+            <svg lucideLayoutGrid class="w-4 h-4 text-cyan-500"></svg>
+          </div>
+        </div>
+        <div class="flex items-center gap-1.5 min-w-0">
+          <span class="font-bold tracking-tight text-sm text-[var(--text-primary)] truncate">
+            Sistema de Control
+          </span>
+          <span class="text-[9px] font-semibold px-1.5 py-0.2 rounded-full bg-cyan-500/10 text-cyan-500 border border-cyan-500/20 shrink-0">
+            PRO
+          </span>
+        </div>
+      </div>
+      <button
+        type="button"
+        (click)="store.closeSidebar()"
+        class="p-1.5 rounded-lg bg-[var(--bg-tertiary)] hover:bg-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer shrink-0"
+        aria-label="Cerrar menú"
+      >
+        <svg lucideX class="w-4 h-4"></svg>
+      </button>
+    </div>
+
+    <!-- Module section title -->
+    <div class="px-3">
+      <p class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+        Módulos del Sistema
+      </p>
+    </div>
+
+    <!-- Navigation items -->
+    <nav class="space-y-1">
+      @for (item of menuItems; track item.id) {
+        @let isActive = store.isViewActive(item.id);
+        <button
+          type="button"
+          (click)="store.navigate(item.id)"
+          [class]="
+            'w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-150 cursor-pointer ' +
+            (isActive
+              ? 'bg-cyan-500 text-white shadow-md shadow-cyan-500/20 font-semibold'
+              : 'text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]')
+          "
+        >
+          <div class="flex items-center gap-3">
+            <svg
+              [lucideIcon]="item.icon"
+              [class]="'w-4 h-4 ' + (isActive ? 'text-white' : 'text-[var(--text-muted)]')"
+            ></svg>
+            <span>{{ item.label }}</span>
+          </div>
+
+          <div class="flex items-center gap-1.5">
+            @if (item.badge) {
+              <span
+                [class]="
+                  'px-1.5 py-0.5 text-[10px] font-bold rounded-full ' +
+                  (isActive
+                    ? 'bg-white/20 text-white'
+                    : 'bg-cyan-500/10 text-cyan-500 border border-cyan-500/20')
+                "
+              >
+                {{ item.badge }}
+              </span>
+            }
+            @if (item.highlight && !isActive) {
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+            }
+            @if (isActive) {
+              <svg lucideChevronRight class="w-3.5 h-3.5 text-white/80"></svg>
+            }
+          </div>
+        </button>
+      }
+    </nav>
+
+    <!-- Quick status box -->
+    <div class="p-3.5 rounded-2xl bg-gradient-to-br from-cyan-500/10 via-sky-500/5 to-transparent border border-cyan-500/20">
+      <div class="flex items-center gap-2 text-cyan-500 text-xs font-semibold mb-1">
+        <svg lucideSparkles class="w-4 h-4"></svg>
+        <span>Infraestructura Sync</span>
+      </div>
+      <p class="text-[11px] text-[var(--text-muted)] leading-relaxed">
+        v2.4.0 — Base de datos sincronizada en tiempo real (AES-256).
+      </p>
+    </div>
+  </div>
+
+  <!-- Footer logout button -->
+  <div class="pt-4 border-t border-[var(--border-color)]">
+    <button
+      type="button"
+      (click)="store.navigate('welcome')"
+      class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium text-[var(--text-secondary)] hover:text-rose-500 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all duration-150 cursor-pointer group"
+    >
+      <div class="flex items-center gap-3">
+        <svg lucideLogOut class="w-4 h-4 text-[var(--text-muted)] group-hover:text-rose-500 transition-colors"></svg>
+        <span class="group-hover:translate-x-0.5 transition-transform">Cerrar Sesión</span>
+      </div>
+      <span class="text-[10px] text-[var(--text-muted)] group-hover:text-rose-400">Salir</span>
+    </button>
+  </div>
+</aside>

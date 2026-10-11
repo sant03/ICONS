@@ -1,0 +1,567 @@
+<div class="h-full flex flex-col min-h-0 animate-in fade-in duration-200 overflow-y-auto md:overflow-hidden">
+  <!-- Top Banner / Header (fijo en desktop, incluido en scroll en móvil) -->
+  <div class="md:shrink-0 p-4 lg:p-8 pb-6 border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <div class="flex flex-wrap items-center gap-2 mb-1">
+          <h1 class="text-2xl font-extrabold tracking-tight text-[var(--text-primary)]">
+            Panel de Control General
+          </h1>
+          <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-cyan-500/10 text-cyan-500 border border-cyan-500/20">
+            Inventario Activo
+          </span>
+        </div>
+        <p class="text-xs text-[var(--text-muted)]">
+          Vista general de sus operaciones y acceso rápido a los módulos principales.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button
+          type="button"
+          (click)="exportReport()"
+          class="px-3.5 py-2 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border-color)] text-[var(--text-primary)] text-xs font-medium border border-[var(--border-color)] flex items-center gap-2 transition-all cursor-pointer"
+        >
+          <svg lucideDownload class="w-3.5 h-3.5 text-cyan-500"></svg>
+          <span>Exportar Reporte</span>
+        </button>
+
+        <button
+          type="button"
+          (click)="store.openNewSaleModal()"
+          class="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white text-xs font-semibold shadow-lg shadow-cyan-500/20 flex items-center gap-2 transition-all cursor-pointer"
+        >
+          <svg lucidePlusCircle class="w-4 h-4"></svg>
+          <span>Nueva Venta</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenido principal con scroll vertical -->
+  <div class="md:flex-1 md:min-h-0 overflow-y-auto p-4 lg:p-8 space-y-8 pb-16">
+
+  <!-- Metric Cards Grid -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Metric 1 -->
+    <div class="p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm hover:border-cyan-500/30 transition-all space-y-3">
+      <div class="flex items-center justify-between">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+          VENTAS DE HOY
+        </span>
+        <div class="p-2 rounded-xl bg-cyan-500/10 text-cyan-500">
+          <svg lucideTrendingUp class="w-4 h-4"></svg>
+        </div>
+      </div>
+      <div>
+        <p class="text-2xl font-black text-[var(--text-primary)] tracking-tight">$12,450.00</p>
+        <p class="text-[11px] text-emerald-500 font-semibold flex items-center gap-1 mt-1">
+          <svg lucideArrowUpRight class="w-3.5 h-3.5"></svg>
+          <span>+12.5% vs ayer</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Metric 2 -->
+    <div class="p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm hover:border-amber-500/30 transition-all space-y-3">
+      <div class="flex items-center justify-between">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+          STOCK CRÍTICO / BAJO
+        </span>
+        <div class="p-2 rounded-xl bg-amber-500/10 text-amber-500">
+          <svg lucidePackage class="w-4 h-4"></svg>
+        </div>
+      </div>
+      <div>
+        <p class="text-2xl font-black text-[var(--text-primary)] tracking-tight">18 Items</p>
+        <p class="text-[11px] text-rose-500 font-semibold flex items-center gap-1 mt-1">
+          <svg lucideArrowDownRight class="w-3.5 h-3.5"></svg>
+          <span>-2 vs ayer (requiere reposición)</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Metric 3 -->
+    <div class="p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm hover:border-indigo-500/30 transition-all space-y-3">
+      <div class="flex items-center justify-between">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+          PEDIDOS PENDIENTES
+        </span>
+        <div class="p-2 rounded-xl bg-indigo-500/10 text-indigo-500">
+          <svg lucideShoppingBag class="w-4 h-4"></svg>
+        </div>
+      </div>
+      <div>
+        <p class="text-2xl font-black text-[var(--text-primary)] tracking-tight">5</p>
+        <p class="text-[11px] text-cyan-500 font-semibold flex items-center gap-1 mt-1">
+          <svg lucideSparkles class="w-3.5 h-3.5"></svg>
+          <span>Nuevos vs ayer</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Metric 4 -->
+    <div class="p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm hover:border-emerald-500/30 transition-all space-y-3">
+      <div class="flex items-center justify-between">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+          NUEVOS CLIENTES
+        </span>
+        <div class="p-2 rounded-xl bg-emerald-500/10 text-emerald-500">
+          <svg lucideUsers class="w-4 h-4"></svg>
+        </div>
+      </div>
+      <div>
+        <p class="text-2xl font-black text-[var(--text-primary)] tracking-tight">24</p>
+        <p class="text-[11px] text-emerald-500 font-semibold flex items-center gap-1 mt-1">
+          <svg lucideArrowUpRight class="w-3.5 h-3.5"></svg>
+          <span>+18% este mes</span>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- System Modules Section with Horizontal Scroll & Floating Action Button -->
+  <div class="space-y-3">
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 class="text-base font-bold text-[var(--text-primary)]">Módulos del Sistema</h2>
+        <p class="text-xs text-[var(--text-muted)]">Acceso directo a las áreas principales de gestión</p>
+      </div>
+
+      <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-500 border border-cyan-500/20">
+        6 Módulos disponibles
+      </span>
+    </div>
+
+    <div class="relative group/carousel">
+      <!-- Floating Button Scroll Left -->
+      @if (canScrollLeft()) {
+        <button
+          type="button"
+          (click)="scrollModules('left')"
+          aria-label="Ver módulos anteriores"
+          class="absolute -left-3.5 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-[var(--bg-card)]/95 backdrop-blur-md border border-[var(--border-color)] shadow-xl text-[var(--text-primary)] hover:text-cyan-500 hover:border-cyan-500/50 hover:scale-110 active:scale-95 flex items-center justify-center transition-all cursor-pointer ring-4 ring-black/5 dark:ring-white/5"
+        >
+          <svg lucideChevronLeft class="w-5 h-5"></svg>
+        </button>
+      }
+
+      <!-- Cards Container (Horizontal scroll, scrollbar hidden, never collapses to column on desktop) -->
+      <div
+        #modulesContainer
+        (scroll)="checkScroll()"
+        class="flex flex-row items-stretch gap-4 sm:gap-6 overflow-x-auto no-scrollbar scroll-smooth py-2 snap-x snap-mandatory px-[calc((100%-340px)/2)] md:px-1 sm:scroll-auto sm:snap-none"
+      >
+        <!-- Card 1: Ventas -->
+        <div class="snap-center w-[300px] sm:w-[340px] md:w-[360px] shrink-0 p-6 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm flex flex-col justify-between hover:border-cyan-500/50 transition-all group">
+          <div class="space-y-4">
+            <div class="w-14 h-14 rounded-2xl bg-cyan-500/10 text-cyan-500 flex items-center justify-center border border-cyan-500/20 group-hover:scale-105 transition-transform">
+              <svg lucideTrendingUp class="w-7 h-7"></svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-[var(--text-primary)]">Ventas</h3>
+              <p class="text-xs text-[var(--text-muted)] mt-1">
+                Gestión completa de facturación y despacho diario.
+              </p>
+            </div>
+            <ul class="space-y-2.5 text-xs text-[var(--text-secondary)]">
+              <li class="flex items-center gap-2">
+                <svg lucideCheckCircle2 class="w-3.5 h-3.5 text-cyan-500 shrink-0"></svg>
+                <span>Registrar Ventas diarias</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <svg lucideCheckCircle2 class="w-3.5 h-3.5 text-cyan-500 shrink-0"></svg>
+                <span>Consultar historial de Ventas</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <svg lucideCheckCircle2 class="w-3.5 h-3.5 text-cyan-500 shrink-0"></svg>
+                <span>Editar Ventas realizadas</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <svg lucideCheckCircle2 class="w-3.5 h-3.5 text-cyan-500 shrink-0"></svg>
+                <span>Generar reportes de ingresos</span>
+              </li>
+            </ul>
+          </div>
+          <button
+            type="button"
+            (click)="store.navigate('sales')"
+            class="mt-6 w-full py-2.5 px-4 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md shadow-cyan-500/20"
+          >
+            <span>Gestionar Ventas</span>
+            <svg lucideChevronRight class="w-4 h-4"></svg>
+          </button>
+        </div>
+
+        <!-- Card 2: Compras -->
+        <div class="snap-center w-[300px] sm:w-[340px] md:w-[360px] shrink-0 p-6 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm flex flex-col justify-between hover:border-pink-500/50 transition-all group">
+          <div class="space-y-4">
+            <div class="w-14 h-14 rounded-2xl bg-pink-500/10 text-pink-500 flex items-center justify-center border border-pink-500/20 group-hover:scale-105 transition-transform">
+              <svg lucideShoppingBag class="w-7 h-7"></svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-[var(--text-primary)]">Compras</h3>
+              <p class="text-xs text-[var(--text-muted)] mt-1">
+                Órdenes de suministro e ingreso de proveedores.
+              </p>
+            </div>
+            <ul class="space-y-2.5 text-xs text-[var(--text-secondary)]">
+              <li class="flex items-center gap-2">
+                <svg lucideCheckCircle2 class="w-3.5 h-3.5 text-pink-500 shrink-0"></svg>
+                <span>Registrar Compras a proveedores</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <svg lucideCheckCircle2 class="w-3.5 h-3.5 text-pink-500 shrink-0"></svg>
+                <span>Consultar historial de Compras</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <svg lucideCheckCircle2 class="w-3.5 h-3.5 text-pink-500 shrink-0"></svg>
+                <span>Editar Registros de entrada</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <svg lucideCheckCircle2 class="w-3.5 h-3.5 text-pink-500 shrink-0"></svg>
+                <span>Ingresar nuevos Productos</span>
+              </li>
+            </ul>
+          </div>
+          <button
+            type="button"
+            (click)="store.navigate('purchase-order')"
+            class="mt-6 w-full py-2.5 px-4 rounded-xl bg-pink-500 hover:bg-pink-600 text-white font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md shadow-pink-500/20"
+          >
+            <span>Gestionar Compras</span>
+            <svg lucideChevronRight class="w-4 h-4"></svg>
+          </button>
+        </div>
+
+        <!-- Card 3: Productos -->
+        <div class="snap-center w-[300px] sm:w-[340px] md:w-[360px] shrink-0 p-6 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm flex flex-col justify-between hover:border-emerald-500/50 transition-all group">
+          <div class="space-y-4">
+            <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center border border-emerald-500/20 group-hover:scale-105 transition-transform">
+              <svg lucidePackage class="w-7 h-7"></svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-[var(--text-primary)]">Productos</h3>
+              <p class="text-xs text-[var(--text-muted)] mt-1">
+                Catálogo de mercancía, existencias y SKUs.
+              </p>
+            </div>
+            <ul class="space-y-2.5 text-xs text-[var(--text-secondary)]">
+              <li class="flex items-center gap-2">
+                <svg lucideCheckCircle2 class="w-3.5 h-3.5 text-emerald-500 shrink-0"></svg>
+                <span>Consultar estado de los productos</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <svg lucideCheckCircle2 class="w-3.5 h-3.5 text-emerald-500 shrink-0"></svg>
+                <span>Añadir y editar información</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <svg lucideCheckCircle2 class="w-3.5 h-3.5 text-emerald-500 shrink-0"></svg>
+                <span>Ajustar niveles de inventario</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <svg lucideCheckCircle2 class="w-3.5 h-3.5 text-emerald-500 shrink-0"></svg>
+                <span>Categorizar catálogo</span>
+              </li>
+            </ul>
+          </div>
+          <button
+            type="button"
+            (click)="store.navigate('products')"
+            class="mt-6 w-full py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md shadow-emerald-500/20"
+          >
+            <span>Ver Productos</span>
+            <svg lucideChevronRight class="w-4 h-4"></svg>
+          </button>
+        </div>
+
+        <!-- Card 4: Usuarios (NUEVA) -->
+        <div class="snap-center w-[300px] sm:w-[340px] md:w-[360px] shrink-0 p-6 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm flex flex-col justify-between hover:border-indigo-500/50 transition-all group">
+          <div class="space-y-4">
+            <div class="w-14 h-14 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center border border-indigo-500/20 group-hover:scale-105 transition-transform">
+              <svg lucideUsers class="w-7 h-7"></svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-[var(--text-primary)]">Usuarios</h3>
+              <p class="text-xs text-[var(--text-muted)] mt-1">
+                Gestión de cuentas de personal, cargos y accesos.
+              </p>
+            </div>
+            <ul class="space-y-2.5 text-xs text-[var(--text-secondary)]">
+              <li class="flex items-center gap-2">
+                <svg lucideCheckCircle2 class="w-3.5 h-3.5 text-indigo-500 shrink-0"></svg>
+                <span>Directorio de personal y roles</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <svg lucideCheckCircle2 class="w-3.5 h-3.5 text-indigo-500 shrink-0"></svg>
+                <span>Editar perfiles y credenciales</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <svg lucideCheckCircle2 class="w-3.5 h-3.5 text-indigo-500 shrink-0"></svg>
+                <span>Bloquear y suspender accesos</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <svg lucideCheckCircle2 class="w-3.5 h-3.5 text-indigo-500 shrink-0"></svg>
+                <span>Auditoría de actividad reciente</span>
+              </li>
+            </ul>
+          </div>
+          <button
+            type="button"
+            (click)="store.navigate('users')"
+            class="mt-6 w-full py-2.5 px-4 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md shadow-indigo-500/20"
+          >
+            <span>Gestionar Usuarios</span>
+            <svg lucideChevronRight class="w-4 h-4"></svg>
+          </button>
+        </div>
+
+        <!-- Card 5: Clientes y Proveedores (NUEVA) -->
+        <div class="snap-center w-[300px] sm:w-[340px] md:w-[360px] shrink-0 p-6 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm flex flex-col justify-between hover:border-amber-500/50 transition-all group">
+          <div class="space-y-4">
+            <div class="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center border border-amber-500/20 group-hover:scale-105 transition-transform">
+              <svg lucideHandshake class="w-7 h-7"></svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-[var(--text-primary)]">Clientes y Proveedores</h3>
+              <p class="text-xs text-[var(--text-muted)] mt-1">
+                Directorio comercial, cuentas y canales de contacto.
+              </p>
+            </div>
+            <ul class="space-y-2.5 text-xs text-[var(--text-secondary)]">
+              <li class="flex items-center gap-2">
+                <svg lucideCheckCircle2 class="w-3.5 h-3.5 text-amber-500 shrink-0"></svg>
+                <span>Directorio completo de clientes</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <svg lucideCheckCircle2 class="w-3.5 h-3.5 text-amber-500 shrink-0"></svg>
+                <span>Gestión de proveedores e insumos</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <svg lucideCheckCircle2 class="w-3.5 h-3.5 text-amber-500 shrink-0"></svg>
+                <span>Canales directos de comunicación</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <svg lucideCheckCircle2 class="w-3.5 h-3.5 text-amber-500 shrink-0"></svg>
+                <span>Registro de nuevos contactos</span>
+              </li>
+            </ul>
+          </div>
+          <button
+            type="button"
+            (click)="store.navigate('clients')"
+            class="mt-6 w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md shadow-amber-500/20"
+          >
+            <span>Ver Clientes y Prov.</span>
+            <svg lucideChevronRight class="w-4 h-4"></svg>
+          </button>
+        </div>
+
+        <!-- Card 6: Orden de Compra (NUEVA) -->
+        <div class="snap-center w-[300px] sm:w-[340px] md:w-[360px] shrink-0 p-6 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm flex flex-col justify-between hover:border-sky-500/50 transition-all group">
+          <div class="space-y-4">
+            <div class="w-14 h-14 rounded-2xl bg-sky-500/10 text-sky-500 flex items-center justify-center border border-sky-500/20 group-hover:scale-105 transition-transform">
+              <svg lucideFileText class="w-7 h-7"></svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-[var(--text-primary)]">Orden de Compra</h3>
+              <p class="text-xs text-[var(--text-muted)] mt-1">
+                Documentos de abastecimiento y cadena de suministro.
+              </p>
+            </div>
+            <ul class="space-y-2.5 text-xs text-[var(--text-secondary)]">
+              <li class="flex items-center gap-2">
+                <svg lucideCheckCircle2 class="w-3.5 h-3.5 text-sky-500 shrink-0"></svg>
+                <span>Emisión y detalle de órdenes</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <svg lucideCheckCircle2 class="w-3.5 h-3.5 text-sky-500 shrink-0"></svg>
+                <span>Control de entregas y fechas</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <svg lucideCheckCircle2 class="w-3.5 h-3.5 text-sky-500 shrink-0"></svg>
+                <span>Aprobación de compras e insumos</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <svg lucideCheckCircle2 class="w-3.5 h-3.5 text-sky-500 shrink-0"></svg>
+                <span>Historial de abastecimiento</span>
+              </li>
+            </ul>
+          </div>
+          <button
+            type="button"
+            (click)="store.navigate('purchase-orders')"
+            class="mt-6 w-full py-2.5 px-4 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md shadow-sky-500/20"
+          >
+            <span>Ver Órdenes de Compra</span>
+            <svg lucideChevronRight class="w-4 h-4"></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Floating Button Scroll Right -->
+      @if (canScrollRight()) {
+        <button
+          type="button"
+          (click)="scrollModules('right')"
+          aria-label="Ver más módulos"
+          class="absolute -right-3.5 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-[var(--bg-card)]/95 backdrop-blur-md border border-[var(--border-color)] shadow-xl text-[var(--text-primary)] hover:text-cyan-500 hover:border-cyan-500/50 hover:scale-110 active:scale-95 flex items-center justify-center transition-all cursor-pointer ring-4 ring-black/5 dark:ring-white/5"
+        >
+          <svg lucideChevronRight class="w-5 h-5"></svg>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Quick Action Pills (matching reference bottom buttons) -->
+  <div class="flex flex-wrap items-center gap-3">
+    <button
+      type="button"
+      (click)="store.openNewSaleModal()"
+      class="px-4 py-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] hover:border-cyan-500 text-xs font-medium text-[var(--text-primary)] flex items-center gap-2 transition-all cursor-pointer shadow-sm"
+    >
+      <svg lucidePlusCircle class="w-3.5 h-3.5 text-cyan-500"></svg>
+      <span>Nuevo Registro</span>
+      <kbd class="px-1.5 py-0.5 text-[9px] font-mono text-[var(--text-muted)] bg-[var(--bg-tertiary)] rounded">ALT + N</kbd>
+    </button>
+
+    <button
+      type="button"
+      (click)="store.navigate('products')"
+      class="px-4 py-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] hover:border-cyan-500 text-xs font-medium text-[var(--text-primary)] flex items-center gap-2 transition-all cursor-pointer shadow-sm"
+    >
+      <svg lucideSearch class="w-3.5 h-3.5 text-cyan-500"></svg>
+      <span>Buscar SKU</span>
+      <kbd class="px-1.5 py-0.5 text-[9px] font-mono text-[var(--text-muted)] bg-[var(--bg-tertiary)] rounded">ALT + F</kbd>
+    </button>
+
+    <button
+      type="button"
+      (click)="store.navigate('products')"
+      class="px-4 py-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] hover:border-cyan-500 text-xs font-medium text-[var(--text-primary)] flex items-center gap-2 transition-all cursor-pointer shadow-sm"
+    >
+      <svg lucideBox class="w-3.5 h-3.5 text-cyan-500"></svg>
+      <span>Inventario Rápido</span>
+      <kbd class="px-1.5 py-0.5 text-[9px] font-mono text-[var(--text-muted)] bg-[var(--bg-tertiary)] rounded">ALT + I</kbd>
+    </button>
+
+    <button
+      type="button"
+      (click)="store.navigate('clients')"
+      class="px-4 py-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] hover:border-cyan-500 text-xs font-medium text-[var(--text-primary)] flex items-center gap-2 transition-all cursor-pointer shadow-sm"
+    >
+      <svg lucideUsers class="w-3.5 h-3.5 text-cyan-500"></svg>
+      <span>Clientes / Proveedores</span>
+    </button>
+  </div>
+
+  <!-- Actividad Reciente Cards -->
+  <div class="md:bg-[var(--bg-card)] md:rounded-3xl md:border md:border-[var(--border-color)] md:shadow-sm md:p-6 space-y-4">
+    <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-3">
+      <div>
+        <h3 class="text-base font-bold text-[var(--text-primary)]">Actividad Reciente</h3>
+        <p class="text-xs text-[var(--text-muted)]">Historial de últimas transacciones en el sistema</p>
+      </div>
+
+      <div class="flex items-center gap-3 flex-wrap gap-y-2">
+        <div class="flex items-center gap-1 bg-[var(--bg-tertiary)] p-1 rounded-xl border border-[var(--border-color)] text-xs font-medium">
+          <button
+            type="button"
+            (click)="filterModule.set('all')"
+            [class]="
+              'px-3 py-1 rounded-lg transition-colors cursor-pointer ' +
+              (filterModule() === 'all' ? 'bg-cyan-500 text-white font-semibold' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]')
+            "
+          >
+            Todos
+          </button>
+          <button
+            type="button"
+            (click)="filterModule.set('ventas')"
+            [class]="
+              'px-3 py-1 rounded-lg transition-colors cursor-pointer ' +
+              (filterModule() === 'ventas' ? 'bg-cyan-500 text-white font-semibold' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]')
+            "
+          >
+            Ventas
+          </button>
+          <button
+            type="button"
+            (click)="filterModule.set('compras')"
+            [class]="
+              'px-3 py-1 rounded-lg transition-colors cursor-pointer ' +
+              (filterModule() === 'compras' ? 'bg-cyan-500 text-white font-semibold' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]')
+            "
+          >
+            Compras
+          </button>
+        </div>
+
+        <button
+          type="button"
+          (click)="store.navigate('sales')"
+          class="text-xs font-semibold text-cyan-500 hover:underline flex items-center gap-1 cursor-pointer"
+        >
+          <span>Ver Todo</span>
+          <svg lucideChevronRight class="w-3.5 h-3.5"></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto">
+      <div class="space-y-2.5">
+        @for (tx of filteredTransactions(); track tx.id) {
+          <div class="flex items-center gap-3 p-3.5 rounded-2xl bg-[var(--bg-tertiary)]/50 border border-[var(--border-color)] hover:border-cyan-500/30 hover:bg-[var(--bg-tertiary)] transition-all">
+            <!-- Module badge + icon area -->
+            <div [class]="
+              'w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-[10px] font-bold ' +
+              (tx.module === 'Ventas' ? 'bg-cyan-500/10 text-cyan-500' :
+               tx.module === 'Compras' ? 'bg-pink-500/10 text-pink-500' :
+               'bg-emerald-500/10 text-emerald-500')
+            ">
+              {{ tx.module.charAt(0) }}
+            </div>
+
+            <!-- Main info -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-mono text-xs font-semibold text-cyan-500">{{ tx.id }}</span>
+                <span [class]="
+                  'px-1.5 py-0.5 text-[10px] font-semibold rounded-full ' +
+                  (tx.module === 'Ventas' ? 'bg-cyan-500/10 text-cyan-500' :
+                   tx.module === 'Compras' ? 'bg-pink-500/10 text-pink-500' :
+                   'bg-emerald-500/10 text-emerald-500')
+                ">{{ tx.module }}</span>
+              </div>
+              <p class="text-xs text-[var(--text-primary)] font-medium truncate mt-0.5">{{ tx.description }}</p>
+            </div>
+
+            <!-- Status -->
+            <div class="shrink-0 flex flex-col items-end gap-1">
+              <span class="font-mono font-bold text-xs text-[var(--text-primary)]">{{ tx.amount }}</span>
+              <span class="flex items-center gap-1 text-[10px] font-medium">
+                @if (tx.status === 'Completado') {
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                  <span class="text-emerald-500">Completado</span>
+                }
+                @if (tx.status === 'En Proceso') {
+                  <span class="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse shrink-0"></span>
+                  <span class="text-cyan-500">En Proceso</span>
+                }
+                @if (tx.status === 'Verificado') {
+                  <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0"></span>
+                  <span class="text-indigo-500">Verificado</span>
+                }
+                @if (tx.status === 'Pendiente') {
+                  <span class="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>
+                  <span class="text-amber-500">Pendiente</span>
+                }
+              </span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+  </div>
+</div>

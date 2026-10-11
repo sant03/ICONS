@@ -1,0 +1,109 @@
+<!-- Ported 1:1 from "ICONS UI V.2/src/components/NewSaleModal.tsx" -->
+@if (store.isNewSaleModalOpen()) {
+  <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-150">
+    <div class="bg-[var(--bg-card)] rounded-3xl border border-[var(--border-color)] shadow-2xl w-full max-w-md p-6 space-y-5">
+      <div class="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
+        <div class="flex items-center gap-2">
+          <svg lucideTrendingUp class="w-5 h-5 text-cyan-500"></svg>
+          <h3 class="text-lg font-bold text-[var(--text-primary)]">Registrar Nueva Venta</h3>
+        </div>
+        <button
+          type="button"
+          (click)="store.closeNewSaleModal()"
+          class="text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer"
+        >
+          <svg lucideX class="w-5 h-5"></svg>
+        </button>
+      </div>
+
+      <form (ngSubmit)="handleSubmit()" class="space-y-4">
+        <div class="space-y-1">
+          <label class="text-xs font-semibold text-[var(--text-primary)]" for="sale-client">Cliente</label>
+          <div class="relative">
+            <svg lucideUser class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]"></svg>
+            <input
+              id="sale-client"
+              name="client"
+              type="text"
+              [ngModel]="client()"
+              (ngModelChange)="client.set($event)"
+              placeholder="Nombre del cliente"
+              class="w-full pl-10 pr-3.5 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] focus:outline-none focus:border-cyan-500"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-xs font-semibold text-[var(--text-primary)]" for="sale-product">Producto</label>
+          <select
+            id="sale-product"
+            name="product"
+            [ngModel]="product()"
+            (ngModelChange)="product.set($event)"
+            class="w-full px-3.5 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)]"
+          >
+            <option value="Cups 6oz">Cups 6oz</option>
+            <option value="Cups 8oz">Cups 8oz</option>
+            <option value="P/B 1 LIBRA">P/B 1 LIBRA</option>
+            <option value="P/B 2 LIBRAS">P/B 2 LIBRAS</option>
+            <option value="PQTE PITILLO">PQTE PITILLO</option>
+            <option value="BAGS XL">BAGS XL</option>
+            <option value="Napkin Pack">Napkin Pack</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="space-y-1">
+            <label class="text-xs font-semibold text-[var(--text-primary)]" for="sale-quantity">Cantidad</label>
+            <input
+              id="sale-quantity"
+              name="quantity"
+              type="number"
+              min="1"
+              [ngModel]="quantity()"
+              (ngModelChange)="quantity.set(+$event)"
+              class="w-full px-3.5 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] font-mono"
+            />
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-xs font-semibold text-[var(--text-primary)]" for="sale-unit-price">Precio Unitario ($)</label>
+            <input
+              id="sale-unit-price"
+              name="unitPrice"
+              type="number"
+              [ngModel]="unitPrice()"
+              (ngModelChange)="unitPrice.set(+$event)"
+              class="w-full px-3.5 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] font-mono"
+            />
+          </div>
+        </div>
+
+        <div class="p-3 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-color)] flex justify-between items-center text-xs">
+          <span class="text-[var(--text-muted)] font-semibold">Total a Cobrar:</span>
+          <span class="font-mono font-black text-cyan-500 text-base">
+            ${{ (quantity() * unitPrice()).toLocaleString() }}
+          </span>
+        </div>
+
+        <div class="pt-2 flex gap-3">
+          <button
+            type="button"
+            (click)="store.closeNewSaleModal()"
+            class="flex-1 py-2.5 rounded-xl border border-[var(--border-color)] text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] cursor-pointer"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            class="flex-1 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white text-xs font-semibold shadow-md shadow-cyan-500/20 flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <svg lucideCheckCircle2 class="w-4 h-4"></svg>
+            <span>Confirmar Venta</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
