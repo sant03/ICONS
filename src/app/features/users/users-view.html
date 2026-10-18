@@ -30,14 +30,14 @@
     </div>
   </div>
 
-  <!-- Contenido principal con scroll vertical -->
-  <div class="flex-1 min-h-0 overflow-y-auto px-4 lg:px-8 pb-16">
+  <!-- Contenido principal (en desktop sin scroll global, cada columna maneja su propio scroll) -->
+  <div class="flex-1 min-h-0 overflow-y-auto lg:overflow-hidden px-4 lg:px-8 pb-8 flex flex-col">
 
-  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-    <!-- Personal list -->
-    <div class="lg:col-span-4">
-      <div class="p-6 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm space-y-4">
-        <div class="flex items-center justify-between">
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:flex-1 lg:min-h-0 lg:h-full">
+    <!-- Personal list (columna izquierda con su propio scroll en desktop) -->
+    <div class="lg:col-span-4 lg:h-full lg:min-h-0 lg:flex lg:flex-col">
+      <div class="lg:p-6 lg:rounded-3xl lg:bg-[var(--bg-card)] lg:border lg:border-[var(--border-color)] lg:shadow-sm space-y-4 lg:h-full lg:flex lg:flex-col lg:min-h-0">
+        <div class="flex items-center justify-between shrink-0">
           <h2 class="text-base font-bold text-[var(--text-primary)]">
             Personal ({{ visibleStaff().length }})
           </h2>
@@ -48,7 +48,8 @@
           </span>
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
+        <!-- Lista de personal con scroll independiente en desktop -->
+        <div class="grid grid-cols-2 gap-3 lg:flex-1 lg:overflow-y-auto lg:min-h-0 pr-1">
           @for (member of visibleStaff(); track member.idNumber) {
             <button
               type="button"
@@ -79,13 +80,53 @@
       </div>
     </div>
 
+    <!-- Backdrop overlay for mobile bottom drawer -->
+    @if (isMobileDrawerOpen()) {
+      <div
+        class="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs lg:hidden transition-opacity duration-300"
+        (click)="closeMobileDrawer()"
+        aria-hidden="true"
+      ></div>
+    }
+
     <!-- Detail: form + advanced configuration + activity -->
-    <div class="lg:col-span-8 space-y-6">
-      <form
-        (ngSubmit)="save()"
-        class="p-6 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm space-y-6"
-      >
-        <!-- Title row -->
+    <!-- On desktop: 8-column right panel with independent scroll. On mobile: bottom drawer up to header toolbar (top-16) -->
+    <div
+      [class]="
+        'fixed inset-x-0 bottom-0 top-16 z-50 flex flex-col bg-[var(--bg-primary)] rounded-t-3xl shadow-2xl border-t border-[var(--border-color)] transition-transform duration-300 ease-out ' +
+        'lg:static lg:inset-auto lg:z-auto lg:col-span-8 lg:h-full lg:min-h-0 lg:flex lg:flex-col lg:translate-y-0 lg:pointer-events-auto lg:bg-transparent lg:rounded-none lg:border-t-0 lg:shadow-none lg:overflow-hidden ' +
+        (isMobileDrawerOpen() ? 'translate-y-0 pointer-events-auto' : 'translate-y-full pointer-events-none lg:pointer-events-auto')
+      "
+    >
+      <!-- Mobile Drawer Header with close button (lg:hidden) -->
+      <div class="lg:hidden shrink-0 px-5 pt-3.5 pb-3 border-b border-[var(--border-color)] bg-[var(--bg-card)] rounded-t-3xl flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-full bg-cyan-500/10 text-cyan-500 flex items-center justify-center font-bold text-xs">
+            <svg lucideUser class="w-4 h-4"></svg>
+          </div>
+          <div>
+            <h3 class="text-xs font-bold text-[var(--text-primary)]">Detalle de Usuario</h3>
+            <p class="text-[10px] text-[var(--text-muted)] font-mono">{{ selected().username }}</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          (click)="closeMobileDrawer()"
+          class="p-2 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+          aria-label="Cerrar detalle"
+        >
+          <svg lucideX class="w-4 h-4"></svg>
+        </button>
+      </div>
+
+      <!-- Drawer scrollable body on mobile / independent scroll column on desktop -->
+      <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 lg:p-0 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:space-y-6 lg:pr-2">
+        <!-- Form info de usuario: sin card en móvil, card completa en desktop -->
+        <form
+          (ngSubmit)="save()"
+          class="lg:p-6 lg:rounded-3xl lg:bg-[var(--bg-card)] lg:border lg:border-[var(--border-color)] lg:shadow-sm space-y-6"
+        >
+          <!-- Title row -->
         <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div class="space-y-1.5">
             <div class="flex items-center gap-2.5 flex-wrap">
@@ -333,8 +374,8 @@
         </div>
       </form>
 
-      <!-- Activity feed -->
-      <div class="p-6 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm space-y-4">
+      <!-- Activity feed: sin card en móvil, card completa en desktop -->
+      <div class="lg:p-6 lg:rounded-3xl lg:bg-[var(--bg-card)] lg:border lg:border-[var(--border-color)] lg:shadow-sm space-y-4 pt-6 lg:pt-6 border-t border-[var(--border-color)]/60 lg:border-t-[var(--border-color)]">
         <div class="flex items-center justify-between gap-4">
           <div>
             <h3 class="text-base font-bold text-[var(--text-primary)]">Actividad Reciente</h3>
@@ -383,6 +424,7 @@
             Sin actividad registrada para este usuario.
           </div>
         }
+      </div>
       </div>
     </div>
   </div>

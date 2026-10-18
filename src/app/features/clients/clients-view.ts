@@ -59,8 +59,15 @@ export class ClientsView {
     this.editingId() ? 'Editar cliente' : 'Añadir nuevo cliente',
   );
 
+  protected readonly isMobileDrawerOpen = signal(false);
+
   protected select(id: string): void {
     this.selectedId.set(id);
+    this.isMobileDrawerOpen.set(true);
+  }
+
+  protected closeMobileDrawer(): void {
+    this.isMobileDrawerOpen.set(false);
   }
 
   protected openCreate(): void {

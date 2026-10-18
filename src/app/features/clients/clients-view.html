@@ -24,7 +24,7 @@
     <button
       type="button"
       (click)="openCreate()"
-      class="self-start sm:self-auto px-5 py-3 rounded-xl bg-[var(--text-primary)] text-[var(--bg-card)] hover:opacity-90 text-sm font-bold flex items-center gap-2 transition-opacity cursor-pointer shadow-md"
+      class="hidden sm:flex self-start sm:self-auto px-5 py-3 rounded-xl bg-[var(--text-primary)] text-[var(--bg-card)] hover:opacity-90 text-sm font-bold items-center gap-2 transition-opacity cursor-pointer shadow-md"
     >
       <svg lucidePlus class="w-4 h-4"></svg>
       <span>Añadir nuevo cliente</span>
@@ -70,86 +70,125 @@
       </div>
     </div>
 
-    <!-- Detail card (SIEMPRE A LA VISTA) -->
-    <div class="lg:col-span-4 h-full min-h-0 overflow-y-auto">
+    <!-- Backdrop overlay for mobile bottom drawer -->
+    @if (isMobileDrawerOpen()) {
       <div
-        class="p-6 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm relative"
-      >
+        class="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs lg:hidden transition-opacity duration-300"
+        (click)="closeMobileDrawer()"
+        aria-hidden="true"
+      ></div>
+    }
+
+    <!-- Detail card (En desktop columna lateral derecha; en móvil bottom drawer que sube hasta top-16) -->
+    <div
+      [class]="
+        'fixed inset-x-0 bottom-0 top-16 z-50 flex flex-col bg-[var(--bg-primary)] rounded-t-3xl shadow-2xl border-t border-[var(--border-color)] transition-transform duration-300 ease-out ' +
+        'lg:static lg:inset-auto lg:z-auto lg:col-span-4 lg:h-full lg:min-h-0 lg:translate-y-0 lg:pointer-events-auto lg:bg-transparent lg:rounded-none lg:border-t-0 lg:shadow-none lg:overflow-y-auto lg:block ' +
+        (isMobileDrawerOpen() ? 'translate-y-0 pointer-events-auto' : 'translate-y-full pointer-events-none lg:pointer-events-auto')
+      "
+    >
+      <!-- Mobile Drawer Top Bar with close button (lg:hidden) -->
+      <div class="lg:hidden shrink-0 px-5 pt-3.5 pb-3 border-b border-[var(--border-color)] bg-[var(--bg-card)] rounded-t-3xl flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-full bg-cyan-500/10 text-cyan-500 flex items-center justify-center font-bold text-xs">
+            <svg lucideUser class="w-4 h-4"></svg>
+          </div>
+          <div>
+            <h3 class="text-xs font-bold text-[var(--text-primary)]">Detalle del Cliente</h3>
+            <p class="text-[10px] text-[var(--text-muted)] font-mono truncate max-w-[200px]">{{ selected().name }}</p>
+          </div>
+        </div>
         <button
           type="button"
-          (click)="openEdit()"
-          aria-label="Editar cliente"
-          class="absolute top-5 right-5 p-2 rounded-xl text-[var(--text-muted)] hover:text-cyan-500 hover:bg-cyan-500/10 transition-colors cursor-pointer"
+          (click)="closeMobileDrawer()"
+          class="p-2 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+          aria-label="Cerrar detalle"
         >
-          <svg lucideSquarePen class="w-4 h-4"></svg>
+          <svg lucideX class="w-4 h-4"></svg>
         </button>
+      </div>
 
-        <div class="flex flex-col items-center text-center pt-2">
-          <div
-            class="w-32 h-32 rounded-full overflow-hidden bg-[var(--bg-tertiary)] border border-[var(--border-color)] flex items-center justify-center text-[var(--text-muted)]"
+      <!-- Drawer scrollable body on mobile / direct content on desktop -->
+      <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-0 lg:overflow-visible">
+        <div
+          class="p-6 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm relative"
+        >
+          <button
+            type="button"
+            (click)="openEdit()"
+            aria-label="Editar cliente"
+            class="absolute top-5 right-5 p-2 rounded-xl text-[var(--text-muted)] hover:text-cyan-500 hover:bg-cyan-500/10 transition-colors cursor-pointer"
           >
-            @if (selected().avatarUrl) {
-              <img
-                [src]="selected().avatarUrl"
-                [alt]="selected().name"
-                class="w-full h-full object-cover"
-              />
-            } @else {
-              <svg lucideUser class="w-12 h-12"></svg>
-            }
-          </div>
-          <h3 class="mt-4 text-xl font-extrabold text-[var(--text-primary)]">
-            {{ selected().name }}
-          </h3>
-          <p class="text-xs text-[var(--text-muted)]">CC / ID: {{ selected().docId }}</p>
-        </div>
+            <svg lucideSquarePen class="w-4 h-4"></svg>
+          </button>
 
-        <div class="mt-6 space-y-4 relative pr-10">
-          <div class="flex items-start gap-3">
-            <svg lucideMapPin class="w-4 h-4 mt-0.5 shrink-0 text-[var(--text-muted)]"></svg>
-            <div class="min-w-0">
-              <p class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
-                Dirección
-              </p>
-              <p class="text-sm font-semibold text-[var(--text-primary)]">
-                {{ selected().address }}
-              </p>
+          <div class="flex flex-col items-center text-center pt-2">
+            <div
+              class="w-32 h-32 rounded-full overflow-hidden bg-[var(--bg-tertiary)] border border-[var(--border-color)] flex items-center justify-center text-[var(--text-muted)]"
+            >
+              @if (selected().avatarUrl) {
+                <img
+                  [src]="selected().avatarUrl"
+                  [alt]="selected().name"
+                  class="w-full h-full object-cover"
+                />
+              } @else {
+                <svg lucideUser class="w-12 h-12"></svg>
+              }
             </div>
+            <h3 class="mt-4 text-xl font-extrabold text-[var(--text-primary)]">
+              {{ selected().name }}
+            </h3>
+            <p class="text-xs text-[var(--text-muted)]">CC / ID: {{ selected().docId }}</p>
           </div>
 
-          <div class="flex items-start gap-3">
-            <svg lucidePhone class="w-4 h-4 mt-0.5 shrink-0 text-[var(--text-muted)]"></svg>
-            <div class="min-w-0">
-              <p class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
-                Teléfono
-              </p>
-              <p class="text-sm font-semibold font-mono text-[var(--text-primary)]">
-                {{ selected().phone }}
-              </p>
+          <div class="mt-6 space-y-4 relative pr-10">
+            <div class="flex items-start gap-3">
+              <svg lucideMapPin class="w-4 h-4 mt-0.5 shrink-0 text-[var(--text-muted)]"></svg>
+              <div class="min-w-0">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                  Dirección
+                </p>
+                <p class="text-sm font-semibold text-[var(--text-primary)]">
+                  {{ selected().address }}
+                </p>
+              </div>
             </div>
-          </div>
 
-          <div class="flex items-start gap-3">
-            <svg lucideMail class="w-4 h-4 mt-0.5 shrink-0 text-[var(--text-muted)]"></svg>
-            <div class="min-w-0">
-              <p class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
-                Email
-              </p>
-              <p class="text-sm font-semibold text-[var(--text-primary)] break-all">
-                {{ selected().email }}
-              </p>
+            <div class="flex items-start gap-3">
+              <svg lucidePhone class="w-4 h-4 mt-0.5 shrink-0 text-[var(--text-muted)]"></svg>
+              <div class="min-w-0">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                  Teléfono
+                </p>
+                <p class="text-sm font-semibold font-mono text-[var(--text-primary)]">
+                  {{ selected().phone }}
+                </p>
+              </div>
             </div>
-          </div>
 
-          <a
-            [href]="chatHref()"
-            target="_blank"
-            rel="noopener"
-            aria-label="Abrir chat"
-            class="absolute right-0 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-emerald-500/15 text-emerald-600 border border-emerald-500/30 flex items-center justify-center hover:bg-emerald-500/25 transition-colors cursor-pointer"
-          >
-            <svg lucideMessageCircle class="w-4 h-4"></svg>
-          </a>
+            <div class="flex items-start gap-3">
+              <svg lucideMail class="w-4 h-4 mt-0.5 shrink-0 text-[var(--text-muted)]"></svg>
+              <div class="min-w-0">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                  Email
+                </p>
+                <p class="text-sm font-semibold text-[var(--text-primary)] break-all">
+                  {{ selected().email }}
+                </p>
+              </div>
+            </div>
+
+            <a
+              [href]="chatHref()"
+              target="_blank"
+              rel="noopener"
+              aria-label="Abrir chat"
+              class="absolute right-0 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-emerald-500/15 text-emerald-600 border border-emerald-500/30 flex items-center justify-center hover:bg-emerald-500/25 transition-colors cursor-pointer"
+            >
+              <svg lucideMessageCircle class="w-4 h-4"></svg>
+            </a>
+          </div>
         </div>
       </div>
     </div>

@@ -57,8 +57,15 @@ export class SuppliersView {
     this.editingId() ? 'Editar proveedor' : 'Añadir nuevo proveedor',
   );
 
+  protected readonly isMobileDrawerOpen = signal(false);
+
   protected select(id: string): void {
     this.selectedId.set(id);
+    this.isMobileDrawerOpen.set(true);
+  }
+
+  protected closeMobileDrawer(): void {
+    this.isMobileDrawerOpen.set(false);
   }
 
   protected openCreate(): void {

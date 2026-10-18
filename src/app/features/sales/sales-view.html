@@ -6,8 +6,8 @@
   Only the source's Spanish labels are kept in the ported controls; the module
   keeps its English column headers.
 -->
-<div class="h-full flex flex-col min-h-0 animate-in fade-in duration-200 relative">
-  <!-- Header (FIJO) -->
+<div class="h-full overflow-y-auto overflow-x-hidden md:overflow-hidden md:flex md:flex-col md:min-h-0 animate-in fade-in duration-200 relative">
+  <!-- Header (fijo en desktop, incluido en scroll en móvil) -->
   <div class="shrink-0 p-4 lg:p-8 pb-6 border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
@@ -15,12 +15,13 @@
         <p class="text-xs text-[var(--text-muted)]">Comprehensive record of transactions and orders.</p>
       </div>
 
-      <div class="flex items-center gap-3">
+      <!-- Botones de acción con scroll horizontal invisible en móvil -->
+      <div class="flex items-center gap-3 overflow-x-auto no-scrollbar w-full md:w-auto pb-1 md:pb-0 shrink-0">
         <button
           type="button"
           (click)="store.navigate('orders')"
           title="Ver Pedidos Agrupados"
-          class="px-3.5 py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 text-xs font-semibold border border-cyan-500/30 flex items-center gap-2 transition-all cursor-pointer"
+          class="shrink-0 whitespace-nowrap px-3.5 py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 text-xs font-semibold border border-cyan-500/30 flex items-center gap-2 transition-all cursor-pointer"
         >
           <svg lucideFolderPlus class="w-3.5 h-3.5"></svg>
           <span>Grouped Orders</span>
@@ -29,7 +30,7 @@
         <button
           type="button"
           (click)="exportCsv()"
-          class="px-3.5 py-2 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border-color)] text-[var(--text-primary)] text-xs font-medium border border-[var(--border-color)] flex items-center gap-2 transition-all cursor-pointer"
+          class="shrink-0 whitespace-nowrap px-3.5 py-2 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border-color)] text-[var(--text-primary)] text-xs font-medium border border-[var(--border-color)] flex items-center gap-2 transition-all cursor-pointer"
         >
           <svg lucideDownload class="w-3.5 h-3.5 text-cyan-500"></svg>
           <span>Export CSV</span>
@@ -38,7 +39,7 @@
         <button
           type="button"
           (click)="store.openNewSaleModal()"
-          class="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white text-xs font-semibold shadow-lg shadow-cyan-500/20 flex items-center gap-2 transition-all cursor-pointer"
+          class="shrink-0 whitespace-nowrap px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white text-xs font-semibold shadow-lg shadow-cyan-500/20 flex items-center gap-2 transition-all cursor-pointer"
         >
           <svg lucidePlus class="w-4 h-4"></svg>
           <span>+ New Sale</span>
@@ -47,8 +48,8 @@
     </div>
   </div>
 
-  <!-- Contenido principal con scroll vertical -->
-  <div class="flex-1 min-h-0 overflow-y-auto p-4 lg:p-8 space-y-8 pb-24">
+  <!-- Contenido principal con scroll vertical (en móvil integrado al scroll del contenedor raíz, en desktop scroll interno) -->
+  <div class="md:flex-1 md:min-h-0 md:overflow-y-auto p-4 lg:p-8 space-y-8 pb-24">
 
   <!-- Top 4 Metrics -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -174,7 +175,8 @@
       </h2>
     </div>
 
-    <div class="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-color)] shadow-sm overflow-hidden">
+    <!-- Desktop Table (visible only on md+) -->
+    <div class="hidden md:block bg-[var(--bg-card)] rounded-2xl border border-[var(--border-color)] shadow-sm overflow-hidden">
       <div class="overflow-x-auto max-h-[380px] overflow-y-auto">
         <table class="w-full text-left border-collapse">
           <thead class="sticky top-0 bg-[var(--bg-card)] z-10 shadow-xs">
@@ -249,6 +251,85 @@
         </table>
       </div>
     </div>
+
+    <!-- Mobile Individual Cards View (visible only on mobile) -->
+    <div class="block md:hidden space-y-3">
+      @for (item of sortedTodaySales(); track item.id) {
+        <div
+          class="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-xs space-y-3 transition-all"
+          [class.border-cyan-500]="isSelected(item.id)"
+          [class.bg-cyan-500/5]="isSelected(item.id)"
+        >
+          <!-- Top row: Checkbox, ID, Payment status, Actions -->
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 min-w-0 flex-wrap">
+              <input
+                type="checkbox"
+                [checked]="isSelected(item.id)"
+                (change)="toggleSelectSale(item.id)"
+                class="rounded border-[var(--border-color)] text-cyan-500 focus:ring-cyan-500 shrink-0"
+              />
+              <span class="font-mono font-bold text-xs text-cyan-500 shrink-0">{{ item.id }}</span>
+              @if (item.paymentStatus === 'Pagado') {
+                <span
+                  class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 shrink-0"
+                >
+                  Pagado
+                </span>
+              } @else {
+                <span
+                  class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/30 shrink-0"
+                >
+                  Debe ${{ item.amountDue || item.total }}
+                </span>
+              }
+            </div>
+
+            <div class="flex items-center gap-1 shrink-0">
+              <button
+                type="button"
+                title="Editar Registro"
+                (click)="openEditModal(item)"
+                class="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] cursor-pointer"
+              >
+                <svg lucideEdit class="w-3.5 h-3.5"></svg>
+              </button>
+              <button
+                type="button"
+                title="Eliminar Registro"
+                (click)="askDelete(item.id)"
+                class="p-1.5 rounded-lg text-rose-500 hover:bg-rose-500/10 cursor-pointer"
+              >
+                <svg lucideTrash2 class="w-3.5 h-3.5"></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Client & Product info -->
+          <div class="border-t border-[var(--border-color)]/60 pt-2.5 space-y-1">
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-[var(--text-muted)] text-[11px]">Cliente:</span>
+              <span class="font-semibold text-[var(--text-primary)] text-right truncate ml-2">{{ item.client }}</span>
+            </div>
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-[var(--text-muted)] text-[11px]">Producto:</span>
+              <span class="text-[var(--text-secondary)] text-right truncate ml-2">{{ item.product }}</span>
+            </div>
+          </div>
+
+          <!-- Bottom row: Quantity and Total -->
+          <div class="flex items-center justify-between pt-2 border-t border-[var(--border-color)]/60">
+            <span class="text-[11px] text-[var(--text-muted)]">
+              Cantidad: <strong class="font-mono text-[var(--text-primary)]">{{ item.quantity }}</strong>
+            </span>
+            <div class="text-right">
+              <span class="text-[10px] text-[var(--text-muted)] block leading-tight">Total</span>
+              <span class="font-mono font-bold text-sm text-[var(--text-primary)]">${{ item.total }}</span>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
   </div>
 
   <!-- ALL HISTORICAL RECORDS SECTION -->
@@ -300,7 +381,8 @@
       </div>
     }
 
-    <div class="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-color)] shadow-sm overflow-hidden">
+    <!-- Desktop Table (visible only on md+) -->
+    <div class="hidden md:block bg-[var(--bg-card)] rounded-2xl border border-[var(--border-color)] shadow-sm overflow-hidden">
       <div class="overflow-x-auto max-h-[420px] overflow-y-auto">
         <table class="w-full text-left border-collapse">
           <thead class="sticky top-0 bg-[var(--bg-card)] z-10 shadow-xs">
@@ -390,6 +472,109 @@
           </tbody>
         </table>
       </div>
+    </div>
+
+    <!-- Mobile Individual Cards View (visible only on mobile) -->
+    <div class="block md:hidden space-y-3">
+      @if (sortedHistoricalSales().length > 0) {
+        <div class="flex items-center justify-between px-1 text-xs text-[var(--text-muted)]">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              [checked]="isAllSelected(sortedHistoricalSales())"
+              (change)="toggleSelectAll(sortedHistoricalSales())"
+              class="rounded border-[var(--border-color)] text-cyan-500 focus:ring-cyan-500"
+            />
+            <span class="text-[11px] font-medium">Seleccionar todos</span>
+          </label>
+          <span class="text-[10px] font-mono">{{ sortedHistoricalSales().length }} registros</span>
+        </div>
+      }
+
+      @for (item of sortedHistoricalSales(); track item.id) {
+        <div
+          class="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-xs space-y-3 transition-all"
+          [class.border-cyan-500]="isSelected(item.id)"
+          [class.bg-cyan-500/5]="isSelected(item.id)"
+        >
+          <!-- Top row: Checkbox, Date, Code, Payment Status, Actions -->
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 min-w-0 flex-wrap">
+              <input
+                type="checkbox"
+                [checked]="isSelected(item.id)"
+                (change)="toggleSelectSale(item.id)"
+                class="rounded border-[var(--border-color)] text-cyan-500 focus:ring-cyan-500 shrink-0"
+              />
+              <span class="font-mono text-[11px] text-[var(--text-muted)] shrink-0">{{ item.date }}</span>
+              @if (item.code) {
+                <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border border-[var(--border-color)] shrink-0">
+                  {{ item.code }}
+                </span>
+              }
+              @if (item.paymentStatus === 'Pagado') {
+                <span
+                  class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 shrink-0"
+                >
+                  Pagado
+                </span>
+              } @else {
+                <span
+                  class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/30 shrink-0"
+                >
+                  Debe ${{ item.amountDue || item.total }}
+                </span>
+              }
+            </div>
+
+            <div class="flex items-center gap-1 shrink-0">
+              <button
+                type="button"
+                title="Editar Registro"
+                (click)="openEditModal(item)"
+                class="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] cursor-pointer"
+              >
+                <svg lucideEdit class="w-3.5 h-3.5"></svg>
+              </button>
+              <button
+                type="button"
+                title="Eliminar Registro"
+                (click)="askDelete(item.id)"
+                class="p-1.5 rounded-lg text-rose-500 hover:bg-rose-500/10 cursor-pointer"
+              >
+                <svg lucideTrash2 class="w-3.5 h-3.5"></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Client & Product info -->
+          <div class="border-t border-[var(--border-color)]/60 pt-2.5 space-y-1">
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-[var(--text-muted)] text-[11px]">Cliente:</span>
+              <span class="font-semibold text-[var(--text-primary)] text-right truncate ml-2">{{ item.client }}</span>
+            </div>
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-[var(--text-muted)] text-[11px]">Producto:</span>
+              <span class="text-[var(--text-secondary)] text-right truncate ml-2">{{ item.product }}</span>
+            </div>
+          </div>
+
+          <!-- Bottom row: Quantity and Total -->
+          <div class="flex items-center justify-between pt-2 border-t border-[var(--border-color)]/60">
+            <span class="text-[11px] text-[var(--text-muted)]">
+              Cantidad: <strong class="font-mono text-[var(--text-primary)]">{{ item.quantity }}</strong>
+            </span>
+            <div class="text-right">
+              <span class="text-[10px] text-[var(--text-muted)] block leading-tight">Total</span>
+              <span class="font-mono font-bold text-sm text-[var(--text-primary)]">${{ item.total }}</span>
+            </div>
+          </div>
+        </div>
+      } @empty {
+        <div class="p-8 text-center rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] text-xs text-[var(--text-muted)]">
+          No se encontraron registros de venta.
+        </div>
+      }
     </div>
   </div>
 

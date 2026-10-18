@@ -9,6 +9,7 @@ import {
   LucidePower,
   LucideTrash2,
   LucideUser,
+  LucideX,
 } from '@lucide/angular';
 import { StaffGroup, StaffMember, UserProfile, UserActivity } from '../../core/models/types';
 import { AppStore } from '../../core/state/app-store';
@@ -35,11 +36,15 @@ type GroupFilter = 'Todos' | StaffGroup;
     LucideTrash2,
     LucideCheckCircle2,
     LucideUser,
+    LucideX,
   ],
   templateUrl: './users-view.html',
 })
 export class UsersView {
   protected readonly store = inject(AppStore);
+
+  /** Mobile bottom drawer state */
+  protected readonly isMobileDrawerOpen = signal(false);
 
   protected readonly filters: GroupFilter[] = [
     'Todos',
@@ -96,6 +101,11 @@ export class UsersView {
     this.selectedId.set(idNumber);
     this.isEditing.set(false);
     this.syncDraft();
+    this.isMobileDrawerOpen.set(true);
+  }
+
+  protected closeMobileDrawer(): void {
+    this.isMobileDrawerOpen.set(false);
   }
 
   protected startEdit(): void {

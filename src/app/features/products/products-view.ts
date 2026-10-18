@@ -126,8 +126,16 @@ export class ProductsView {
     return product.status === 'LOW_STOCK' ? 'STOCK BAJO' : 'DISPONIBLE';
   }
 
+  /** Mobile bottom drawer state */
+  protected readonly isMobileDrawerOpen = signal(false);
+
   protected selectProduct(product: ProductCatalogItem): void {
     this.selectedProductId.set(product.id);
+    this.isMobileDrawerOpen.set(true);
+  }
+
+  protected closeMobileDrawer(): void {
+    this.isMobileDrawerOpen.set(false);
   }
 
   protected openProductModal(): void {
