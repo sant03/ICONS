@@ -413,48 +413,6 @@
     </div>
   </div>
 
-  <!-- Quick Action Pills (matching reference bottom buttons) -->
-  <div class="flex flex-wrap items-center gap-3">
-    <button
-      type="button"
-      (click)="store.openNewSaleModal()"
-      class="px-4 py-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] hover:border-cyan-500 text-xs font-medium text-[var(--text-primary)] flex items-center gap-2 transition-all cursor-pointer shadow-sm"
-    >
-      <svg lucidePlusCircle class="w-3.5 h-3.5 text-cyan-500"></svg>
-      <span>Nuevo Registro</span>
-      <kbd class="px-1.5 py-0.5 text-[9px] font-mono text-[var(--text-muted)] bg-[var(--bg-tertiary)] rounded">ALT + N</kbd>
-    </button>
-
-    <button
-      type="button"
-      (click)="store.navigate('products')"
-      class="px-4 py-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] hover:border-cyan-500 text-xs font-medium text-[var(--text-primary)] flex items-center gap-2 transition-all cursor-pointer shadow-sm"
-    >
-      <svg lucideSearch class="w-3.5 h-3.5 text-cyan-500"></svg>
-      <span>Buscar SKU</span>
-      <kbd class="px-1.5 py-0.5 text-[9px] font-mono text-[var(--text-muted)] bg-[var(--bg-tertiary)] rounded">ALT + F</kbd>
-    </button>
-
-    <button
-      type="button"
-      (click)="store.navigate('products')"
-      class="px-4 py-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] hover:border-cyan-500 text-xs font-medium text-[var(--text-primary)] flex items-center gap-2 transition-all cursor-pointer shadow-sm"
-    >
-      <svg lucideBox class="w-3.5 h-3.5 text-cyan-500"></svg>
-      <span>Inventario Rápido</span>
-      <kbd class="px-1.5 py-0.5 text-[9px] font-mono text-[var(--text-muted)] bg-[var(--bg-tertiary)] rounded">ALT + I</kbd>
-    </button>
-
-    <button
-      type="button"
-      (click)="store.navigate('clients')"
-      class="px-4 py-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] hover:border-cyan-500 text-xs font-medium text-[var(--text-primary)] flex items-center gap-2 transition-all cursor-pointer shadow-sm"
-    >
-      <svg lucideUsers class="w-3.5 h-3.5 text-cyan-500"></svg>
-      <span>Clientes / Proveedores</span>
-    </button>
-  </div>
-
   <!-- Actividad Reciente Cards -->
   <div class="md:bg-[var(--bg-card)] md:rounded-3xl md:border md:border-[var(--border-color)] md:shadow-sm md:p-6 space-y-4">
     <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-3">

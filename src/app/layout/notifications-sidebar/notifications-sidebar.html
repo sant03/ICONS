@@ -1,0 +1,218 @@
+<!-- Backdrop overlay -->
+@if (store.notificationsOpen()) {
+  <div
+    class="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs transition-opacity duration-300"
+    (click)="store.closeNotifications()"
+    aria-hidden="true"
+  ></div>
+}
+
+<!-- Right Notification Sidebar -->
+<aside
+  [class]="
+    'fixed inset-y-0 right-0 z-50 w-full sm:w-[420px] bg-[var(--bg-secondary)] border-l border-[var(--border-color)] flex flex-col justify-between shadow-2xl transition-transform duration-300 ease-in-out ' +
+    (store.notificationsOpen() ? 'translate-x-0' : 'translate-x-full')
+  "
+  aria-label="Panel de Notificaciones"
+>
+  <!-- Header -->
+  <div class="shrink-0 p-5 border-b border-[var(--border-color)] bg-[var(--bg-card)]">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-600 via-cyan-500 to-teal-400 p-0.5 flex items-center justify-center shadow-md shrink-0">
+          <div class="w-full h-full bg-[var(--bg-secondary)] rounded-[10px] flex items-center justify-center">
+            <svg lucideBell class="w-4 h-4 text-cyan-500"></svg>
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 class="text-sm font-bold text-[var(--text-primary)]">Notificaciones</h2>
+            @if (store.unreadNotificationsCount() > 0) {
+              <span class="px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-500 text-[10px] font-mono font-bold border border-cyan-500/20">
+                {{ store.unreadNotificationsCount() }} nuevas
+              </span>
+            }
+          </div>
+          <p class="text-[11px] text-[var(--text-muted)]">Eventos del sistema y alertas en tiempo real</p>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        (click)="store.closeNotifications()"
+        class="p-2 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+        aria-label="Cerrar notificaciones"
+      >
+        <svg lucideX class="w-4 h-4"></svg>
+      </button>
+    </div>
+
+    <!-- Filters & Action Bar -->
+    <div class="mt-4 flex items-center justify-between gap-2 pt-3 border-t border-[var(--border-color)]/60">
+      <div class="flex items-center gap-1.5">
+        <button
+          type="button"
+          (click)="setFilter('all')"
+          [class]="
+            'px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ' +
+            (activeFilter() === 'all'
+              ? 'bg-cyan-500 text-white shadow-xs shadow-cyan-500/20'
+              : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]')
+          "
+        >
+          Todas ({{ store.notifications().length }})
+        </button>
+        <button
+          type="button"
+          (click)="setFilter('unread')"
+          [class]="
+            'px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ' +
+            (activeFilter() === 'unread'
+              ? 'bg-cyan-500 text-white shadow-xs shadow-cyan-500/20'
+              : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]')
+          "
+        >
+          No leídas ({{ store.unreadNotificationsCount() }})
+        </button>
+      </div>
+
+      @if (store.unreadNotificationsCount() > 0) {
+        <button
+          type="button"
+          (click)="store.markAllNotificationsAsRead()"
+          class="text-[11px] font-semibold text-cyan-500 hover:text-cyan-400 flex items-center gap-1 transition-colors cursor-pointer"
+        >
+          <svg lucideCheckCheck class="w-3.5 h-3.5"></svg>
+          <span>Marcar leídas</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Notifications List Body -->
+  <div class="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar">
+    @if (filteredNotifications().length === 0) {
+      <div class="h-full min-h-[300px] flex flex-col items-center justify-center text-center p-6 space-y-3">
+        <div class="w-14 h-14 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border-color)] flex items-center justify-center text-[var(--text-muted)]">
+          <svg lucideBell class="w-6 h-6 opacity-40"></svg>
+        </div>
+        <div class="space-y-1">
+          <p class="text-xs font-bold text-[var(--text-primary)]">
+            {{ activeFilter() === 'unread' ? 'Sin notificaciones pendientes' : 'No hay notificaciones' }}
+          </p>
+          <p class="text-[11px] text-[var(--text-muted)] max-w-[220px]">
+            {{ activeFilter() === 'unread' ? 'Todas las notificaciones han sido revisadas.' : 'Cuando ocurran eventos en el sistema, aparecerán listados aquí.' }}
+          </p>
+        </div>
+      </div>
+    } @else {
+      @for (item of filteredNotifications(); track item.id) {
+        <div
+          (click)="handleNotificationClick(item)"
+          [class]="
+            'group relative p-3.5 rounded-2xl border transition-all duration-150 cursor-pointer text-left ' +
+            (!item.read
+              ? 'bg-[var(--bg-card)] border-cyan-500/40 shadow-xs ring-1 ring-cyan-500/20 hover:border-cyan-500/60'
+              : 'bg-[var(--bg-card)]/50 border-[var(--border-color)] hover:border-[var(--text-muted)]/40 hover:bg-[var(--bg-card)]')
+          "
+        >
+          <!-- Unread Indicator Dot -->
+          @if (!item.read) {
+            <span class="absolute top-3.5 right-3.5 w-2 h-2 rounded-full bg-cyan-500 ring-4 ring-cyan-500/20"></span>
+          }
+
+          <div class="flex items-start gap-3">
+            <!-- Type Icon -->
+            <div
+              [class]="
+                'w-9 h-9 rounded-xl border shrink-0 flex items-center justify-center mt-0.5 ' +
+                getBadgeColor(item.type).bg +
+                ' ' +
+                getBadgeColor(item.type).text +
+                ' ' +
+                getBadgeColor(item.type).border
+              "
+            >
+              @switch (item.type) {
+                @case ('order') {
+                  <svg lucideShoppingBag class="w-4 h-4"></svg>
+                }
+                @case ('stock') {
+                  <svg lucideAlertTriangle class="w-4 h-4"></svg>
+                }
+                @case ('user') {
+                  <svg lucideUserX class="w-4 h-4"></svg>
+                }
+                @case ('payment') {
+                  <svg lucideCreditCard class="w-4 h-4"></svg>
+                }
+                @case ('system') {
+                  <svg lucideRefreshCw class="w-4 h-4"></svg>
+                }
+                @default {
+                  <svg lucideBell class="w-4 h-4"></svg>
+                }
+              }
+            </div>
+
+            <!-- Content -->
+            <div class="flex-1 min-w-0 pr-4">
+              <div class="flex items-center gap-1.5">
+                <p class="text-xs font-bold text-[var(--text-primary)] truncate">
+                  {{ item.title }}
+                </p>
+              </div>
+
+              <p class="text-[11px] text-[var(--text-secondary)] mt-1 line-clamp-2 leading-relaxed">
+                {{ item.description }}
+              </p>
+
+              <div class="flex items-center justify-between gap-2 mt-2.5 pt-2 border-t border-[var(--border-color)]/40">
+                <span class="text-[10px] text-[var(--text-muted)] font-mono">
+                  {{ item.time }}
+                </span>
+
+                <div class="flex items-center gap-2">
+                  @if (item.link) {
+                    <span class="text-[10px] font-semibold text-cyan-500 group-hover:underline flex items-center gap-1">
+                      <span>Ver</span>
+                      <svg lucideExternalLink class="w-3 h-3"></svg>
+                    </span>
+                  }
+
+                  <button
+                    type="button"
+                    (click)="deleteNotification($event, item.id)"
+                    class="p-1 rounded-lg text-[var(--text-muted)] hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer opacity-70 group-hover:opacity-100"
+                    title="Eliminar notificación"
+                    aria-label="Eliminar"
+                  >
+                    <svg lucideTrash2 class="w-3 h-3"></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    }
+  </div>
+
+  <!-- Footer -->
+  <div class="shrink-0 p-4 border-t border-[var(--border-color)] bg-[var(--bg-card)] flex items-center justify-between">
+    <span class="text-[11px] text-[var(--text-muted)]">
+      {{ store.notifications().length }} notificaciones registradas
+    </span>
+
+    @if (store.notifications().length > 0) {
+      <button
+        type="button"
+        (click)="store.clearAllNotifications()"
+        class="text-[11px] font-semibold text-rose-500 hover:text-rose-400 flex items-center gap-1.5 transition-colors cursor-pointer"
+      >
+        <svg lucideTrash2 class="w-3.5 h-3.5"></svg>
+        <span>Limpiar todo</span>
+      </button>
+    }
+  </div>
+</aside>

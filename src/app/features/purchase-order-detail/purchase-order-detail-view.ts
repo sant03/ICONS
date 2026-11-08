@@ -5,13 +5,17 @@ import { map } from 'rxjs';
 import {
   LucideArrowLeft,
   LucideCheck,
+  LucideCreditCard,
   LucideDownload,
   LucideEdit,
   LucideMail,
   LucideMapPin,
+  LucidePackage,
   LucidePhone,
   LucideShare2,
+  LucideShieldCheck,
   LucideTrash2,
+  LucideUser,
 } from '@lucide/angular';
 import { PurchaseOrder } from '../../core/models/types';
 import { AppStore } from '../../core/state/app-store';
@@ -33,9 +37,13 @@ import { AppStore } from '../../core/state/app-store';
     LucideEdit,
     LucideMail,
     LucideMapPin,
+    LucidePackage,
     LucidePhone,
     LucideShare2,
     LucideTrash2,
+    LucideUser,
+    LucideCreditCard,
+    LucideShieldCheck,
   ],
   templateUrl: './purchase-order-detail-view.html',
 })

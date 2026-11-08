@@ -15,10 +15,12 @@ import {
   Transaction,
   UserProfile,
   ViewMode,
+  NotificationItem,
 } from '../models/types';
 import {
   historicalSalesRecords,
   initialClients,
+  initialNotifications,
   initialOrders,
   initialProducts,
   initialProductCategories,
@@ -81,7 +83,15 @@ export class AppStore {
   readonly suppliers = signal<Supplier[]>(structuredClone(initialSuppliers));
   /** Documents of the Orden de Compra module (list + detail views). */
   readonly purchaseOrders = signal<PurchaseOrder[]>(structuredClone(initialPurchaseOrders));
+  /** Notificaciones del sistema para el sidebar lateral derecho */
+  readonly notifications = signal<NotificationItem[]>(structuredClone(initialNotifications));
+  readonly notificationsOpen = signal(false);
   readonly isNewSaleModalOpen = signal(false);
+
+  /** Cantidad de notificaciones no leídas para el badge del header */
+  readonly unreadNotificationsCount = computed(
+    () => this.notifications().filter((n) => !n.read).length,
+  );
 
   /** Drives the `${theme}` class that the original appended to the root container. */
   readonly themeClass = computed(() => this.theme());
@@ -126,9 +136,14 @@ export class AppStore {
   }
 
   readonly sidebarOpen = signal(false);
+  readonly sidebarCollapsed = signal(false);
 
   toggleSidebar(): void {
     this.sidebarOpen.update((open) => !open);
+  }
+
+  toggleSidebarCollapsed(): void {
+    this.sidebarCollapsed.update((collapsed) => !collapsed);
   }
 
   closeSidebar(): void {
@@ -141,6 +156,36 @@ export class AppStore {
 
   toggleTheme(): void {
     this.theme.update((prev) => (prev === 'light' ? 'dark' : 'light'));
+  }
+
+  toggleNotifications(): void {
+    this.notificationsOpen.update((open) => !open);
+  }
+
+  openNotifications(): void {
+    this.notificationsOpen.set(true);
+  }
+
+  closeNotifications(): void {
+    this.notificationsOpen.set(false);
+  }
+
+  markNotificationAsRead(id: string): void {
+    this.notifications.update((list) =>
+      list.map((item) => (item.id === id ? { ...item, read: true } : item)),
+    );
+  }
+
+  markAllNotificationsAsRead(): void {
+    this.notifications.update((list) => list.map((item) => ({ ...item, read: true })));
+  }
+
+  clearNotification(id: string): void {
+    this.notifications.update((list) => list.filter((item) => item.id !== id));
+  }
+
+  clearAllNotifications(): void {
+    this.notifications.set([]);
   }
 
   /** Replaces the `onNavigate` callback of the original components. */

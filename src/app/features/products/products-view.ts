@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { CustomSelectComponent } from '../../shared/ui/custom-select/custom-select';
 import {
   LucideAlertCircle,
   LucideBox,
@@ -39,6 +40,7 @@ import { AppStore } from '../../core/state/app-store';
   selector: 'app-products-view',
   imports: [
     FormsModule,
+    CustomSelectComponent,
     LucideAlertCircle,
     LucideBox,
     LucideEdit,
@@ -84,6 +86,8 @@ export class ProductsView {
     ...this.store.productCategories(),
   ]);
 
+  protected readonly formCategories = computed(() => this.categories().slice(1));
+
   protected readonly filteredProducts = computed(() => {
     const term = this.searchTerm().trim().toLowerCase();
     const category = this.selectedCategory();
@@ -128,9 +132,11 @@ export class ProductsView {
 
   /** Mobile bottom drawer state */
   protected readonly isMobileDrawerOpen = signal(false);
+  protected readonly isMobileDrawerReady = signal(false);
 
   protected selectProduct(product: ProductCatalogItem): void {
     this.selectedProductId.set(product.id);
+    this.isMobileDrawerReady.set(true);
     this.isMobileDrawerOpen.set(true);
   }
 

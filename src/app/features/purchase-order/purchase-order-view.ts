@@ -1,15 +1,29 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   LucideArrowLeft,
   LucideCheck,
+  LucideChevronLeft,
+  LucideChevronRight,
   LucideClock,
   LucideFileCheck,
   LucideFilter,
+  LucideGrid,
   LucidePackage,
   LucideSparkles,
   LucideTrash2,
+  LucideX,
 } from '@lucide/angular';
+import { CustomSelectComponent, SelectOption } from '../../shared/ui/custom-select/custom-select';
+import { CustomDatePickerComponent } from '../../shared/ui/custom-datepicker/custom-datepicker';
 import { AppStore } from '../../core/state/app-store';
 
 interface OrderLineItem {
@@ -31,6 +45,8 @@ interface CatalogProduct {
   selector: 'app-purchase-order-view',
   imports: [
     FormsModule,
+    CustomSelectComponent,
+    CustomDatePickerComponent,
     LucideArrowLeft,
     LucideClock,
     LucideFileCheck,
@@ -39,17 +55,89 @@ interface CatalogProduct {
     LucideFilter,
     LucideCheck,
     LucideTrash2,
+    LucideChevronLeft,
+    LucideChevronRight,
+    LucideGrid,
+    LucideX,
   ],
   templateUrl: './purchase-order-view.html',
 })
-export class PurchaseOrderView {
+export class PurchaseOrderView implements AfterViewInit {
   protected readonly store = inject(AppStore);
 
+  protected readonly poStatus = signal('Draft');
+  protected readonly statusOptions: SelectOption[] = [
+    { value: 'Draft', label: 'Draft (Editing)' },
+    { value: 'Submitted', label: 'Submitted' },
+    { value: 'Approved', label: 'Approved' },
+  ];
+
   protected readonly supplier = signal('Global Logistics S.A.');
+  protected readonly supplierOptions = [
+    'Global Logistics S.A.',
+    'Plásticos del Norte Ltda',
+    'Empaques Especiales',
+  ];
+
+  protected readonly department = signal('Operations');
+  protected readonly departmentOptions = ['Operations', 'Logistics', 'Sales'];
+
+  protected readonly paymentMethod = signal('Bank Transfer');
+  protected readonly paymentMethodOptions = [
+    'Bank Transfer',
+    'Credit Card',
+    'Net 30 Days',
+  ];
+
+  protected readonly poCategory = signal('Category');
+  protected readonly categoryOptions = ['Category', 'Plásticos', 'Empaques', 'Bolsas', 'Vasos'];
+
+  protected readonly poStockStatus = signal('Stock Status');
+  protected readonly stockStatusOptions = ['Stock Status', 'In Stock', 'Low Stock', 'Out of Stock'];
+
   protected readonly orderNumber = signal('PO-003');
   protected readonly creationDate = signal('2022-02-15');
-  protected readonly paymentMethod = signal('Bank Transfer');
-  protected readonly department = signal('Operations');
+
+  // Carousel controls for Select Products
+  protected readonly productsContainer = viewChild<ElementRef<HTMLDivElement>>('productsContainer');
+  protected readonly canScrollLeft = signal(false);
+  protected readonly canScrollRight = signal(true);
+
+  // Bottom drawer state for "Ver todos"
+  protected readonly isAllProductsDrawerOpen = signal(false);
+  protected readonly isAllProductsDrawerReady = signal(false);
+
+  ngAfterViewInit(): void {
+    setTimeout(() => this.checkScroll(), 100);
+  }
+
+  protected checkScroll(): void {
+    const el = this.productsContainer()?.nativeElement;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    this.canScrollLeft.set(scrollLeft > 10);
+    this.canScrollRight.set(scrollLeft < scrollWidth - clientWidth - 10);
+  }
+
+  protected scrollProducts(direction: 'left' | 'right'): void {
+    const el = this.productsContainer()?.nativeElement;
+    if (!el) return;
+    const scrollAmount = 240;
+    el.scrollBy({
+      left: direction === 'right' ? scrollAmount : -scrollAmount,
+      behavior: 'smooth',
+    });
+    setTimeout(() => this.checkScroll(), 350);
+  }
+
+  protected openAllProductsDrawer(): void {
+    this.isAllProductsDrawerReady.set(true);
+    this.isAllProductsDrawerOpen.set(true);
+  }
+
+  protected closeAllProductsDrawer(): void {
+    this.isAllProductsDrawerOpen.set(false);
+  }
 
   // Selectable Products from Catalog
   protected readonly availableProducts = signal<CatalogProduct[]>([

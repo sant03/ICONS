@@ -1,5 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { CustomSelectComponent } from '../../shared/ui/custom-select/custom-select';
 import {
   LucideCheckCircle2,
   LucideTrendingUp,
@@ -11,7 +12,14 @@ import { AppStore } from '../../core/state/app-store';
 
 @Component({
   selector: 'app-new-sale-modal',
-  imports: [FormsModule, LucideTrendingUp, LucideX, LucideUser, LucideCheckCircle2],
+  imports: [
+    FormsModule,
+    CustomSelectComponent,
+    LucideTrendingUp,
+    LucideX,
+    LucideUser,
+    LucideCheckCircle2,
+  ],
   templateUrl: './new-sale-modal.html',
 })
 export class NewSaleModal {
@@ -19,6 +27,15 @@ export class NewSaleModal {
 
   protected readonly client = signal('');
   protected readonly product = signal('Cups 6oz');
+  protected readonly productOptions = [
+    'Cups 6oz',
+    'Cups 8oz',
+    'P/B 1 LIBRA',
+    'P/B 2 LIBRAS',
+    'PQTE PITILLO',
+    'BAGS XL',
+    'Napkin Pack',
+  ];
   protected readonly quantity = signal(2);
   protected readonly unitPrice = signal(1500);
 

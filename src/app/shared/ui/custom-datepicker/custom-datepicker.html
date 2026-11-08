@@ -1,0 +1,16 @@
+<div class="relative w-full">
+  <p-datepicker
+    [id]="id"
+    [name]="name"
+    [ngModel]="internalDate()"
+    (ngModelChange)="onDateSelect($event)"
+    [dateFormat]="dateFormat"
+    [placeholder]="placeholder"
+    [disabled]="disabled"
+    [showIcon]="true"
+    [iconDisplay]="'input'"
+    appendTo="body"
+    styleClass="w-full text-xs"
+    [inputStyleClass]="'w-full px-3 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] font-mono ' + inputClass"
+  />
+</div>

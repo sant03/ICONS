@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import {
+  LucideChevronLeft,
   LucideChevronRight,
   LucideDynamicIcon,
   LucideFileText,
@@ -29,7 +30,15 @@ interface MenuItem {
 
 @Component({
   selector: 'app-sidebar',
-  imports: [LucideDynamicIcon, LucideChevronRight, LucideSparkles, LucideLogOut, LucideX, LucideLayoutGrid],
+  imports: [
+    LucideDynamicIcon,
+    LucideChevronRight,
+    LucideChevronLeft,
+    LucideSparkles,
+    LucideLogOut,
+    LucideX,
+    LucideLayoutGrid,
+  ],
   templateUrl: './sidebar.html',
 })
 export class Sidebar {

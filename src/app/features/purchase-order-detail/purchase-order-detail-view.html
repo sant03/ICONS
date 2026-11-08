@@ -1,6 +1,6 @@
-<div class="h-full flex flex-col min-h-0 animate-in fade-in duration-200">
+<div class="h-full overflow-y-auto overflow-x-hidden md:overflow-hidden md:flex md:flex-col md:min-h-0 overscroll-contain">
   @if (order(); as po) {
-    <!-- Document header: back link, number, state and document actions (FIJO) -->
+    <!-- Document header: back link, number, state and document actions -->
     <div
       class="shrink-0 p-4 lg:p-8 pb-6 border-b border-[var(--border-color)] bg-[var(--bg-primary)]"
     >
@@ -82,8 +82,8 @@
       </div>
     </div>
 
-    <!-- Contenido principal con scroll vertical -->
-    <div class="flex-1 min-h-0 overflow-y-auto p-4 lg:p-8 space-y-8 pb-20">
+    <!-- Contenido principal con scroll vertical (en móvil fluye con el scroll global, en desktop scroll interno) -->
+    <div class="md:flex-1 md:min-h-0 md:overflow-y-auto p-4 lg:p-8 space-y-8 pb-20 overscroll-contain">
       <!-- Supplier data -->
       <div
         class="p-4 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border-color)] text-xs"
@@ -119,13 +119,31 @@
         </div>
       </div>
 
-      <!-- Items table -->
+      <!-- Items: Table on Desktop, Cards on Mobile (sin apariencia de card en móvil) -->
       <div
-        class="rounded-3xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm p-6 space-y-4"
+        class="space-y-4 md:p-6 md:rounded-3xl md:bg-[var(--bg-card)] md:border md:border-[var(--border-color)] md:shadow-sm"
       >
-        <h2 class="text-base font-bold text-[var(--text-primary)]">Productos de la orden</h2>
+        <div class="flex flex-wrap items-center justify-between gap-y-2 gap-x-4">
+          <div class="flex items-center gap-2.5 flex-wrap">
+            <h2 class="text-base font-bold text-[var(--text-primary)]">
+              Productos de la orden
+            </h2>
+            <span
+              class="px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-500 text-xs font-mono font-semibold border border-cyan-500/20 shrink-0 whitespace-nowrap"
+            >
+              {{ po.items.length }} {{ po.items.length === 1 ? 'producto' : 'productos' }}
+            </span>
+          </div>
 
-        <div class="overflow-x-auto max-h-[360px] overflow-y-auto">
+          <span
+            class="text-xs font-mono text-[var(--text-muted)] shrink-0 whitespace-nowrap"
+          >
+            Total: {{ po.totalProducts }} unidades
+          </span>
+        </div>
+
+        <!-- Vista Desktop: Tabla tradicional -->
+        <div class="hidden md:block overflow-x-auto max-h-[380px] overflow-y-auto no-scrollbar">
           <table class="w-full text-left border-collapse">
             <thead class="sticky top-0 bg-[var(--bg-card)] z-10 shadow-xs">
               <tr
@@ -137,65 +155,184 @@
                 <th class="py-3 px-4 text-right">Total</th>
               </tr>
             </thead>
-          <tbody class="divide-y divide-[var(--border-color)] text-xs">
-            @for (item of po.items; track item.productId) {
-              <tr class="hover:bg-[var(--bg-tertiary)]/50 transition-colors">
-                <td class="py-3.5 px-4 font-semibold text-[var(--text-primary)]">
-                  {{ item.product }}
-                </td>
-                <td class="py-3.5 px-4 text-center font-mono font-bold text-[var(--text-primary)]">
-                  {{ item.quantity }}
-                </td>
-                <td class="py-3.5 px-4 text-right font-mono text-[var(--text-secondary)]">
-                  {{ formatMoney(item.unitPrice) }}
-                </td>
-                <td class="py-3.5 px-4 text-right font-mono font-bold text-[var(--text-primary)]">
-                  {{ formatMoney(item.total) }}
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
+            <tbody class="divide-y divide-[var(--border-color)] text-xs">
+              @for (item of po.items; track item.productId) {
+                <tr class="hover:bg-[var(--bg-tertiary)]/50 transition-colors">
+                  <td class="py-3.5 px-4 font-semibold text-[var(--text-primary)]">
+                    <div class="flex items-center gap-2.5">
+                      <div class="w-7 h-7 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-color)] flex items-center justify-center text-cyan-500 shrink-0">
+                        <svg lucidePackage class="w-3.5 h-3.5"></svg>
+                      </div>
+                      <div>
+                        <p class="font-bold text-[var(--text-primary)]">{{ item.product }}</p>
+                        @if (item.productId) {
+                          <p class="text-[10px] font-mono text-[var(--text-muted)]">#{{ item.productId }}</p>
+                        }
+                      </div>
+                    </div>
+                  </td>
+                  <td class="py-3.5 px-4 text-center font-mono font-bold text-[var(--text-primary)]">
+                    <span class="px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-500 text-xs font-semibold border border-cyan-500/20">
+                      {{ item.quantity }}
+                    </span>
+                  </td>
+                  <td class="py-3.5 px-4 text-right font-mono text-[var(--text-secondary)]">
+                    {{ formatMoney(item.unitPrice) }}
+                  </td>
+                  <td class="py-3.5 px-4 text-right font-mono font-bold text-emerald-500">
+                    {{ formatMoney(item.total) }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
 
-    <!-- Approval block and totals -->
+        <!-- Vista Móvil: Cards individuales -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:hidden gap-3.5">
+          @for (item of po.items; track item.productId) {
+            <div
+              class="p-4 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border-color)] hover:border-cyan-500/40 hover:shadow-md transition-all flex flex-col justify-between space-y-3 group"
+            >
+              <!-- Top: Icon, Product Name, and Qty Badge -->
+              <div class="flex items-start gap-3">
+                <div
+                  class="w-10 h-10 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center justify-center text-cyan-500 shrink-0 group-hover:scale-105 transition-transform shadow-xs"
+                >
+                  <svg lucidePackage class="w-5 h-5"></svg>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center justify-between gap-1.5">
+                    <span class="text-[10px] font-mono font-bold text-[var(--text-muted)] uppercase tracking-wider truncate">
+                      {{ item.productId ? '#' + item.productId : 'Producto' }}
+                    </span>
+                    <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-500 border border-cyan-500/30 shrink-0">
+                      {{ item.quantity }} uds
+                    </span>
+                  </div>
+                  <h3
+                    class="text-xs sm:text-sm font-bold text-[var(--text-primary)] leading-snug mt-1 line-clamp-2"
+                    [title]="item.product"
+                  >
+                    {{ item.product }}
+                  </h3>
+                </div>
+              </div>
+
+              <!-- Pricing Info Footer -->
+              <div class="border-t border-[var(--border-color)]/60 pt-2.5 flex items-center justify-between text-xs">
+                <div class="space-y-0.5">
+                  <p class="text-[9px] font-mono font-bold text-[var(--text-muted)] uppercase tracking-wider">
+                    Precio Unidad
+                  </p>
+                  <p class="font-mono text-xs font-semibold text-[var(--text-secondary)]">
+                    {{ formatMoney(item.unitPrice) }}
+                  </p>
+                </div>
+                <div class="text-right space-y-0.5">
+                  <p class="text-[9px] font-mono font-bold text-[var(--text-muted)] uppercase tracking-wider">
+                    Total
+                  </p>
+                  <p class="font-mono text-sm font-black text-emerald-500">
+                    {{ formatMoney(item.total) }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+    <!-- Approval block and totals (sin apariencia de card en móvil) -->
     <div
-      class="p-6 rounded-3xl bg-[var(--bg-tertiary)] border border-[var(--border-color)] flex flex-col lg:flex-row items-center justify-between gap-6"
+      class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-5 md:p-6 md:rounded-3xl md:bg-[var(--bg-tertiary)] md:border md:border-[var(--border-color)]"
     >
-      <div class="space-y-1 text-xs text-[var(--text-secondary)]">
-        <p
-          class="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--text-muted)]"
-        >
-          General
+      <!-- Left side: structured general info cards -->
+      <div class="flex-1 space-y-3">
+        <p class="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--text-muted)]">
+          Información General y Liquidación
         </p>
-        <p>
-          Orden hecha por:
-          <strong class="text-[var(--text-primary)]">{{ po.madeBy }}</strong>
-        </p>
-        <p>
-          Usuario: <strong class="font-mono text-[var(--text-primary)]">{{ po.user }}</strong>
-          · Área: <strong class="text-[var(--text-primary)]">{{ po.area }}</strong>
-          · Pago: <strong class="text-[var(--text-primary)]">{{ po.paymentMethod }}</strong>
-        </p>
-        <p class="flex items-center gap-2 pt-1">
-          <span class="text-[var(--text-muted)]">Aprobado Por:</span>
-          <span class="border-b-2 border-[var(--border-color)] italic font-semibold text-cyan-500 px-3">
-            {{ po.approvedBy ?? 'Gerencia General' }}
-          </span>
-        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <!-- Made by / User -->
+          <div class="p-3 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center gap-3 shadow-xs">
+            <div class="w-8 h-8 rounded-xl bg-cyan-500/10 text-cyan-500 flex items-center justify-center shrink-0">
+              <svg lucideUser class="w-4 h-4"></svg>
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="text-[9px] font-mono font-bold text-[var(--text-muted)] uppercase tracking-wider">
+                Orden hecha por
+              </p>
+              <p class="text-xs font-bold text-[var(--text-primary)] truncate">
+                {{ po.madeBy }}
+              </p>
+              <p class="text-[10px] text-[var(--text-muted)] font-mono truncate">
+                @{{ po.user }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Area & Payment Method -->
+          <div class="p-3 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center gap-3 shadow-xs">
+            <div class="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center shrink-0">
+              <svg lucideCreditCard class="w-4 h-4"></svg>
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="text-[9px] font-mono font-bold text-[var(--text-muted)] uppercase tracking-wider">
+                Área y Pago
+              </p>
+              <p class="text-xs font-bold text-[var(--text-primary)] truncate">
+                {{ po.area }}
+              </p>
+              <p class="text-[10px] text-cyan-500 font-semibold font-mono truncate">
+                {{ po.paymentMethod }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Approved by -->
+          <div class="p-3 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center gap-3 shadow-xs">
+            <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
+              <svg lucideShieldCheck class="w-4 h-4"></svg>
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center justify-between gap-1">
+                <p class="text-[9px] font-mono font-bold text-[var(--text-muted)] uppercase tracking-wider">
+                  Aprobación
+                </p>
+                <span class="px-1.5 py-0.2 rounded-full bg-emerald-500/10 text-emerald-500 text-[8px] font-mono font-bold uppercase">
+                  OK
+                </span>
+              </div>
+              <p class="text-xs font-bold text-cyan-500 italic truncate">
+                {{ po.approvedBy ?? 'Gerencia General' }}
+              </p>
+              <p class="text-[10px] text-[var(--text-muted)] font-mono">
+                Autorizado
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="px-5 py-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] text-right">
-        <p
-          class="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--text-muted)]"
-        >
-          Total
-        </p>
-        <p class="text-2xl font-black font-mono text-emerald-500">{{ formatMoney(po.total) }}</p>
-        <p class="text-xs font-semibold text-[var(--text-muted)] mt-0.5">
-          {{ po.totalProducts }} productos
-        </p>
+      <!-- Right side: Total Box (full-width on mobile, right-aligned on desktop) -->
+      <div
+        class="w-full lg:w-auto p-4 sm:px-6 sm:py-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center justify-between lg:flex-col lg:items-end lg:justify-center gap-3 shadow-sm shrink-0"
+      >
+        <div class="text-left lg:text-right space-y-0.5">
+          <p class="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--text-muted)]">
+            Total Liquidado
+          </p>
+          <span class="inline-block px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-500 text-[10px] font-mono font-semibold border border-cyan-500/20">
+            {{ po.totalProducts }} productos
+          </span>
+        </div>
+
+        <div class="text-right">
+          <p class="text-2xl sm:text-3xl font-black font-mono text-emerald-500 tracking-tight leading-none">
+            {{ formatMoney(po.total) }}
+          </p>
+        </div>
       </div>
     </div>
     </div>

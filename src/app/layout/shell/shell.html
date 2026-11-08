@@ -1,12 +1,12 @@
 <!-- Ported 1:1 from the main return block of "ICONS UI V.2/src/App.tsx" -->
 <div
   [class]="
-    'h-screen max-h-screen h-dvh overflow-hidden bg-[var(--bg-primary)] text-[var(--text-primary)] flex flex-col font-sans transition-colors duration-200 ' +
+    'h-full h-[100dvh] max-h-[100dvh] w-full overflow-hidden bg-[var(--bg-primary)] text-[var(--text-primary)] flex flex-col font-sans transition-colors duration-200 overscroll-none ' +
     store.themeClass()
   "
 >
   <!-- Fixed Header with high z-index to allow popovers over main area -->
-  <app-header class="shrink-0 relative z-30" />
+  <app-header class="block shrink-0 relative z-30 w-full" />
 
   <!-- Main Workspace with Sidebar & Content Area -->
   <div class="flex-1 min-h-0 flex overflow-hidden relative">
@@ -19,13 +19,21 @@
       ></div>
     }
 
-    <app-sidebar class="contents lg:block lg:h-full lg:w-64 lg:shrink-0" />
+    <app-sidebar
+      [class]="
+        'contents lg:block lg:h-full lg:shrink-0 lg:relative lg:z-20 transition-all duration-300 ' +
+        (store.sidebarCollapsed() ? 'lg:w-20' : 'lg:w-64')
+      "
+    />
 
-    <main class="flex-1 min-h-0 flex flex-col overflow-hidden bg-[var(--bg-primary)] w-full">
+    <main class="flex-1 min-h-0 flex flex-col overflow-hidden bg-[var(--bg-primary)] w-full overscroll-none">
       <router-outlet />
     </main>
   </div>
 
   <!-- Global Modal for New Sale -->
   <app-new-sale-modal />
+
+  <!-- Right Notifications Sidebar & Backdrop -->
+  <app-notifications-sidebar />
 </div>

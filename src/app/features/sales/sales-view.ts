@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { CustomSelectComponent } from '../../shared/ui/custom-select/custom-select';
 import {
   LucideAlertCircle,
   LucideArrowUpDown,
@@ -41,6 +42,7 @@ type SortOption =
   selector: 'app-sales-view',
   imports: [
     FormsModule,
+    CustomSelectComponent,
     LucideAlertCircle,
     LucideArrowUpDown,
     LucideCalendar,
@@ -79,6 +81,7 @@ export class SalesView {
   protected readonly isGroupAlertVisible = signal(false);
   protected readonly groupClient = signal('');
   protected readonly groupPaymentStatus = signal<PaymentStatus>('Pagado');
+  protected readonly paymentStatusOptions = ['Pagado', 'Debe'];
 
   protected readonly filteredTodaySales = computed(() => {
     const term = this.searchTerm().toLowerCase();

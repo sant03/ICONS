@@ -1,5 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { CustomSelectComponent } from '../../shared/ui/custom-select/custom-select';
+import { CustomDatePickerComponent } from '../../shared/ui/custom-datepicker/custom-datepicker';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   LucideArrowLeft,
@@ -29,6 +31,8 @@ type AuthMode = 'welcome' | 'login' | 'register';
   selector: 'app-welcome-auth',
   imports: [
     FormsModule,
+    CustomSelectComponent,
+    CustomDatePickerComponent,
     LucideLayoutGrid,
     LucideMoon,
     LucideSun,
@@ -62,6 +66,12 @@ export class WelcomeAuth {
   protected readonly username = signal('Freddy60');
   protected readonly password = signal('••••••••');
   protected readonly agreeTerms = signal(true);
+  protected readonly role = signal('Admin');
+  protected readonly roleOptions = [
+    { value: 'Admin', label: 'Administrator' },
+    { value: 'Manager', label: 'Inventory Manager' },
+    { value: 'Sales', label: 'Sales Assistant' },
+  ];
 
   protected setMode(mode: AuthMode): void {
     this.mode.set(mode);

@@ -84,10 +84,15 @@
     <!-- Notification Bell -->
     <button
       type="button"
+      (click)="store.toggleNotifications()"
       class="p-2 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border-color)] text-[var(--text-primary)] transition-all relative cursor-pointer"
+      title="Notificaciones"
+      aria-label="Abrir notificaciones"
     >
       <svg lucideBell class="w-4 h-4 text-[var(--text-secondary)]"></svg>
-      <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-cyan-500 ring-2 ring-[var(--bg-secondary)] animate-pulse"></span>
+      @if (store.unreadNotificationsCount() > 0) {
+        <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-cyan-500 ring-2 ring-[var(--bg-secondary)] animate-pulse"></span>
+      }
     </button>
 
     <!-- User Profile Menu -->

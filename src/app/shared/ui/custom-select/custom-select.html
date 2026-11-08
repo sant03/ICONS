@@ -1,0 +1,12 @@
+<p-select
+  [id]="id || undefined"
+  [options]="normalizedOptions"
+  optionLabel="label"
+  optionValue="value"
+  [placeholder]="placeholder"
+  [disabled]="disabled"
+  [ngModel]="selectedValue()"
+  (ngModelChange)="onSelectChange($event)"
+  styleClass="w-full text-xs"
+  appendTo="body"
+/>

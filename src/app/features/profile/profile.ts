@@ -1,5 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { CustomSelectComponent } from '../../shared/ui/custom-select/custom-select';
+import { CustomDatePickerComponent } from '../../shared/ui/custom-datepicker/custom-datepicker';
 import {
   LucideArrowLeft,
   LucideBriefcase,
@@ -25,6 +27,8 @@ import { AppStore } from '../../core/state/app-store';
   selector: 'app-profile',
   imports: [
     FormsModule,
+    CustomSelectComponent,
+    CustomDatePickerComponent,
     LucideArrowLeft,
     LucideEdit,
     LucideUser,
@@ -48,6 +52,7 @@ export class Profile {
   protected readonly store = inject(AppStore);
 
   protected readonly profile = signal<UserProfile>({ ...this.store.userProfile() });
+  protected readonly roleOptions = ['Administrative', 'Manager', 'Sales'];
   protected readonly isSaved = signal(false);
 
   protected updateProfile(patch: Partial<UserProfile>): void {

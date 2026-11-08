@@ -1,5 +1,5 @@
-<div class="h-full flex flex-col min-h-0 p-4 lg:p-8 space-y-6 animate-in fade-in duration-200">
-  <!-- Header bar: module title + entry point of the create form (FIJO) -->
+<div class="h-full overflow-y-auto overflow-x-hidden md:overflow-hidden md:flex md:flex-col md:min-h-0 p-4 lg:p-8 space-y-6">
+  <!-- Header bar: module title + entry point of the create form -->
   <div
     class="shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
   >
@@ -22,7 +22,7 @@
     </button>
   </div>
 
-  <!-- Title, count and search of the list (FIJO) -->
+  <!-- Title, count and search of the list -->
   <div class="shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
     <div class="flex items-center gap-3">
       <h2 class="text-lg font-bold text-[var(--text-primary)]">
@@ -51,8 +51,8 @@
     </div>
   </div>
 
-  <!-- Contenedor de las tarjetas de las órdenes (SOLO ESTE HACE SCROLL) -->
-  <div class="flex-1 min-h-0 overflow-y-auto pr-1">
+  <!-- Contenedor de las tarjetas de las órdenes (en móvil se desplaza con el scroll principal, en desktop scroll independiente) -->
+  <div class="md:flex-1 md:min-h-0 md:overflow-y-auto pr-1">
     @if (filteredOrders().length === 0) {
       <div
         class="py-16 text-center rounded-3xl bg-[var(--bg-card)] border border-[var(--border-color)] text-sm text-[var(--text-muted)]"

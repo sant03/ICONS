@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { CustomSelectComponent } from '../../shared/ui/custom-select/custom-select';
 import {
   LucideArrowUpDown,
   LucideBox,
@@ -20,6 +21,7 @@ type NewOrderStatus = 'COMPLETED' | 'PENDING' | 'SHIPPED';
   selector: 'app-orders-view',
   imports: [
     FormsModule,
+    CustomSelectComponent,
     LucideDatabase,
     LucideSearch,
     LucideArrowUpDown,
@@ -43,6 +45,7 @@ export class OrdersView {
   protected readonly clientName = signal('');
   protected readonly units = signal(10);
   protected readonly status = signal<NewOrderStatus>('PENDING');
+  protected readonly orderStatusOptions = ['PENDING', 'SHIPPED', 'COMPLETED'];
 
   protected readonly filteredOrders = computed(() => {
     const term = this.searchTerm().toLowerCase();

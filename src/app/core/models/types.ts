@@ -207,3 +207,16 @@ export interface PurchaseOrder {
   totalProducts: number;
   approvedBy?: string;
 }
+
+export type NotificationType = 'order' | 'stock' | 'user' | 'payment' | 'system';
+
+export interface NotificationItem {
+  id: string;
+  title: string;
+  description: string;
+  time: string;
+  type: NotificationType;
+  read: boolean;
+  link?: ViewMode;
+}
+

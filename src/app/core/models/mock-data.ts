@@ -12,6 +12,7 @@ import {
   Client,
   Supplier,
   PurchaseOrder,
+  NotificationItem,
 } from './types';
 
 export const initialTransactions: Transaction[] = [
@@ -524,5 +525,78 @@ export const initialPurchaseOrders: PurchaseOrder[] = [
     ],
     total: 45000,
     totalProducts: 50,
+  },
+];
+
+export const initialNotifications: NotificationItem[] = [
+  {
+    id: 'notif-1',
+    title: 'Nuevo Pedido Registrado',
+    description: 'Pedido #PO-008 recibido de Juan López por valor de $450.00.',
+    time: 'Hace 5 min',
+    type: 'order',
+    read: false,
+    link: 'orders',
+  },
+  {
+    id: 'notif-2',
+    title: 'Alerta de Stock Bajo',
+    description: 'El producto "Bolsa Hermética 1/2kg" alcanzó el umbral crítico (12 unidades restantes).',
+    time: 'Hace 22 min',
+    type: 'stock',
+    read: false,
+    link: 'products',
+  },
+  {
+    id: 'notif-3',
+    title: 'Seguridad: Usuario Bloqueado',
+    description: 'La cuenta de personal "Karolay24" fue bloqueada tras 3 intentos fallidos de autenticación.',
+    time: 'Hace 1 hora',
+    type: 'user',
+    read: false,
+    link: 'users',
+  },
+  {
+    id: 'notif-4',
+    title: 'Pago Recibido y Aprobado',
+    description: 'Se confirmó transferencia bancaria por $1,250.00 asociada a la Venta #VT-2044.',
+    time: 'Hace 2 horas',
+    type: 'payment',
+    read: true,
+    link: 'sales',
+  },
+  {
+    id: 'notif-5',
+    title: 'Orden de Compra Autorizada',
+    description: 'La Orden #003 dirigida a "Distribuciones S.A.S" fue marcada como Disponible para recepción.',
+    time: 'Hace 4 horas',
+    type: 'order',
+    read: true,
+    link: 'purchase-orders',
+  },
+  {
+    id: 'notif-6',
+    title: 'Sincronización de Base de Datos',
+    description: 'Sincronización de infraestructura exitosa en tiempo real con cifrado AES-256.',
+    time: 'Hace 6 horas',
+    type: 'system',
+    read: true,
+  },
+  {
+    id: 'notif-7',
+    title: 'Nuevo Cliente Vinculado',
+    description: 'Se registró "Supermercado Los Andes" en la cartera de clientes mayoristas.',
+    time: 'Ayer, 4:15 PM',
+    type: 'user',
+    read: true,
+    link: 'clients',
+  },
+  {
+    id: 'notif-8',
+    title: 'Actualización del Sistema',
+    description: 'Kernel del panel actualizado a la versión v2.4.2 con optimizaciones de rendimiento.',
+    time: 'Ayer, 9:00 AM',
+    type: 'system',
+    read: true,
   },
 ];

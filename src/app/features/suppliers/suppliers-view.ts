@@ -58,9 +58,11 @@ export class SuppliersView {
   );
 
   protected readonly isMobileDrawerOpen = signal(false);
+  protected readonly isMobileDrawerReady = signal(false);
 
   protected select(id: string): void {
     this.selectedId.set(id);
+    this.isMobileDrawerReady.set(true);
     this.isMobileDrawerOpen.set(true);
   }
 

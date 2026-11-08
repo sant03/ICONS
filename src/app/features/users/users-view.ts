@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { CustomDatePickerComponent } from '../../shared/ui/custom-datepicker/custom-datepicker';
 import {
   LucideCamera,
   LucideCheckCircle2,
@@ -28,6 +29,7 @@ type GroupFilter = 'Todos' | StaffGroup;
   selector: 'app-users-view',
   imports: [
     FormsModule,
+    CustomDatePickerComponent,
     LucideEdit,
     LucideCamera,
     LucideLock,
@@ -45,6 +47,7 @@ export class UsersView {
 
   /** Mobile bottom drawer state */
   protected readonly isMobileDrawerOpen = signal(false);
+  protected readonly isMobileDrawerReady = signal(false);
 
   protected readonly filters: GroupFilter[] = [
     'Todos',
@@ -101,6 +104,7 @@ export class UsersView {
     this.selectedId.set(idNumber);
     this.isEditing.set(false);
     this.syncDraft();
+    this.isMobileDrawerReady.set(true);
     this.isMobileDrawerOpen.set(true);
   }
 
