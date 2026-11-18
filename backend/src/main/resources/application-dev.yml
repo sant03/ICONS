@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/icons?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: icons
+    password: icons
+    hikari:
+      maximum-pool-size: 10
+
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    clean-disabled: false
+
+logging:
+  level:
+    com.plastyfreddy.icons: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

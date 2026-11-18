@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: jdbc:tc:mysql:8.4:///icons_test
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+
+  jpa:
+    show-sql: false
+
+  flyway:
+    clean-disabled: false
+
+icons:
+  security:
+    jwt:
+      secret: test-secret-key-for-unit-tests-must-be-at-least-256-bits-long-padding!!
+
+logging:
+  level:
+    com.plastyfreddy.icons: INFO
+    org.testcontainers: WARN
