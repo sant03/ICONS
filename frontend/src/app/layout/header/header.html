@@ -1,7 +1,7 @@
 <header class="shrink-0 border-b border-[var(--border-color)] bg-[var(--bg-secondary)]/90 backdrop-blur-md transition-colors duration-200">
   <div class="h-16 px-3 sm:px-4 lg:px-6 flex items-center justify-between gap-2 sm:gap-4">
     <!-- Left side: Logo & Brand (acts as sidebar toggle on mobile/tablet <lg) -->
-    <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+    <div class="flex items-center gap-2 sm:gap-3 min-w-0 animate-fade-in">
       <button
         type="button"
         (click)="store.toggleSidebar()"
@@ -32,7 +32,7 @@
     </div>
 
     <!-- Center: Desktop Global Search Bar -->
-    <div class="hidden md:flex items-center flex-1 max-w-md mx-4 lg:mx-8">
+    <div class="hidden md:flex items-center flex-1 max-w-md mx-4 lg:mx-8 animate-fade-down">
       <div class="relative w-full">
         <svg lucideSearch class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]"></svg>
         <input
@@ -47,7 +47,7 @@
     </div>
 
     <!-- Right side: Actions, Theme toggle & Profile -->
-    <div class="flex items-center gap-1.5 sm:gap-2 lg:gap-3 shrink-0">
+    <div class="flex items-center gap-1.5 sm:gap-2 lg:gap-3 shrink-0 animate-fade-left">
       <!-- Mobile Search Toggle Button -->
       <button
         type="button"

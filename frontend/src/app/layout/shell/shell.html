@@ -13,7 +13,7 @@
     <!-- Mobile Sidebar Backdrop Overlay -->
     @if (store.sidebarOpen()) {
       <div
-        class="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs lg:hidden transition-opacity"
+        class="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs lg:hidden animate-fade-in"
         (click)="store.closeSidebar()"
         aria-hidden="true"
       ></div>
@@ -21,7 +21,7 @@
 
     <app-sidebar
       [class]="
-        'contents lg:block lg:h-full lg:shrink-0 lg:relative lg:z-20 transition-all duration-300 ' +
+        'contents lg:block lg:h-full lg:shrink-0 lg:relative lg:z-20 transition-all duration-350 ease-spring ' +
         (store.sidebarCollapsed() ? 'lg:w-20' : 'lg:w-64')
       "
     />

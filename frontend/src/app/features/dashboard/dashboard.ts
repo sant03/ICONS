@@ -24,6 +24,7 @@ import {
   LucideUsers,
 } from '@lucide/angular';
 import { AppStore } from '../../core/state/app-store';
+import { ScrollRevealDirective } from '../../shared/directives/scroll-reveal.directive';
 
 @Component({
   selector: 'app-dashboard',
@@ -42,6 +43,7 @@ import { AppStore } from '../../core/state/app-store';
     LucideChevronRight,
     LucideHandshake,
     LucideFileText,
+    ScrollRevealDirective,
   ],
   templateUrl: './dashboard.html',
 })

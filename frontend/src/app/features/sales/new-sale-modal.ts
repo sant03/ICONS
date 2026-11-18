@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CustomSelectComponent } from '../../shared/ui/custom-select/custom-select';
 import {
@@ -25,6 +25,10 @@ import { AppStore } from '../../core/state/app-store';
 export class NewSaleModal {
   protected readonly store = inject(AppStore);
 
+  protected readonly isVisible = signal(false);
+  protected readonly isAnimatingOut = signal(false);
+  private closeTimer?: ReturnType<typeof setTimeout>;
+
   protected readonly client = signal('');
   protected readonly product = signal('Cups 6oz');
   protected readonly productOptions = [
@@ -38,6 +42,42 @@ export class NewSaleModal {
   ];
   protected readonly quantity = signal(2);
   protected readonly unitPrice = signal(1500);
+
+  constructor() {
+    effect(() => {
+      const open = this.store.isNewSaleModalOpen();
+      if (open) {
+        if (this.closeTimer) {
+          clearTimeout(this.closeTimer);
+          this.closeTimer = undefined;
+        }
+        this.isAnimatingOut.set(false);
+        this.isVisible.set(true);
+      } else if (this.isVisible() && !this.isAnimatingOut()) {
+        this.isAnimatingOut.set(true);
+        this.closeTimer = setTimeout(() => {
+          this.isVisible.set(false);
+          this.isAnimatingOut.set(false);
+        }, 220);
+      }
+    });
+  }
+
+  protected requestClose(): void {
+    if (this.isAnimatingOut()) return;
+    this.isAnimatingOut.set(true);
+    this.closeTimer = setTimeout(() => {
+      this.store.closeNewSaleModal();
+      this.isVisible.set(false);
+      this.isAnimatingOut.set(false);
+    }, 220);
+  }
+
+  protected onBackdropClick(event: MouseEvent): void {
+    if (event.target === event.currentTarget) {
+      this.requestClose();
+    }
+  }
 
   protected handleSubmit(): void {
     if (!this.client()) return;
@@ -71,6 +111,6 @@ export class NewSaleModal {
 
     this.store.addSale(newSale, newTx);
     this.client.set('');
-    this.store.closeNewSaleModal();
+    this.requestClose();
   }
 }
