@@ -47,6 +47,9 @@ icons:
       refresh-token-expiration: 7d
     cors:
       allowed-origins: ${CORS_ORIGINS:http://localhost:4200}
+    auth:
+      max-failed-attempts: 5
+      lockout-duration: 15m
     rate-limit:
       auth-requests-per-minute: 10
 
