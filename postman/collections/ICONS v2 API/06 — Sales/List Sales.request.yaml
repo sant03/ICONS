@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{baseUrl}}/sales?search=&customerId=&paymentStatus=&page=0&size=20"
+method: GET
+queryParams:
+  - key: search
+    value: ""
+    description: Búsqueda por código/cliente
+  - key: customerId
+    value: ""
+    description: Filtrar por cliente
+  - key: paymentStatus
+    value: ""
+    description: PAGADO | NO_PAGADO | PARCIAL
+  - key: page
+    value: "0"
+  - key: size
+    value: "20"
+order: 1000

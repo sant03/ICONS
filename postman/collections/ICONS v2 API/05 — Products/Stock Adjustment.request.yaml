@@ -1,0 +1,14 @@
+$kind: http-request
+url: "{{baseUrl}}/products/1/stock-adjustment"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "type": "ADJUSTMENT_IN",
+      "quantity": 50,
+      "notes": "Reposición por inventario físico"
+    }
+order: 7000

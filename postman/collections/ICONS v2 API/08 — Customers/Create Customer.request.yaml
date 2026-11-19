@@ -1,0 +1,16 @@
+$kind: http-request
+url: "{{baseUrl}}/customers"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "name": "María García",
+      "docId": "1098765432",
+      "phone": "3001234567",
+      "email": "maria@email.com",
+      "address": "Calle 45 #20-30, Barranquilla"
+    }
+order: 3000

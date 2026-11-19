@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{baseUrl}}/categories"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "name": "Plásticos Industriales"
+    }
+order: 3000

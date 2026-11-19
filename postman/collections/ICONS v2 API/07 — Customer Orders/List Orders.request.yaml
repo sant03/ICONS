@@ -1,0 +1,14 @@
+$kind: http-request
+url: "{{baseUrl}}/orders?search=&status=&page=0&size=20"
+method: GET
+queryParams:
+  - key: search
+    value: ""
+  - key: status
+    value: ""
+    description: PENDING | COMPLETED | SHIPPED | CANCELLED
+  - key: page
+    value: "0"
+  - key: size
+    value: "20"
+order: 1000

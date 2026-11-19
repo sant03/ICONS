@@ -1,0 +1,31 @@
+$kind: http-request
+url: "{{baseUrl}}/purchase-orders"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "supplierId": 1,
+      "supplierName": "Plásticos del Caribe S.A.S",
+      "supplierAddress": "Vía 40 #72-100, Barranquilla",
+      "supplierPhone": "6053456789",
+      "supplierEmail": "ventas@plasticoscaribe.com",
+      "date": "2026-11-19",
+      "madeOn": "2026-11-19",
+      "receptionDate": "2026-11-25",
+      "madeBy": "Santiago Potes",
+      "area": "Almacén",
+      "paymentMethod": "Transferencia",
+      "approvedBy": "Gerente General",
+      "scheduledDate": "2026-11-22",
+      "items": [
+        {
+          "productId": 1,
+          "quantity": 500,
+          "unitPrice": 480.00
+        }
+      ]
+    }
+order: 3000

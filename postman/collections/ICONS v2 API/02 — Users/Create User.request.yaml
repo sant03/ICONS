@@ -1,0 +1,19 @@
+$kind: http-request
+url: "{{baseUrl}}/users"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "username": "jperez",
+      "email": "jperez@plastyfreddy.com",
+      "password": "Pass123!",
+      "fullName": "Juan Pérez",
+      "docId": "1234567890",
+      "phone": "3001234567",
+      "positionName": "Vendedor",
+      "roleId": 2
+    }
+order: 3000

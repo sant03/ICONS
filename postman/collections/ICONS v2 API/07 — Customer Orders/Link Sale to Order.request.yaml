@@ -1,0 +1,4 @@
+$kind: http-request
+url: "{{baseUrl}}/orders/1/sales/1"
+method: POST
+order: 4000

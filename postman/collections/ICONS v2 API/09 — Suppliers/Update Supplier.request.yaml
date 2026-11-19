@@ -1,0 +1,13 @@
+$kind: http-request
+url: "{{baseUrl}}/suppliers/1"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "name": "Plásticos del Caribe S.A.S (Actualizado)",
+      "phone": "6059876543"
+    }
+order: 4000

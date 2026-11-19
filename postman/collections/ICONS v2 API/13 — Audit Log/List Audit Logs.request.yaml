@@ -1,0 +1,15 @@
+$kind: http-request
+url: "{{baseUrl}}/audit?search=&category=&page=0&size=20"
+method: GET
+queryParams:
+  - key: search
+    value: ""
+    description: Búsqueda por descripción/username/acción
+  - key: category
+    value: ""
+    description: Filtrar por categoría
+  - key: page
+    value: "0"
+  - key: size
+    value: "20"
+order: 1000

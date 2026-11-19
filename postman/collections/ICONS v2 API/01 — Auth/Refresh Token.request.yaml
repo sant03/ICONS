@@ -1,0 +1,23 @@
+$kind: http-request
+url: "{{baseUrl}}/auth/refresh"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "refreshToken": "{{refreshToken}}"
+    }
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: |-
+      if (pm.response.code === 200) {
+          var json = pm.response.json();
+          pm.collectionVariables.set('accessToken', json.accessToken);
+          pm.collectionVariables.set('refreshToken', json.refreshToken);
+      }
+    language: text/javascript
+order: 2000

@@ -1,0 +1,13 @@
+$kind: http-request
+url: "{{baseUrl}}/customers/1"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "name": "María García Actualizada",
+      "phone": "3009876543"
+    }
+order: 4000

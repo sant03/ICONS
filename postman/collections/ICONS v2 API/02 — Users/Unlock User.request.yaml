@@ -1,0 +1,4 @@
+$kind: http-request
+url: "{{baseUrl}}/users/1/unlock"
+method: POST
+order: 7000

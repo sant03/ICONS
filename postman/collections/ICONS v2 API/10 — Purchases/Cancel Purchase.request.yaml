@@ -1,0 +1,4 @@
+$kind: http-request
+url: "{{baseUrl}}/purchases/1/cancel"
+method: POST
+order: 4000

@@ -1,0 +1,14 @@
+$kind: http-request
+url: "{{baseUrl}}/products/1"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "reference": "Bolsa plástica 20x30 (actualizada)",
+      "salePrice": 800.00,
+      "minPurchase": 15
+    }
+order: 4000

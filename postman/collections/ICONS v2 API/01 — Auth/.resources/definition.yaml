@@ -1,0 +1,3 @@
+$kind: collection
+description: Autenticación, tokens y reset de contraseña (pública)
+order: 1000

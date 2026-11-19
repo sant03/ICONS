@@ -1,0 +1,4 @@
+$kind: http-request
+url: "{{baseUrl}}/notifications"
+method: DELETE
+order: 6000

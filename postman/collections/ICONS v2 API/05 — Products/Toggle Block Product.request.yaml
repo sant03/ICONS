@@ -1,0 +1,4 @@
+$kind: http-request
+url: "{{baseUrl}}/products/1/toggle-block"
+method: PATCH
+order: 6000

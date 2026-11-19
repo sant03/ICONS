@@ -1,0 +1,15 @@
+$kind: http-request
+url: "{{baseUrl}}/products?search=&categoryId=&page=0&size=20"
+method: GET
+queryParams:
+  - key: search
+    value: ""
+    description: Búsqueda por referencia/código
+  - key: categoryId
+    value: ""
+    description: Filtrar por categoría
+  - key: page
+    value: "0"
+  - key: size
+    value: "20"
+order: 1000

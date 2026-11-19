@@ -63,6 +63,13 @@
             <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
         </dependency>
 
+        <!-- Argon2 (password hashing) -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk18on</artifactId>
+            <version>1.78.1</version>
+        </dependency>
+
         <!-- JWT (creación de tokens) -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>

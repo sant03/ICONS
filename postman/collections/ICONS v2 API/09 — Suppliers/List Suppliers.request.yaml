@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{baseUrl}}/suppliers?search=&page=0&size=20"
+method: GET
+queryParams:
+  - key: search
+    value: ""
+    description: Búsqueda por nombre/código
+  - key: page
+    value: "0"
+  - key: size
+    value: "20"
+order: 1000

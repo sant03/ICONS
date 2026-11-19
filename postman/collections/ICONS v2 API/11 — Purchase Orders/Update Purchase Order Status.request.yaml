@@ -1,0 +1,8 @@
+$kind: http-request
+url: "{{baseUrl}}/purchase-orders/1/status?status=USADA"
+method: PATCH
+queryParams:
+  - key: status
+    value: USADA
+    description: DISPONIBLE | USADA | PENDIENTE | CANCELADA
+order: 4000

@@ -1,0 +1,14 @@
+$kind: http-request
+url: "{{baseUrl}}/roles"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "name": "Bodeguero",
+      "description": "Acceso a inventario y productos",
+      "permissionCodes": ["PRODUCTS_VIEW", "PRODUCTS_EDIT", "INVENTORY_VIEW", "INVENTORY_ADJUST"]
+    }
+order: 3000

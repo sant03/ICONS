@@ -1,0 +1,15 @@
+$kind: http-request
+url: "{{baseUrl}}/suppliers"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "name": "Plásticos del Caribe S.A.S",
+      "phone": "6053456789",
+      "email": "ventas@plasticoscaribe.com",
+      "address": "Vía 40 #72-100, Barranquilla"
+    }
+order: 3000

@@ -2,6 +2,12 @@
 workspace:
   id: 62ffc737-4355-464a-8f09-81ea7aac2094
 
+# Each entry here maps a local resource to one or more corresponding objects in Postman Cloud
+
+cloudResources:
+  collections:
+    ../postman/collections/ICONS v2 API: 33f86958-205b-4fee-9ec1-8b01ac1404db
+
 # All resources in the `postman/` folder are automatically registered in Local View.
 # Point to additional files outside the `postman/` folder to register them individually. Example:
 #localResources:

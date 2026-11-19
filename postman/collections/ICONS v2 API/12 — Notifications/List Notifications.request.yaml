@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{baseUrl}}/notifications?filter=&page=0&size=20"
+method: GET
+queryParams:
+  - key: filter
+    value: ""
+    description: all | unread
+  - key: page
+    value: "0"
+  - key: size
+    value: "20"
+order: 1000

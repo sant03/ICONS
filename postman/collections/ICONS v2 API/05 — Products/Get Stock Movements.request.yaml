@@ -1,0 +1,7 @@
+$kind: http-request
+url: "{{baseUrl}}/products/1/movements?page=0&size=20"
+method: GET
+queryParams:
+  page: "0"
+  size: "20"
+order: 8000

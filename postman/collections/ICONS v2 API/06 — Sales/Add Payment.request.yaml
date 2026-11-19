@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{baseUrl}}/sales/1/payment"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "amount": 2000.00
+    }
+order: 4000

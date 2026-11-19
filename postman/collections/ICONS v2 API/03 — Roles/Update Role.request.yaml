@@ -1,0 +1,13 @@
+$kind: http-request
+url: "{{baseUrl}}/roles/1"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "name": "Bodeguero Senior",
+      "permissionCodes": ["PRODUCTS_VIEW", "PRODUCTS_EDIT", "PRODUCTS_CREATE", "INVENTORY_VIEW", "INVENTORY_ADJUST"]
+    }
+order: 4000

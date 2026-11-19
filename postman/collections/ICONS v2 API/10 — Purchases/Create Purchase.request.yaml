@@ -1,0 +1,27 @@
+$kind: http-request
+url: "{{baseUrl}}/purchases"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "supplierId": 1,
+      "supplierName": "Plásticos del Caribe S.A.S",
+      "date": "2026-11-19",
+      "notes": "Compra quincenal",
+      "items": [
+        {
+          "productId": 1,
+          "quantity": 200,
+          "unitPrice": 500.00
+        },
+        {
+          "productId": 2,
+          "quantity": 100,
+          "unitPrice": 900.00
+        }
+      ]
+    }
+order: 3000

@@ -1,0 +1,16 @@
+$kind: collection
+description: |-
+  Inventario completo de servicios del backend ICONS v2 — PlastyFreddy.
+
+  Base URL: {{baseUrl}}
+  Auth: Bearer JWT
+variables:
+  baseUrl: http://localhost:8080
+  accessToken: ""
+  refreshToken: ""
+auth:
+  - id: 438277ca-bf43-4997-844b-b63102ddefd4
+    type: bearer
+    name: bearer auth
+    credentials:
+      token: "{{accessToken}}"

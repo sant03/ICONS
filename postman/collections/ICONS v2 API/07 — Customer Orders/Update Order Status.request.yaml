@@ -1,0 +1,8 @@
+$kind: http-request
+url: "{{baseUrl}}/orders/1/status?status=COMPLETED"
+method: PATCH
+queryParams:
+  - key: status
+    value: COMPLETED
+    description: PENDING | COMPLETED | SHIPPED | CANCELLED
+order: 5000

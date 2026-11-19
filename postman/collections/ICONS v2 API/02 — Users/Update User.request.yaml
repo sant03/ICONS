@@ -1,0 +1,14 @@
+$kind: http-request
+url: "{{baseUrl}}/users/1"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "fullName": "Juan Pérez Actualizado",
+      "phone": "3009876543",
+      "positionName": "Jefe de Ventas"
+    }
+order: 4000
