@@ -21,14 +21,27 @@
       </button>
     </div>
 
-    <button
-      type="button"
-      (click)="openCreate()"
-      class="hidden sm:flex self-start sm:self-auto px-5 py-3 rounded-xl bg-[var(--text-primary)] text-[var(--bg-card)] hover:opacity-90 text-sm font-bold items-center gap-2 transition-opacity cursor-pointer shadow-md"
-    >
-      <svg lucidePlus class="w-4 h-4"></svg>
-      <span>Añadir nuevo proveedor</span>
-    </button>
+    <div class="flex items-center gap-3">
+      <div class="relative">
+        <svg lucideSearch class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-muted)]"></svg>
+        <input
+          name="searchTerm"
+          type="text"
+          [ngModel]="searchTerm()"
+          (ngModelChange)="searchTerm.set($event)"
+          placeholder="Buscar proveedor..."
+          class="w-full sm:w-56 pl-9 pr-3 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] focus:outline-none focus:border-cyan-500"
+        />
+      </div>
+      <button
+        type="button"
+        (click)="openCreate()"
+        class="hidden sm:flex px-5 py-2.5 rounded-xl bg-[var(--text-primary)] text-[var(--bg-card)] hover:opacity-90 text-sm font-bold items-center gap-2 transition-opacity cursor-pointer shadow-md"
+      >
+        <svg lucidePlus class="w-4 h-4"></svg>
+        <span>Añadir proveedor</span>
+      </button>
+    </div>
   </div>
 
   <div class="lg:flex-1 lg:min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -36,9 +49,8 @@
     <div class="lg:col-span-8 lg:h-full lg:min-h-0 flex flex-col space-y-4">
       <h2 class="shrink-0 text-lg font-bold text-[var(--text-primary)]">Todos los Proveedores</h2>
 
-      <!-- En móvil fluye con el scroll global, en desktop scroll independiente -->
       <div class="lg:flex-1 lg:min-h-0 lg:overflow-y-auto space-y-3 pr-2">
-        @for (supplier of suppliers(); track supplier.id) {
+        @for (supplier of filteredSuppliers(); track supplier.id) {
           <button
             type="button"
             (click)="select(supplier.id)"
@@ -66,6 +78,11 @@
               {{ supplier.phone }}
             </span>
           </button>
+        } @empty {
+          <div class="text-center py-12 text-[var(--text-muted)]">
+            <svg lucideBuilding class="w-10 h-10 mx-auto mb-3 opacity-40"></svg>
+            <p class="text-sm font-semibold">No se encontraron proveedores</p>
+          </div>
         }
       </div>
     </div>
@@ -79,7 +96,7 @@
       ></div>
     }
 
-    <!-- Detail card (En desktop columna lateral derecha; en móvil bottom drawer que sube hasta top-16) -->
+    <!-- Detail card -->
     <div
       [class]="
         'fixed inset-x-0 bottom-0 top-16 z-50 flex flex-col overflow-hidden bg-[var(--bg-primary)] rounded-t-3xl shadow-2xl border-t border-[var(--border-color)] ' +
@@ -90,7 +107,7 @@
           : 'translate-y-full pointer-events-none' + (isMobileDrawerReady() ? '' : ' hidden lg:block'))
       "
     >
-      <!-- Mobile Drawer Top Bar with close button (lg:hidden) -->
+      <!-- Mobile Drawer Top Bar -->
       <div class="lg:hidden shrink-0 px-5 pt-3.5 pb-3 border-b border-[var(--border-color)] bg-[var(--bg-card)] rounded-t-3xl flex items-center justify-between">
         <div class="flex items-center gap-2.5">
           <div class="w-8 h-8 rounded-full bg-cyan-500/10 text-cyan-500 flex items-center justify-center font-bold text-xs">
@@ -111,19 +128,29 @@
         </button>
       </div>
 
-      <!-- Drawer scrollable body on mobile / direct content on desktop -->
+      <!-- Drawer body -->
       <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-0 lg:overflow-visible">
         <div
           class="lg:p-6 lg:rounded-3xl lg:bg-[var(--bg-card)] lg:border lg:border-[var(--border-color)] lg:shadow-sm relative"
         >
-          <button
-            type="button"
-            (click)="openEdit()"
-            aria-label="Editar proveedor"
-            class="absolute top-5 right-5 p-2 rounded-xl text-[var(--text-muted)] hover:text-cyan-500 hover:bg-cyan-500/10 transition-colors cursor-pointer"
-          >
-            <svg lucideSquarePen class="w-4 h-4"></svg>
-          </button>
+          <div class="absolute top-5 right-5 flex items-center gap-1">
+            <button
+              type="button"
+              (click)="openEdit()"
+              aria-label="Editar proveedor"
+              class="p-2 rounded-xl text-[var(--text-muted)] hover:text-cyan-500 hover:bg-cyan-500/10 transition-colors cursor-pointer"
+            >
+              <svg lucideSquarePen class="w-4 h-4"></svg>
+            </button>
+            <button
+              type="button"
+              (click)="openDeletePopup()"
+              aria-label="Eliminar proveedor"
+              class="p-2 rounded-xl text-[var(--text-muted)] hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
+            >
+              <svg lucideTrash2 class="w-4 h-4"></svg>
+            </button>
+          </div>
 
           <div class="flex flex-col items-center text-center pt-2">
             <div
@@ -203,10 +230,15 @@
 <!-- Create / edit modal -->
 @if (modalOpen()) {
   <div
-    class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-150"
+    class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+    [class.animate-fade-in]="!modalAnimatingOut()"
+    [class.animate-fade-out]="modalAnimatingOut()"
+    (click)="onModalBackdrop($event)"
   >
     <div
       class="bg-[var(--bg-card)] rounded-3xl border border-[var(--border-color)] shadow-2xl w-full max-w-md p-6 space-y-5"
+      [class.animate-modal-in]="!modalAnimatingOut()"
+      [class.animate-modal-out]="modalAnimatingOut()"
     >
       <div class="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
         <div class="flex items-center gap-2">
@@ -217,7 +249,7 @@
           type="button"
           (click)="closeModal()"
           aria-label="Cerrar"
-          class="text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer"
+          class="p-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer"
         >
           <svg lucideX class="w-5 h-5"></svg>
         </button>
@@ -330,12 +362,57 @@
   </div>
 }
 
-<!-- FAB -->
+<!-- Delete confirmation popup -->
+@if (deletePopupOpen()) {
+  <div
+    class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+    [class.animate-fade-in]="!deletePopupAnimatingOut()"
+    [class.animate-fade-out]="deletePopupAnimatingOut()"
+    (click)="onDeleteBackdrop($event)"
+  >
+    <div
+      class="bg-[var(--bg-card)] rounded-3xl border border-[var(--border-color)] shadow-2xl w-full max-w-sm p-6 space-y-5"
+      [class.animate-modal-in]="!deletePopupAnimatingOut()"
+      [class.animate-modal-out]="deletePopupAnimatingOut()"
+    >
+      <div class="flex flex-col items-center text-center space-y-3">
+        <div class="w-12 h-12 rounded-full bg-rose-500/10 flex items-center justify-center">
+          <svg lucideAlertTriangle class="w-6 h-6 text-rose-500"></svg>
+        </div>
+        <h3 class="text-lg font-bold text-[var(--text-primary)]">Eliminar proveedor</h3>
+        <p class="text-sm text-[var(--text-secondary)]">
+          ¿Estás seguro de que deseas eliminar a
+          <span class="font-semibold text-[var(--text-primary)]">{{ selected()?.name }}</span>?
+          Esta acción no se puede deshacer.
+        </p>
+      </div>
+      <div class="flex gap-3">
+        <button
+          type="button"
+          (click)="closeDeletePopup()"
+          class="flex-1 py-2.5 rounded-xl border border-[var(--border-color)] text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] cursor-pointer"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          (click)="confirmDelete()"
+          class="flex-1 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-semibold shadow-md shadow-rose-500/20 flex items-center justify-center gap-1.5 cursor-pointer"
+        >
+          <svg lucideTrash2 class="w-4 h-4"></svg>
+          <span>Eliminar</span>
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- FAB (mobile only) -->
 <button
   type="button"
   (click)="openCreate()"
   aria-label="Añadir nuevo proveedor"
-  class="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-cyan-500 hover:bg-cyan-600 text-white shadow-2xl shadow-cyan-500/50 flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-pointer z-40 border-2 border-white/20"
+  class="sm:hidden fixed bottom-6 right-6 w-14 h-14 rounded-full bg-cyan-500 hover:bg-cyan-600 text-white shadow-2xl shadow-cyan-500/50 flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-pointer z-40 border-2 border-white/20"
 >
   <svg lucidePlus class="w-6 h-6"></svg>
 </button>
