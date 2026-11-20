@@ -34,13 +34,14 @@ public class JwtService {
     }
 
     public String generateAccessToken(Long userId, String username, Long tenantId,
-                                       Collection<String> permissions) {
+                                       Collection<String> permissions, String userStatus) {
         Instant now = Instant.now();
         return Jwts.builder()
             .subject(userId.toString())
             .claim("username", username)
             .claim("tenantId", tenantId)
             .claim("permissions", permissions)
+            .claim("userStatus", userStatus)
             .issuedAt(Date.from(now))
             .expiration(Date.from(now.plus(accessTokenExpiration)))
             .signWith(signingKey)

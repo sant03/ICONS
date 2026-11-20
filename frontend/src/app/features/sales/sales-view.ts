@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CustomSelectComponent } from '../../shared/ui/custom-select/custom-select';
 import {
@@ -22,6 +22,7 @@ import {
 } from '@lucide/angular';
 import { OrderItem, PaymentStatus, SaleRecord } from '../../core/models/types';
 import { AppStore } from '../../core/state/app-store';
+import { SalesApi, SaleResponse } from '../../core/api';
 
 /** Sort options of the "Ordenar Por" modal (ported from `sortOption`). */
 type SortOption =
@@ -63,13 +64,14 @@ type SortOption =
   ],
   templateUrl: './sales-view.html',
 })
-export class SalesView {
+export class SalesView implements OnInit {
   protected readonly store = inject(AppStore);
+  private readonly api = inject(SalesApi);
 
+  protected readonly allSales = signal<SaleRecord[]>([]);
   protected readonly searchTerm = signal('');
   protected readonly selectedFilter = signal<string>('all');
-  /** Same fixed "today" label the header and the Today section use. */
-  protected readonly todayLabel = 'September 27, 2026';
+  protected readonly todayLabel = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
   // Grouping / sorting / row actions (ported from "ICONS COMPLETE/src/views/SalesView.tsx")
   protected readonly selectedSaleIds = signal<string[]>([]);
@@ -83,24 +85,71 @@ export class SalesView {
   protected readonly groupPaymentStatus = signal<PaymentStatus>('Pagado');
   protected readonly paymentStatusOptions = ['Pagado', 'Debe'];
 
+  protected readonly totalRevenue = computed(() =>
+    this.allSales().reduce((sum, s) => sum + s.total, 0),
+  );
+
+  protected readonly totalRevenueFormatted = computed(() =>
+    this.totalRevenue().toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+  );
+
+  protected readonly avgTicket = computed(() => {
+    const sales = this.allSales();
+    return sales.length ? this.totalRevenue() / sales.length : 0;
+  });
+
+  protected readonly avgTicketFormatted = computed(() =>
+    this.avgTicket().toFixed(2),
+  );
+
+  ngOnInit(): void {
+    this.api.list({ size: 500 }).subscribe({
+      next: (page) => this.allSales.set(page.content.map((s) => SalesView.mapSale(s))),
+    });
+  }
+
+  private static mapSale(s: SaleResponse): SaleRecord {
+    const firstItem = s.items[0];
+    return {
+      id: s.code ?? String(s.id),
+      client: s.customerName,
+      product: firstItem?.productName ?? '(varios)',
+      quantity: firstItem?.quantity ?? s.items.reduce((sum, i) => sum + i.quantity, 0),
+      unitPrice: firstItem?.unitPrice ?? 0,
+      total: s.total,
+      date: s.date,
+      code: s.code,
+      status: s.status === 'CANCELLED' ? 'Reembolsado' : s.amountDue > 0 ? 'Pendiente' : 'Completado',
+      paymentStatus: s.paymentStatus === 'PAGADO' ? 'Pagado' : 'Debe',
+      amountDue: s.amountDue,
+      notes: s.notes ?? undefined,
+    };
+  }
+
+  private readonly todayStr = new Date().toISOString().slice(0, 10);
+
   protected readonly filteredTodaySales = computed(() => {
     const term = this.searchTerm().toLowerCase();
-    return this.store.todaySales().filter(
-      (s) =>
-        s.client.toLowerCase().includes(term) ||
-        s.product.toLowerCase().includes(term) ||
-        s.id.toLowerCase().includes(term),
-    );
+    return this.allSales()
+      .filter((s) => s.date === this.todayStr)
+      .filter(
+        (s) =>
+          s.client.toLowerCase().includes(term) ||
+          s.product.toLowerCase().includes(term) ||
+          s.id.toLowerCase().includes(term),
+      );
   });
 
   protected readonly filteredHistoricalSales = computed(() => {
     const term = this.searchTerm().toLowerCase();
-    return this.store.historicalSales().filter(
-      (s) =>
-        s.client.toLowerCase().includes(term) ||
-        s.product.toLowerCase().includes(term) ||
-        (s.code && s.code.toLowerCase().includes(term)),
-    );
+    return this.allSales()
+      .filter((s) => s.date !== this.todayStr)
+      .filter(
+        (s) =>
+          s.client.toLowerCase().includes(term) ||
+          s.product.toLowerCase().includes(term) ||
+          (s.code && s.code.toLowerCase().includes(term)),
+      );
   });
 
   protected readonly sortedTodaySales = computed(() =>
@@ -111,12 +160,9 @@ export class SalesView {
     this.sortSales(this.filteredHistoricalSales()),
   );
 
-  /** Every sale currently in the store (today + historical) for the selection helpers. */
   protected readonly selectedSales = computed<SaleRecord[]>(() => {
     const ids = new Set(this.selectedSaleIds());
-    return [...this.store.todaySales(), ...this.store.historicalSales()].filter((s) =>
-      ids.has(s.id),
-    );
+    return this.allSales().filter((s) => ids.has(s.id));
   });
 
   protected readonly selectedUnits = computed(() =>
@@ -172,7 +218,7 @@ export class SalesView {
 
     const order: OrderItem = {
       id: `g-${Date.now()}`,
-      orderNumber: `Pedido ${this.store.orders().length + 1}`,
+      orderNumber: `Pedido ${Date.now()}`,
       status: this.groupPaymentStatus() === 'Pagado' ? 'COMPLETED' : 'PENDING',
       client: this.groupClient() || 'Cliente Varios',
       date: new Date().toLocaleDateString('es-ES'),
@@ -204,7 +250,7 @@ export class SalesView {
   protected saveEdit(): void {
     const form = this.editForm();
     if (!form) return;
-    this.store.updateSale(form.id, form);
+    this.allSales.update((list) => list.map((s) => (s.id === form.id ? form : s)));
     this.editForm.set(null);
   }
 
@@ -215,7 +261,7 @@ export class SalesView {
   protected confirmDelete(): void {
     const id = this.deleteSaleId();
     if (!id) return;
-    this.store.deleteSale(id);
+    this.allSales.update((list) => list.filter((s) => s.id !== id));
     this.selectedSaleIds.update((ids) => ids.filter((item) => item !== id));
     this.deleteSaleId.set(null);
   }
@@ -223,7 +269,7 @@ export class SalesView {
   protected exportCsv(): void {
     const csv =
       'ID,Client,Product,Quantity,UnitPrice,Total,Date,PaymentStatus\n' +
-      [...this.store.todaySales(), ...this.store.historicalSales()]
+      this.allSales()
         .map(
           (s) =>
             `${s.id},${s.client},${s.product},${s.quantity},$${s.unitPrice},$${s.total},${s.date},${s.paymentStatus}`,

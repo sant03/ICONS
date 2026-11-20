@@ -69,8 +69,20 @@ public class User extends TenantAwareEntity {
     @Column(name = "locked_until")
     private Instant lockedUntil;
 
+    @Column(name = "suspended_until")
+    private Instant suspendedUntil;
+
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
     public boolean isLocked() {
         return lockedUntil != null && Instant.now().isBefore(lockedUntil);
+    }
+
+    public boolean isSuspensionExpired() {
+        return status == UserStatus.SUSPENDED
+            && suspendedUntil != null
+            && Instant.now().isAfter(suspendedUntil);
     }
 
     public void incrementFailedAttempts() {
@@ -85,5 +97,33 @@ public class User extends TenantAwareEntity {
     public void lock(Instant until) {
         this.lockedUntil = until;
         this.status = UserStatus.LOCKED;
+    }
+
+    public void restrict() {
+        this.status = UserStatus.RESTRICTED;
+    }
+
+    public void unrestrict() {
+        this.status = UserStatus.ACTIVE;
+    }
+
+    public void suspend(Instant until) {
+        this.status = UserStatus.SUSPENDED;
+        this.suspendedUntil = until;
+    }
+
+    public void unsuspend() {
+        this.status = UserStatus.ACTIVE;
+        this.suspendedUntil = null;
+    }
+
+    public void softDelete() {
+        this.status = UserStatus.DEACTIVATED;
+        this.deletedAt = Instant.now();
+    }
+
+    public void reactivate() {
+        this.status = UserStatus.ACTIVE;
+        this.deletedAt = null;
     }
 }

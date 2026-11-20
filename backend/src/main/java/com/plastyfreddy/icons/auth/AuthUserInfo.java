@@ -1,5 +1,7 @@
 package com.plastyfreddy.icons.auth;
 
+import java.util.List;
+
 public record AuthUserInfo(
     Long id,
     String username,
@@ -8,5 +10,6 @@ public record AuthUserInfo(
     String avatarUrl,
     String status,
     String tenantName,
-    String tenantSlug
+    String tenantSlug,
+    List<String> permissions
 ) {}

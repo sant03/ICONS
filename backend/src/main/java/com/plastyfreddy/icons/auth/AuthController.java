@@ -5,8 +5,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/auth")
@@ -20,6 +23,18 @@ public class AuthController {
     @Operation(summary = "Iniciar sesión con código de empresa + credenciales")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    @PostMapping("/register")
+    @Operation(summary = "Registro público de nuevo usuario (excluye rol Gerencial)")
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(request));
+    }
+
+    @GetMapping("/roles")
+    @Operation(summary = "Listar roles disponibles para registro público (excluye Gerencial)")
+    public ResponseEntity<List<PublicRoleResponse>> publicRoles(@RequestParam String tenant) {
+        return ResponseEntity.ok(authService.listPublicRoles(tenant));
     }
 
     @PostMapping("/refresh")
@@ -63,5 +78,18 @@ public class AuthController {
     @Operation(summary = "Obtener información del usuario autenticado")
     public ResponseEntity<AuthUserInfo> me() {
         return ResponseEntity.ok(authService.getMe());
+    }
+
+    @GetMapping("/profile")
+    @Operation(summary = "Obtener perfil completo del usuario autenticado")
+    public ResponseEntity<ProfileResponse> getProfile() {
+        return ResponseEntity.ok(authService.getProfile());
+    }
+
+    @PutMapping("/profile")
+    @Operation(summary = "Actualizar perfil del usuario autenticado")
+    public ResponseEntity<ProfileResponse> updateProfile(
+            @Valid @RequestBody UpdateProfileRequest request) {
+        return ResponseEntity.ok(authService.updateProfile(request));
     }
 }

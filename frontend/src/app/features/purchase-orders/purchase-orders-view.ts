@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
@@ -9,6 +9,7 @@ import {
 } from '@lucide/angular';
 import { PurchaseOrder } from '../../core/models/types';
 import { AppStore } from '../../core/state/app-store';
+import { PurchaseOrdersApi, PurchaseOrderResponse } from '../../core/api';
 
 /**
  * "Todas las Órdenes de Compra" — first view of the Orden de Compra module.
@@ -24,27 +25,64 @@ import { AppStore } from '../../core/state/app-store';
   imports: [FormsModule, LucideCalendar, LucideFileText, LucidePlus, LucideSearch],
   templateUrl: './purchase-orders-view.html',
 })
-export class PurchaseOrdersView {
+export class PurchaseOrdersView implements OnInit {
   protected readonly store = inject(AppStore);
   private readonly router = inject(Router);
+  private readonly api = inject(PurchaseOrdersApi);
 
-  /** Mirrors the `searchQuery` prop of the original component. */
+  protected readonly purchaseOrders = signal<PurchaseOrder[]>([]);
   protected readonly searchTerm = signal('');
+
+  ngOnInit(): void {
+    this.api.list({ size: 200 }).subscribe({
+      next: (page) => this.purchaseOrders.set(page.content.map((po) => PurchaseOrdersView.mapPO(po))),
+    });
+  }
+
+  private static mapPO(po: PurchaseOrderResponse): PurchaseOrder {
+    const statusMap: Record<string, PurchaseOrder['status']> = {
+      AVAILABLE: 'Disponible', USED: 'Usada', PENDING: 'Pendiente', CANCELLED: 'Cancelada',
+      Disponible: 'Disponible', Usada: 'Usada', Pendiente: 'Pendiente', Cancelada: 'Cancelada',
+    };
+    return {
+      id: po.code ?? `Orden ${String(po.id).padStart(3, '0')}`,
+      orderNo: String(po.id).padStart(3, '0'),
+      date: po.date,
+      madeOn: po.madeOn,
+      receptionDate: po.receptionDate ?? '',
+      status: statusMap[po.status] ?? 'Pendiente',
+      supplier: po.supplierName,
+      supplierAddress: po.supplierAddress ?? undefined,
+      supplierPhone: po.supplierPhone ?? undefined,
+      supplierEmail: po.supplierEmail ?? undefined,
+      madeBy: po.madeBy,
+      user: po.userUsername,
+      area: po.area ?? '',
+      paymentMethod: po.paymentMethod ?? '',
+      items: po.items.map((i) => ({
+        productId: String(i.productId),
+        product: i.productName,
+        quantity: i.quantity,
+        unitPrice: i.unitPrice,
+        total: i.total,
+      })),
+      total: po.total,
+      totalProducts: po.totalProducts,
+      approvedBy: po.approvedBy ?? undefined,
+    };
+  }
 
   protected readonly filteredOrders = computed(() => {
     const query = this.searchTerm().trim().toLowerCase();
-    if (!query) return this.store.purchaseOrders();
-    return this.store
-      .purchaseOrders()
-      .filter(
-        (po) =>
-          po.id.toLowerCase().includes(query) || po.supplier.toLowerCase().includes(query),
-      );
+    if (!query) return this.purchaseOrders();
+    return this.purchaseOrders().filter(
+      (po) =>
+        po.id.toLowerCase().includes(query) || po.supplier.toLowerCase().includes(query),
+    );
   });
 
-  /** Counts of the documents by state, shown in the footer indicators. */
   protected readonly availableCount = computed(
-    () => this.store.purchaseOrders().filter((po) => po.status === 'Disponible').length,
+    () => this.purchaseOrders().filter((po) => po.status === 'Disponible').length,
   );
 
   /** Every card is a link to the document detail of that order. */

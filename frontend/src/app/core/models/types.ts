@@ -125,7 +125,8 @@ export interface UserProfile {
   role: string;
   positionName: string;
   avatarUrl: string;
-  status: 'ACTIVE' | 'LOCKED' | 'SUSPENDED';
+  status: 'ACTIVE' | 'LOCKED' | 'RESTRICTED' | 'SUSPENDED' | 'DEACTIVATED';
+  suspendedUntil?: string | null;
 }
 
 /** Role buckets used by the Users module filter pills. */

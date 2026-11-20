@@ -17,6 +17,5 @@ public record UpdateUserRequest(
     String phone,
     String landline,
     String positionName,
-    Long roleId,
-    String status
+    Long roleId
 ) {}

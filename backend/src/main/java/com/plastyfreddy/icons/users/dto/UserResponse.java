@@ -19,6 +19,7 @@ public record UserResponse(
     String status,
     int failedAttempts,
     Instant lockedUntil,
+    Instant suspendedUntil,
     Instant createdAt,
     String createdBy
 ) {}

@@ -1,5 +1,6 @@
 package com.plastyfreddy.icons.shared.config;
 
+import com.plastyfreddy.icons.shared.security.UserStatusFilter;
 import com.plastyfreddy.icons.shared.tenant.TenantFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -18,6 +19,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -33,13 +35,17 @@ public class SecurityConfig {
 
     private final CorsConfigurationSource corsConfigurationSource;
     private final TenantFilter tenantFilter;
+    private final UserStatusFilter userStatusFilter;
 
     @Value("${icons.security.jwt.secret}")
     private String jwtSecret;
 
-    public SecurityConfig(CorsConfigurationSource corsConfigurationSource, TenantFilter tenantFilter) {
+    public SecurityConfig(CorsConfigurationSource corsConfigurationSource,
+                          TenantFilter tenantFilter,
+                          UserStatusFilter userStatusFilter) {
         this.corsConfigurationSource = corsConfigurationSource;
         this.tenantFilter = tenantFilter;
+        this.userStatusFilter = userStatusFilter;
     }
 
     @Bean
@@ -54,7 +60,11 @@ public class SecurityConfig {
                 .frameOptions(frame -> frame.deny())
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**").permitAll()
+                .requestMatchers(
+                    "/auth/login", "/auth/register", "/auth/roles",
+                    "/auth/refresh", "/auth/logout",
+                    "/auth/password-reset/**"
+                ).permitAll()
                 .requestMatchers("/docs/**").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
@@ -66,17 +76,20 @@ public class SecurityConfig {
                     .jwtAuthenticationConverter(jwtAuthenticationConverter())
                 )
             )
-            .addFilterBefore(tenantFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterAfter(tenantFilter, BearerTokenAuthenticationFilter.class)
+            .addFilterAfter(userStatusFilter, TenantFilter.class);
 
         return http.build();
     }
 
     @Bean
     public JwtDecoder jwtDecoder() {
-        SecretKey key = new SecretKeySpec(
-            jwtSecret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"
+        SecretKey key = io.jsonwebtoken.security.Keys.hmacShaKeyFor(
+            jwtSecret.getBytes(StandardCharsets.UTF_8)
         );
-        return NimbusJwtDecoder.withSecretKey(key).build();
+        return NimbusJwtDecoder.withSecretKey(key)
+            .macAlgorithm(org.springframework.security.oauth2.jose.jws.MacAlgorithm.HS512)
+            .build();
     }
 
     @Bean

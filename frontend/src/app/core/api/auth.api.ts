@@ -23,6 +23,53 @@ export interface AuthUserInfo {
   status: string;
   tenantName: string;
   tenantSlug: string;
+  permissions: string[];
+}
+
+export interface RegisterRequest {
+  tenant: string;
+  username: string;
+  email: string;
+  password: string;
+  fullName: string;
+  docId?: string;
+  dateOfBirth?: string;
+  phone?: string;
+  positionName?: string;
+  roleId: number;
+}
+
+export interface PublicRoleResponse {
+  id: number;
+  name: string;
+  description: string;
+}
+
+export interface ProfileResponse {
+  id: number;
+  username: string;
+  fullName: string;
+  email: string;
+  docId: string | null;
+  dateOfBirth: string | null;
+  phone: string | null;
+  landline: string | null;
+  positionName: string | null;
+  avatarUrl: string | null;
+  roleName: string | null;
+  status: string;
+  createdAt: string;
+  tenantName: string;
+}
+
+export interface UpdateProfileRequest {
+  fullName?: string;
+  email?: string;
+  docId?: string;
+  dateOfBirth?: string;
+  phone?: string;
+  landline?: string;
+  positionName?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -32,6 +79,16 @@ export class AuthApi {
 
   login(body: LoginRequest) {
     return this.http.post<AuthResponse>(`${this.base}/login`, body);
+  }
+
+  register(body: RegisterRequest) {
+    return this.http.post<AuthResponse>(`${this.base}/register`, body);
+  }
+
+  publicRoles(tenant: string) {
+    return this.http.get<PublicRoleResponse[]>(`${this.base}/roles`, {
+      params: { tenant },
+    });
   }
 
   refresh(refreshToken: string) {
@@ -48,6 +105,14 @@ export class AuthApi {
 
   me() {
     return this.http.get<AuthUserInfo>(`${this.base}/me`);
+  }
+
+  getProfile() {
+    return this.http.get<ProfileResponse>(`${this.base}/profile`);
+  }
+
+  updateProfile(body: UpdateProfileRequest) {
+    return this.http.put<ProfileResponse>(`${this.base}/profile`, body);
   }
 
   requestPasswordReset(tenant: string, email: string) {

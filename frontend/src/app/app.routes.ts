@@ -13,6 +13,7 @@ import { ClientsView } from './features/clients/clients-view';
 import { SuppliersView } from './features/suppliers/suppliers-view';
 import { PurchaseOrdersView } from './features/purchase-orders/purchase-orders-view';
 import { PurchaseOrderDetailView } from './features/purchase-order-detail/purchase-order-detail-view';
+import { authGuard } from './core/auth/auth.guard';
 
 /**
  * The React app kept `currentView` in state. Here the same `ViewMode` values
@@ -42,6 +43,7 @@ export const routes: Routes = [
   {
     path: '',
     component: Shell,
+    canActivate: [authGuard],
     children: [
       { path: 'dashboard', component: Dashboard },
       { path: 'sales', component: SalesView },

@@ -15,6 +15,8 @@ public interface UserMapper {
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "failedAttempts", ignore = true)
     @Mapping(target = "lockedUntil", ignore = true)
+    @Mapping(target = "suspendedUntil", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
     @Mapping(target = "role", ignore = true)
     User toEntity(CreateUserRequest request);
 

@@ -60,8 +60,8 @@
         </span>
         <svg lucideDollarSign class="w-4 h-4 text-cyan-500"></svg>
       </div>
-      <p class="text-2xl font-black text-[var(--text-primary)]">$12,450.00</p>
-      <p class="text-[10px] font-semibold text-emerald-500">+8.2% vs last month</p>
+      <p class="text-2xl font-black text-[var(--text-primary)]">${{ totalRevenueFormatted() }}</p>
+      <p class="text-[10px] font-semibold text-[var(--text-muted)]">Total acumulado</p>
     </div>
 
     <div class="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm space-y-2">
@@ -71,8 +71,8 @@
         </span>
         <svg lucideShoppingBag class="w-4 h-4 text-cyan-500"></svg>
       </div>
-      <p class="text-2xl font-black text-[var(--text-primary)]">142</p>
-      <p class="text-[10px] font-semibold text-emerald-500">+12 vs last month</p>
+      <p class="text-2xl font-black text-[var(--text-primary)]">{{ allSales().length }}</p>
+      <p class="text-[10px] font-semibold text-[var(--text-muted)]">Total registros</p>
     </div>
 
     <div class="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm space-y-2">
@@ -82,8 +82,8 @@
         </span>
         <svg lucideTrendingUp class="w-4 h-4 text-cyan-500"></svg>
       </div>
-      <p class="text-2xl font-black text-[var(--text-primary)]">$87.60</p>
-      <p class="text-[10px] font-semibold text-rose-500">-2.4% vs last month</p>
+      <p class="text-2xl font-black text-[var(--text-primary)]">${{ avgTicketFormatted() }}</p>
+      <p class="text-[10px] font-semibold text-[var(--text-muted)]">Promedio por venta</p>
     </div>
 
     <div class="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm space-y-2">
@@ -93,8 +93,8 @@
         </span>
         <svg lucideTag class="w-4 h-4 text-cyan-500"></svg>
       </div>
-      <p class="text-2xl font-black text-[var(--text-primary)]">45</p>
-      <p class="text-[10px] font-semibold text-[var(--text-muted)]">Stable vs last month</p>
+      <p class="text-2xl font-black text-[var(--text-primary)]">{{ filteredTodaySales().length }}</p>
+      <p class="text-[10px] font-semibold text-[var(--text-muted)]">Ventas de hoy</p>
     </div>
   </div>
 

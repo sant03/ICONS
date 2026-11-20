@@ -16,6 +16,7 @@ export interface UserResponse {
   avatarUrl: string | null;
   roleName: string;
   status: string;
+  suspendedUntil: string | null;
   createdAt: string;
 }
 
@@ -42,7 +43,6 @@ export interface UpdateUserRequest {
   positionName?: string;
   avatarUrl?: string;
   roleId?: number;
-  status?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -82,5 +82,29 @@ export class UsersApi {
 
   unlock(id: number) {
     return this.http.post<void>(`${this.base}/${id}/unlock`, {});
+  }
+
+  restrict(id: number) {
+    return this.http.post<UserResponse>(`${this.base}/${id}/restrict`, {});
+  }
+
+  unrestrict(id: number) {
+    return this.http.post<UserResponse>(`${this.base}/${id}/unrestrict`, {});
+  }
+
+  suspend(id: number, duration: string) {
+    return this.http.post<UserResponse>(`${this.base}/${id}/suspend`, { duration });
+  }
+
+  unsuspend(id: number) {
+    return this.http.post<UserResponse>(`${this.base}/${id}/unsuspend`, {});
+  }
+
+  deactivate(id: number) {
+    return this.http.delete<void>(`${this.base}/${id}`);
+  }
+
+  reactivate(id: number) {
+    return this.http.post<UserResponse>(`${this.base}/${id}/reactivate`, {});
   }
 }

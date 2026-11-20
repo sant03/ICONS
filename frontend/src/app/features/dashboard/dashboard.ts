@@ -2,6 +2,7 @@ import {
   AfterViewInit,
   Component,
   ElementRef,
+  OnInit,
   computed,
   inject,
   signal,
@@ -25,6 +26,7 @@ import {
 } from '@lucide/angular';
 import { AppStore } from '../../core/state/app-store';
 import { ScrollRevealDirective } from '../../shared/directives/scroll-reveal.directive';
+import { DashboardApi, DashboardStats, RecentTransaction } from '../../core/api';
 
 @Component({
   selector: 'app-dashboard',
@@ -47,14 +49,27 @@ import { ScrollRevealDirective } from '../../shared/directives/scroll-reveal.dir
   ],
   templateUrl: './dashboard.html',
 })
-export class Dashboard implements AfterViewInit {
+export class Dashboard implements AfterViewInit, OnInit {
   protected readonly store = inject(AppStore);
+  private readonly dashboardApi = inject(DashboardApi);
+
+  protected readonly stats = signal<DashboardStats | null>(null);
+  protected readonly apiTransactions = signal<RecentTransaction[]>([]);
 
   protected readonly modulesContainer = viewChild<ElementRef<HTMLDivElement>>('modulesContainer');
   protected readonly canScrollLeft = signal(false);
   protected readonly canScrollRight = signal(true);
 
   protected readonly filterModule = signal<string>('all');
+
+  ngOnInit(): void {
+    this.dashboardApi.getStats().subscribe({
+      next: (data) => {
+        this.stats.set(data);
+        this.apiTransactions.set(data.recentTransactions);
+      },
+    });
+  }
 
   ngAfterViewInit(): void {
     setTimeout(() => this.checkScroll(), 100);
@@ -80,15 +95,14 @@ export class Dashboard implements AfterViewInit {
   }
 
   protected readonly filteredTransactions = computed(() =>
-    this.store.transactions().filter((t) => {
+    this.apiTransactions().filter((t) => {
       if (this.filterModule() === 'all') return true;
       return t.module.toLowerCase() === this.filterModule().toLowerCase();
     }),
   );
 
   protected exportReport(): void {
-    const rows = this.store
-      .transactions()
+    const rows = this.apiTransactions()
       .map((t) => `${t.id},${t.module},"${t.description}",${t.status},${t.amount}`)
       .join('\n');
     const csvContent = 'data:text/csv;charset=utf-8,ID,Modulo,Descripcion,Estado,Monto\n' + rows;

@@ -108,6 +108,29 @@
           </div>
 
           <form (ngSubmit)="onAuthenticate()" class="space-y-4">
+            @if (auth.loginError()) {
+              <div class="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium">
+                {{ auth.loginError() }}
+              </div>
+            }
+
+            <div class="space-y-1.5">
+              <label class="text-xs font-semibold text-[var(--text-primary)]" for="login-tenant">Empresa</label>
+              <div class="relative">
+                <svg lucideBuilding class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]"></svg>
+                <input
+                  id="login-tenant"
+                  name="tenant"
+                  type="text"
+                  [ngModel]="tenant()"
+                  (ngModelChange)="tenant.set($event)"
+                  placeholder="Código de empresa"
+                  class="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
+                  required
+                />
+              </div>
+            </div>
+
             <div class="space-y-1.5">
               <label class="text-xs font-semibold text-[var(--text-primary)]" for="login-username">Username</label>
               <div class="relative">
@@ -160,11 +183,17 @@
 
             <button
               type="submit"
-              class="w-full py-3 px-6 rounded-2xl bg-cyan-500 hover:bg-cyan-600 text-white font-semibold text-xs shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer mt-2"
+              [disabled]="auth.loading()"
+              class="w-full py-3 px-6 rounded-2xl bg-cyan-500 hover:bg-cyan-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-xs shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer mt-2"
             >
-              <svg lucideLogIn class="w-4 h-4"></svg>
-              <span>LOG IN</span>
-              <svg lucideArrowRight class="w-4 h-4"></svg>
+              @if (auth.loading()) {
+                <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <span>VERIFICANDO...</span>
+              } @else {
+                <svg lucideLogIn class="w-4 h-4"></svg>
+                <span>LOG IN</span>
+                <svg lucideArrowRight class="w-4 h-4"></svg>
+              }
             </button>
           </form>
 
@@ -219,19 +248,78 @@
           </button>
         </div>
 
-        <form (ngSubmit)="onAuthenticate()" class="space-y-4">
+        <form (ngSubmit)="onRegister()" class="space-y-4">
+          @if (auth.loginError()) {
+            <div class="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium">
+              {{ auth.loginError() }}
+            </div>
+          }
+
+          <!-- Username & Password -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="space-y-1">
+              <label class="text-[11px] font-bold text-[var(--text-primary)] uppercase tracking-wider flex items-center gap-1.5" for="reg-username">
+                <svg lucideUser class="w-3.5 h-3.5 text-cyan-500"></svg>
+                <span>Username</span>
+              </label>
+              <input
+                id="reg-username"
+                name="regUsername"
+                type="text"
+                [ngModel]="regUsername()"
+                (ngModelChange)="regUsername.set($event)"
+                placeholder="Nombre de usuario"
+                class="w-full px-3.5 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] focus:outline-none focus:border-cyan-500"
+                required
+              />
+            </div>
+
+            <div class="space-y-1">
+              <label class="text-[11px] font-bold text-[var(--text-primary)] uppercase tracking-wider flex items-center gap-1.5" for="reg-password">
+                <svg lucideLock class="w-3.5 h-3.5 text-cyan-500"></svg>
+                <span>Password</span>
+              </label>
+              <div class="relative">
+                <input
+                  id="reg-password"
+                  name="regPassword"
+                  [type]="regShowPassword() ? 'text' : 'password'"
+                  [ngModel]="regPassword()"
+                  (ngModelChange)="regPassword.set($event)"
+                  placeholder="Mínimo 8 caracteres"
+                  class="w-full px-3.5 pr-10 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] focus:outline-none focus:border-cyan-500 font-mono"
+                  required
+                  minlength="8"
+                />
+                <button
+                  type="button"
+                  (click)="regShowPassword.set(!regShowPassword())"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                >
+                  @if (regShowPassword()) {
+                    <svg lucideEyeOff class="w-4 h-4"></svg>
+                  } @else {
+                    <svg lucideEye class="w-4 h-4"></svg>
+                  }
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- First Name & Last Name -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="space-y-1">
               <label class="text-[11px] font-bold text-[var(--text-primary)] uppercase tracking-wider flex items-center gap-1.5" for="reg-first-name">
                 <svg lucideUser class="w-3.5 h-3.5 text-cyan-500"></svg>
-                <span>First Name</span>
+                <span>Nombre</span>
               </label>
               <input
                 id="reg-first-name"
                 name="firstName"
                 type="text"
-                placeholder="Enter first name"
-                value="Freddy"
+                [ngModel]="regFirstName()"
+                (ngModelChange)="regFirstName.set($event)"
+                placeholder="Ingrese su nombre"
                 class="w-full px-3.5 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] focus:outline-none focus:border-cyan-500"
                 required
               />
@@ -240,88 +328,82 @@
             <div class="space-y-1">
               <label class="text-[11px] font-bold text-[var(--text-primary)] uppercase tracking-wider flex items-center gap-1.5" for="reg-last-name">
                 <svg lucideUser class="w-3.5 h-3.5 text-cyan-500"></svg>
-                <span>Last Name</span>
+                <span>Apellido</span>
               </label>
               <input
                 id="reg-last-name"
                 name="lastName"
                 type="text"
-                placeholder="Enter last name"
-                value="Potes"
+                [ngModel]="regLastName()"
+                (ngModelChange)="regLastName.set($event)"
+                placeholder="Ingrese su apellido"
                 class="w-full px-3.5 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] focus:outline-none focus:border-cyan-500"
                 required
               />
             </div>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <!-- Date of Birth & Document ID -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="space-y-1">
               <label class="text-[11px] font-bold text-[var(--text-primary)] uppercase tracking-wider flex items-center gap-1.5" for="reg-dob">
                 <svg lucideCalendar class="w-3.5 h-3.5 text-cyan-500"></svg>
-                <span>Date of Birth</span>
+                <span>Fecha de Nacimiento</span>
               </label>
               <app-datepicker
                 id="reg-dob"
                 name="dateOfBirth"
-                [ngModel]="'1985-04-12'"
-              />
-            </div>
-
-            <div class="space-y-1">
-              <label class="text-[11px] font-bold text-[var(--text-primary)] uppercase tracking-wider" for="reg-age">
-                # Age
-              </label>
-              <input
-                id="reg-age"
-                name="age"
-                type="number"
-                value="39"
-                class="w-full px-3 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] focus:outline-none focus:border-cyan-500 font-mono"
+                [ngModel]="regDateOfBirth()"
+                (ngModelChange)="regDateOfBirth.set($event)"
               />
             </div>
 
             <div class="space-y-1">
               <label class="text-[11px] font-bold text-[var(--text-primary)] uppercase tracking-wider flex items-center gap-1.5" for="reg-id">
                 <svg lucideCreditCard class="w-3.5 h-3.5 text-cyan-500"></svg>
-                <span># ID (CC)</span>
+                <span># Documento (CC)</span>
               </label>
               <input
                 id="reg-id"
                 name="documentId"
                 type="text"
-                value="109848102"
-                placeholder="Enter document ID"
-                class="w-full px-3 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] focus:outline-none focus:border-cyan-500 font-mono"
+                [ngModel]="regDocId()"
+                (ngModelChange)="regDocId.set($event)"
+                placeholder="Número de documento"
+                class="w-full px-3.5 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] focus:outline-none focus:border-cyan-500 font-mono"
               />
             </div>
           </div>
 
+          <!-- Role, Phone & Email -->
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div class="space-y-1">
               <label class="text-[11px] font-bold text-[var(--text-primary)] uppercase tracking-wider flex items-center gap-1.5" for="reg-role">
                 <svg lucideBuilding class="w-3.5 h-3.5 text-cyan-500"></svg>
-                <span>Role</span>
+                <span>Rol</span>
               </label>
               <app-select
                 id="reg-role"
                 name="role"
-                [options]="roleOptions"
-                [ngModel]="role()"
-                (ngModelChange)="role.set($event)"
+                [options]="roleOptions()"
+                [ngModel]="regRoleId()"
+                (ngModelChange)="regRoleId.set($event)"
               />
             </div>
 
             <div class="space-y-1">
               <label class="text-[11px] font-bold text-[var(--text-primary)] uppercase tracking-wider flex items-center gap-1.5" for="reg-phone">
                 <svg lucidePhone class="w-3.5 h-3.5 text-cyan-500"></svg>
-                <span>Phone</span>
+                <span>Teléfono</span>
               </label>
               <input
                 id="reg-phone"
                 name="phone"
                 type="text"
-                value="+57 300 000 0000"
-                class="w-full px-3 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] focus:outline-none focus:border-cyan-500 font-mono"
+                [ngModel]="regPhone()"
+                (ngModelChange)="regPhone.set($event)"
+                placeholder="+57 300 000 0000"
+                class="w-full px-3.5 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] focus:outline-none focus:border-cyan-500 font-mono"
               />
             </div>
 
@@ -334,10 +416,30 @@
                 id="reg-email"
                 name="email"
                 type="email"
-                value="freddy@company.com"
-                class="w-full px-3 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] focus:outline-none focus:border-cyan-500"
+                [ngModel]="regEmail()"
+                (ngModelChange)="regEmail.set($event)"
+                placeholder="correo@ejemplo.com"
+                class="w-full px-3.5 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] focus:outline-none focus:border-cyan-500"
+                required
               />
             </div>
+          </div>
+
+          <!-- Position (optional) -->
+          <div class="space-y-1">
+            <label class="text-[11px] font-bold text-[var(--text-primary)] uppercase tracking-wider flex items-center gap-1.5" for="reg-position">
+              <svg lucideBuilding class="w-3.5 h-3.5 text-cyan-500"></svg>
+              <span>Cargo</span>
+            </label>
+            <input
+              id="reg-position"
+              name="positionName"
+              type="text"
+              [ngModel]="regPositionName()"
+              (ngModelChange)="regPositionName.set($event)"
+              placeholder="Ej: Asistente de ventas (opcional)"
+              class="w-full px-3.5 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] focus:outline-none focus:border-cyan-500"
+            />
           </div>
 
           <div class="p-3.5 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border-color)] flex items-start gap-3">
@@ -350,20 +452,26 @@
               class="mt-0.5 rounded border-gray-300 text-cyan-500 focus:ring-cyan-500 cursor-pointer"
             />
             <label for="terms" class="text-xs text-[var(--text-secondary)] leading-tight cursor-pointer">
-              <span class="font-semibold text-[var(--text-primary)]">I agree to the Terms of Service and Privacy Policy.</span>
+              <span class="font-semibold text-[var(--text-primary)]">Acepto los Términos de Servicio y la Política de Privacidad.</span>
               <br />
               <span class="text-[11px] text-[var(--text-muted)]">
-                By creating an account, you acknowledge that your data will be managed according to internal security protocols.
+                Al crear una cuenta, acepta que sus datos serán gestionados según los protocolos internos de seguridad.
               </span>
             </label>
           </div>
 
           <button
             type="submit"
-            class="w-full py-3 px-6 rounded-2xl bg-cyan-500 hover:bg-cyan-600 text-white font-semibold text-xs shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer"
+            [disabled]="auth.loading() || !agreeTerms()"
+            class="w-full py-3 px-6 rounded-2xl bg-cyan-500 hover:bg-cyan-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-xs shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer"
           >
-            <span>CREATE ACCOUNT</span>
-            <svg lucideArrowRight class="w-4 h-4"></svg>
+            @if (auth.loading()) {
+              <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              <span>CREANDO CUENTA...</span>
+            } @else {
+              <span>CREAR CUENTA</span>
+              <svg lucideArrowRight class="w-4 h-4"></svg>
+            }
           </button>
         </form>
 

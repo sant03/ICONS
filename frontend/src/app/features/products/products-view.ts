@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CustomSelectComponent } from '../../shared/ui/custom-select/custom-select';
 import {
@@ -14,6 +14,7 @@ import {
 } from '@lucide/angular';
 import { ProductCatalogItem, ProductUnit } from '../../core/models/types';
 import { AppStore } from '../../core/state/app-store';
+import { ProductsApi, ProductResponse, CategoriesApi, CategoryResponse } from '../../core/api';
 
 /**
  * Productos: grilla por categoria + panel lateral de detalle, portado de
@@ -53,8 +54,13 @@ import { AppStore } from '../../core/state/app-store';
   ],
   templateUrl: './products-view.html',
 })
-export class ProductsView {
+export class ProductsView implements OnInit {
   protected readonly store = inject(AppStore);
+  private readonly productsApi = inject(ProductsApi);
+  private readonly categoriesApi = inject(CategoriesApi);
+
+  protected readonly products = signal<ProductCatalogItem[]>([]);
+  private readonly apiCategories = signal<CategoryResponse[]>([]);
 
   /** Primera categoria; el source deriva las categorias de `products`. */
   protected readonly allCategory = 'Todas';
@@ -81,17 +87,45 @@ export class ProductsView {
 
   protected readonly units: ProductUnit[] = ['Und', 'Pqt', 'Kg', 'Lb'];
 
+  protected readonly categoryNames = computed(() => this.apiCategories().map((c) => c.name));
+
   protected readonly categories = computed(() => [
     this.allCategory,
-    ...this.store.productCategories(),
+    ...this.categoryNames(),
   ]);
 
   protected readonly formCategories = computed(() => this.categories().slice(1));
 
+  ngOnInit(): void {
+    this.categoriesApi.list({ size: 100 }).subscribe({
+      next: (page) => this.apiCategories.set(page.content),
+    });
+    this.productsApi.list({ size: 500 }).subscribe({
+      next: (page) => this.products.set(page.content.map((p) => this.mapProduct(p))),
+    });
+  }
+
+  private mapProduct(p: ProductResponse): ProductCatalogItem {
+    const status: ProductCatalogItem['status'] =
+      p.stock <= 0 ? 'OUT_OF_STOCK' : p.stock <= p.minPurchase ? 'LOW_STOCK' : 'IN_STOCK';
+    return {
+      id: String(p.id),
+      name: p.reference,
+      code: p.code,
+      stock: p.stock,
+      unitPrice: p.salePrice,
+      purchasePrice: p.purchasePrice,
+      minPurchase: p.minPurchase,
+      unit: (p.unit as ProductUnit) || 'Und',
+      status,
+      category: p.categoryName,
+    };
+  }
+
   protected readonly filteredProducts = computed(() => {
     const term = this.searchTerm().trim().toLowerCase();
     const category = this.selectedCategory();
-    return this.store.products().filter((p) => {
+    return this.products().filter((p) => {
       const matchesTerm =
         !term ||
         p.name.toLowerCase().includes(term) ||
@@ -115,11 +149,10 @@ export class ProductsView {
       .map((cat) => ({ category: cat, products: groups.get(cat) ?? [] }));
   });
 
-  /** `setSelectedProduct` del source; por defecto muestra el primer producto. */
   protected readonly selectedProduct = computed<ProductCatalogItem | null>(() => {
-    const products = this.store.products();
+    const list = this.products();
     const id = this.selectedProductId();
-    return products.find((p) => p.id === id) ?? products.at(0) ?? null;
+    return list.find((p) => p.id === id) ?? list.at(0) ?? null;
   });
 
   protected readonly isEditing = computed(() => this.editingProductId() !== null);
@@ -146,7 +179,7 @@ export class ProductsView {
 
   protected openProductModal(): void {
     this.editingProductId.set(null);
-    const [firstCategory] = this.store.productCategories();
+    const [firstCategory] = this.categoryNames();
     this.reference.set('');
     this.code.set('1247');
     this.category.set(firstCategory ?? '');
@@ -179,29 +212,50 @@ export class ProductsView {
   protected saveProduct(): void {
     const reference = this.reference().trim();
     if (!reference) return;
-    const base = {
-      name: reference,
-      code: this.code().trim(),
-      category: this.category(),
-      stock: Math.max(0, this.stock()),
-      unitPrice: this.salePrice(),
-      purchasePrice: this.purchasePrice(),
-      minPurchase: Math.max(0, this.minPurchase()),
-      unit: this.unit(),
-    };
+    const catObj = this.apiCategories().find((c) => c.name === this.category());
     const editingId = this.editingProductId();
     if (editingId) {
-      this.store.updateProduct(editingId, base);
+      this.productsApi.update(Number(editingId), {
+        reference,
+        categoryId: catObj?.id,
+        minPurchase: Math.max(0, this.minPurchase()),
+        purchasePrice: this.purchasePrice(),
+        salePrice: this.salePrice(),
+        unit: this.unit(),
+      }).subscribe({
+        next: (res) => {
+          const mapped = this.mapProduct(res);
+          this.products.update((list) => list.map((p) => (p.id === editingId ? mapped : p)));
+        },
+      });
     } else {
-      this.store.addProduct({ id: `p-${Date.now()}`, ...base, status: 'IN_STOCK' });
+      this.productsApi.create({
+        reference,
+        categoryId: catObj?.id ?? 0,
+        stock: Math.max(0, this.stock()),
+        minPurchase: Math.max(0, this.minPurchase()),
+        purchasePrice: this.purchasePrice(),
+        salePrice: this.salePrice(),
+        unit: this.unit(),
+      }).subscribe({
+        next: (res) => {
+          const mapped = this.mapProduct(res);
+          this.products.update((list) => [...list, mapped]);
+        },
+      });
     }
     this.isProductModalOpen.set(false);
   }
 
   protected saveCategory(): void {
-    this.store.addCategory(this.newCategoryName());
-    const created = this.newCategoryName().trim();
-    if (created) this.selectedCategory.set(created);
+    const name = this.newCategoryName().trim();
+    if (!name) return;
+    this.categoriesApi.create(name).subscribe({
+      next: (res) => {
+        this.apiCategories.update((list) => [...list, res]);
+        this.selectedCategory.set(res.name);
+      },
+    });
     this.newCategoryName.set('');
     this.isCategoryModalOpen.set(false);
   }

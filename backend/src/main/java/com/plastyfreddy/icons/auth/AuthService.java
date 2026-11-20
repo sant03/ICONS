@@ -20,6 +20,7 @@ import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -56,13 +57,21 @@ public class AuthService {
             .orElseThrow(() -> new BusinessException(HttpStatus.UNAUTHORIZED,
                 "Credenciales incorrectas"));
 
+        if (user.getStatus() == UserStatus.DEACTIVATED) {
+            throw new BusinessException(HttpStatus.FORBIDDEN, "Cuenta desactivada");
+        }
+
         if (user.isLocked()) {
             throw new BusinessException(HttpStatus.FORBIDDEN,
                 "Cuenta bloqueada. Intente de nuevo más tarde");
         }
 
         if (user.getStatus() == UserStatus.SUSPENDED) {
-            throw new BusinessException(HttpStatus.FORBIDDEN, "Cuenta suspendida");
+            if (user.isSuspensionExpired()) {
+                user.unsuspend();
+            } else {
+                throw new BusinessException(HttpStatus.FORBIDDEN, "Cuenta suspendida");
+            }
         }
 
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
@@ -76,7 +85,8 @@ public class AuthService {
 
         var permissions = loadPermissions(user);
         String accessToken = jwtService.generateAccessToken(
-            user.getId(), user.getUsername(), tenant.getId(), permissions
+            user.getId(), user.getUsername(), tenant.getId(), permissions,
+            user.getStatus().name()
         );
 
         String rawRefreshToken = jwtService.generateOpaqueRefreshToken();
@@ -85,7 +95,7 @@ public class AuthService {
         return new AuthResponse(
             accessToken,
             rawRefreshToken,
-            mapToUserInfo(user, tenant)
+            mapToUserInfo(user, tenant, permissions)
         );
     }
 
@@ -111,6 +121,20 @@ public class AuthService {
             .orElseThrow(() -> new BusinessException(HttpStatus.UNAUTHORIZED,
                 "Usuario no encontrado"));
 
+        if (user.getStatus() == UserStatus.DEACTIVATED) {
+            throw new BusinessException(HttpStatus.FORBIDDEN, "Cuenta desactivada");
+        }
+        if (user.getStatus() == UserStatus.LOCKED && user.isLocked()) {
+            throw new BusinessException(HttpStatus.FORBIDDEN, "Cuenta bloqueada");
+        }
+        if (user.getStatus() == UserStatus.SUSPENDED) {
+            if (user.isSuspensionExpired()) {
+                user.unsuspend();
+            } else {
+                throw new BusinessException(HttpStatus.FORBIDDEN, "Cuenta suspendida");
+            }
+        }
+
         Tenant tenant = tenantRepository.findById(stored.getTenantId())
             .orElseThrow(() -> new BusinessException(HttpStatus.UNAUTHORIZED,
                 "Empresa no encontrada"));
@@ -119,7 +143,8 @@ public class AuthService {
 
         var permissions = loadPermissions(user);
         String newAccessToken = jwtService.generateAccessToken(
-            user.getId(), user.getUsername(), tenant.getId(), permissions
+            user.getId(), user.getUsername(), tenant.getId(), permissions,
+            user.getStatus().name()
         );
 
         String newRawRefreshToken = jwtService.generateOpaqueRefreshToken();
@@ -128,7 +153,7 @@ public class AuthService {
         return new AuthResponse(
             newAccessToken,
             newRawRefreshToken,
-            mapToUserInfo(user, tenant)
+            mapToUserInfo(user, tenant, permissions)
         );
     }
 
@@ -197,6 +222,77 @@ public class AuthService {
         refreshTokenRepository.revokeAllByUserId(user.getId());
     }
 
+    private static final String GERENCIAL_ROLE = "Gerencial";
+
+    @Transactional
+    public AuthResponse register(RegisterRequest request) {
+        Tenant tenant = tenantRepository.findBySlug(request.tenant())
+            .orElseThrow(() -> new BusinessException(HttpStatus.BAD_REQUEST,
+                "Código de empresa no válido"));
+
+        if (!"ACTIVE".equals(tenant.getStatus())) {
+            throw new BusinessException(HttpStatus.FORBIDDEN, "La empresa está inactiva");
+        }
+
+        if (userRepository.existsByTenantIdAndUsername(tenant.getId(), request.username())) {
+            throw BusinessException.conflict("El nombre de usuario ya está en uso");
+        }
+        if (userRepository.existsByTenantIdAndEmail(tenant.getId(), request.email())) {
+            throw BusinessException.conflict("El email ya está en uso");
+        }
+
+        Role role = roleRepository.findByIdAndTenantId(request.roleId(), tenant.getId())
+            .orElseThrow(() -> BusinessException.notFound("Rol", request.roleId()));
+
+        if (GERENCIAL_ROLE.equalsIgnoreCase(role.getName())) {
+            throw new BusinessException(HttpStatus.FORBIDDEN,
+                "No se permite el auto-registro con el rol Gerencial");
+        }
+
+        User user = User.builder()
+            .username(request.username())
+            .email(request.email())
+            .passwordHash(passwordEncoder.encode(request.password()))
+            .fullName(request.fullName())
+            .docId(request.docId())
+            .dateOfBirth(request.dateOfBirth())
+            .phone(request.phone())
+            .positionName(request.positionName())
+            .roleId(role.getId())
+            .build();
+        user.setTenantId(tenant.getId());
+        user = userRepository.save(user);
+
+        TenantContext.set(tenant.getId());
+
+        var permissions = loadPermissions(user);
+        String accessToken = jwtService.generateAccessToken(
+            user.getId(), user.getUsername(), tenant.getId(), permissions,
+            user.getStatus().name()
+        );
+
+        String rawRefreshToken = jwtService.generateOpaqueRefreshToken();
+        saveRefreshToken(rawRefreshToken, user.getId(), tenant.getId());
+
+        return new AuthResponse(
+            accessToken,
+            rawRefreshToken,
+            mapToUserInfo(user, tenant, permissions)
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public List<PublicRoleResponse> listPublicRoles(String tenantSlug) {
+        Tenant tenant = tenantRepository.findBySlug(tenantSlug)
+            .orElseThrow(() -> new BusinessException(HttpStatus.BAD_REQUEST,
+                "Código de empresa no válido"));
+
+        return roleRepository.findByTenantId(tenant.getId()).stream()
+            .filter(r -> !GERENCIAL_ROLE.equalsIgnoreCase(r.getName()))
+            .map(r -> new PublicRoleResponse(r.getId(), r.getName(), r.getDescription()))
+            .collect(Collectors.toList());
+    }
+
     @Transactional(readOnly = true)
     public AuthUserInfo getMe() {
         Long userId = com.plastyfreddy.icons.shared.security.CurrentUser.getUserId();
@@ -207,7 +303,83 @@ public class AuthService {
         Tenant tenant = tenantRepository.findById(tenantId)
             .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
 
-        return mapToUserInfo(user, tenant);
+        var permissions = loadPermissions(user);
+        return mapToUserInfo(user, tenant, permissions);
+    }
+
+    @Transactional(readOnly = true)
+    public ProfileResponse getProfile() {
+        Long userId = com.plastyfreddy.icons.shared.security.CurrentUser.getUserId();
+        Long tenantId = com.plastyfreddy.icons.shared.security.CurrentUser.getTenantId();
+
+        User user = userRepository.findByIdAndTenantId(userId, tenantId)
+            .orElseThrow(() -> new BusinessException("Usuario no encontrado"));
+        Tenant tenant = tenantRepository.findById(tenantId)
+            .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
+
+        Role role = roleRepository.findByIdAndTenantId(user.getRoleId(), tenantId)
+            .orElse(null);
+
+        return new ProfileResponse(
+            user.getId(),
+            user.getUsername(),
+            user.getFullName(),
+            user.getEmail(),
+            user.getDocId(),
+            user.getDateOfBirth(),
+            user.getPhone(),
+            user.getLandline(),
+            user.getPositionName(),
+            user.getAvatarUrl(),
+            role != null ? role.getName() : null,
+            user.getStatus().name(),
+            user.getCreatedAt(),
+            tenant.getName()
+        );
+    }
+
+    @Transactional
+    public ProfileResponse updateProfile(UpdateProfileRequest request) {
+        Long userId = com.plastyfreddy.icons.shared.security.CurrentUser.getUserId();
+        Long tenantId = com.plastyfreddy.icons.shared.security.CurrentUser.getTenantId();
+
+        User user = userRepository.findByIdAndTenantId(userId, tenantId)
+            .orElseThrow(() -> new BusinessException("Usuario no encontrado"));
+
+        if (request.email() != null && !request.email().equals(user.getEmail())) {
+            if (userRepository.existsByTenantIdAndEmail(tenantId, request.email())) {
+                throw BusinessException.conflict("El email ya está en uso");
+            }
+            user.setEmail(request.email());
+        }
+        if (request.fullName() != null) user.setFullName(request.fullName());
+        if (request.docId() != null) user.setDocId(request.docId());
+        if (request.dateOfBirth() != null) user.setDateOfBirth(request.dateOfBirth());
+        if (request.phone() != null) user.setPhone(request.phone());
+        if (request.landline() != null) user.setLandline(request.landline());
+        if (request.positionName() != null) user.setPositionName(request.positionName());
+
+        Tenant tenant = tenantRepository.findById(tenantId)
+            .orElseThrow(() -> new BusinessException("Empresa no encontrada"));
+        Role role = roleRepository.findByIdAndTenantId(user.getRoleId(), tenantId)
+            .orElse(null);
+
+        return new ProfileResponse(
+            user.getId(),
+            user.getUsername(),
+            user.getFullName(),
+            user.getEmail(),
+            user.getDocId(),
+            user.getDateOfBirth(),
+            user.getPhone(),
+            user.getLandline(),
+            user.getPositionName(),
+            user.getAvatarUrl(),
+            role != null ? role.getName() : null,
+            user.getStatus().name(),
+            user.getCreatedAt(),
+            tenant.getName()
+        );
     }
 
     private void handleFailedAttempt(User user) {
@@ -236,7 +408,7 @@ public class AuthService {
         refreshTokenRepository.save(rt);
     }
 
-    private AuthUserInfo mapToUserInfo(User user, Tenant tenant) {
+    private AuthUserInfo mapToUserInfo(User user, Tenant tenant, java.util.Collection<String> permissions) {
         return new AuthUserInfo(
             user.getId(),
             user.getUsername(),
@@ -245,7 +417,8 @@ public class AuthService {
             user.getAvatarUrl(),
             user.getStatus().name(),
             tenant.getName(),
-            tenant.getSlug()
+            tenant.getSlug(),
+            List.copyOf(permissions)
         );
     }
 

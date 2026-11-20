@@ -1,21 +1,26 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CustomDatePickerComponent } from '../../shared/ui/custom-datepicker/custom-datepicker';
 import {
+  LucideAlertTriangle,
   LucideCamera,
   LucideCheckCircle2,
   LucideClock,
   LucideEdit,
   LucideLock,
   LucidePower,
+  LucideShieldAlert,
   LucideTrash2,
   LucideUser,
   LucideX,
 } from '@lucide/angular';
 import { StaffGroup, StaffMember, UserProfile, UserActivity } from '../../core/models/types';
 import { AppStore } from '../../core/state/app-store';
+import { AuthService } from '../../core/auth/auth.service';
+import { UsersApi, UserResponse } from '../../core/api';
 
 type GroupFilter = 'Todos' | StaffGroup;
+type ActionPopup = 'restrict' | 'unrestrict' | 'suspend' | 'unsuspend' | 'deactivate' | null;
 
 /**
  * Users module (staff directory): role filters, personal list, detail form,
@@ -30,10 +35,12 @@ type GroupFilter = 'Todos' | StaffGroup;
   imports: [
     FormsModule,
     CustomDatePickerComponent,
+    LucideAlertTriangle,
     LucideEdit,
     LucideCamera,
     LucideLock,
     LucidePower,
+    LucideShieldAlert,
     LucideClock,
     LucideTrash2,
     LucideCheckCircle2,
@@ -42,10 +49,32 @@ type GroupFilter = 'Todos' | StaffGroup;
   ],
   templateUrl: './users-view.html',
 })
-export class UsersView {
+export class UsersView implements OnInit {
   protected readonly store = inject(AppStore);
+  private readonly api = inject(UsersApi);
+  private readonly auth = inject(AuthService);
 
-  /** Mobile bottom drawer state */
+  protected readonly staff = signal<StaffMember[]>([]);
+
+  protected readonly hasBlockPermission = computed(() =>
+    this.auth.currentUser()?.permissions?.includes('USERS_BLOCK') ?? false
+  );
+  protected readonly hasDeletePermission = computed(() =>
+    this.auth.currentUser()?.permissions?.includes('USERS_DELETE') ?? false
+  );
+  protected readonly actionLoading = signal(false);
+
+  protected readonly activePopup = signal<ActionPopup>(null);
+  protected readonly popupAnimatingOut = signal(false);
+  protected readonly selectedDuration = signal<string | null>(null);
+
+  protected readonly suspendDurations = [
+    { value: 'PT1H', label: '1 hora' },
+    { value: 'PT24H', label: '24 horas' },
+    { value: 'P7D', label: '7 días' },
+    { value: 'P30D', label: '30 días' },
+  ];
+
   protected readonly isMobileDrawerOpen = signal(false);
   protected readonly isMobileDrawerReady = signal(false);
 
@@ -57,28 +86,65 @@ export class UsersView {
   ];
   protected readonly activeFilter = signal<GroupFilter>('Todos');
 
-  /** The mockup opens with `Santiago03` selected. */
-  protected readonly selectedId = signal(
-    this.store.staff().find((m) => m.username === 'Santiago03')?.idNumber ??
-      this.store.staff()[0].idNumber,
-  );
-
+  protected readonly selectedId = signal('');
   protected readonly isEditing = signal(false);
   protected readonly isSaved = signal(false);
 
+  ngOnInit(): void {
+    this.api.list({ size: 200 }).subscribe({
+      next: (page) => {
+        const mapped = page.content.map((u) => UsersView.mapUser(u));
+        this.staff.set(mapped);
+        if (mapped.length) {
+          this.selectedId.set(mapped[0].idNumber);
+          this.syncDraft();
+        }
+      },
+    });
+  }
+
+  private static mapUser(u: UserResponse): StaffMember {
+    const roleGroup: StaffGroup =
+      u.roleName === 'Gerencial' ? 'Gerenciales' :
+      u.roleName === 'Administrativo' ? 'Administrativos' : 'Auxiliares';
+    return {
+      username: u.username,
+      fullName: u.fullName,
+      idNumber: String(u.id),
+      memberSince: u.createdAt?.slice(0, 10) ?? '',
+      dateOfBirth: u.dateOfBirth ?? '',
+      age: u.dateOfBirth ? Math.floor((Date.now() - new Date(u.dateOfBirth).getTime()) / 31557600000) : 0,
+      phone: u.phone ?? '',
+      landline: u.landline ?? '',
+      email: u.email,
+      role: u.roleName,
+      positionName: u.positionName ?? '',
+      avatarUrl: u.avatarUrl ?? '',
+      status: (u.status as UserProfile['status']) ?? 'ACTIVE',
+      suspendedUntil: u.suspendedUntil,
+      group: roleGroup,
+      activities: [],
+    };
+  }
+
   protected readonly visibleStaff = computed(() => {
-    const list = this.store.staff();
+    const list = this.staff();
     const filter = this.activeFilter();
     return filter === 'Todos' ? list : list.filter((m) => m.group === filter);
   });
 
   /** Falls back to the first visible member when the selected one is filtered out. */
-  protected readonly selected = computed<StaffMember>(() => {
+  protected readonly selected = computed<StaffMember | null>(() => {
     const list = this.visibleStaff();
-    return list.find((m) => m.idNumber === this.selectedId()) ?? list[0];
+    return list.find((m) => m.idNumber === this.selectedId()) ?? list[0] ?? null;
   });
 
-  protected readonly draft = signal<StaffMember>({ ...this.selected() });
+  protected readonly draft = signal<StaffMember>(UsersView.emptyMember());
+
+  protected statusStyle(): { label: string; cls: string } {
+    const s = this.selected();
+    return s ? this.statusStyles[s.status] : { label: '', cls: '' };
+  }
 
   protected readonly statusStyles: Record<UserProfile['status'], { label: string; cls: string }> = {
     ACTIVE: {
@@ -89,9 +155,17 @@ export class UsersView {
       label: 'Bloqueado',
       cls: 'bg-amber-500/10 text-amber-500 border border-amber-500/20',
     },
+    RESTRICTED: {
+      label: 'Restringido',
+      cls: 'bg-orange-500/10 text-orange-500 border border-orange-500/20',
+    },
     SUSPENDED: {
       label: 'Suspendido',
       cls: 'bg-rose-500/10 text-rose-500 border border-rose-500/20',
+    },
+    DEACTIVATED: {
+      label: 'Desactivado',
+      cls: 'bg-slate-500/10 text-slate-500 border border-slate-500/20',
     },
   };
 
@@ -128,40 +202,162 @@ export class UsersView {
 
   protected save(): void {
     const member = this.selected();
+    if (!member) return;
     const draft = this.draft();
-    this.store.updateStaff(member.idNumber, {
-      username: draft.username,
+    const id = Number(member.idNumber);
+    this.api.update(id, {
       fullName: draft.fullName,
       dateOfBirth: draft.dateOfBirth,
-      age: draft.age,
       phone: draft.phone,
       email: draft.email,
-      role: draft.role,
       positionName: draft.positionName,
+    }).subscribe({
+      next: (res) => {
+        const mapped = UsersView.mapUser(res);
+        this.staff.update((list) => list.map((m) => (m.idNumber === member.idNumber ? mapped : m)));
+      },
     });
     this.isEditing.set(false);
     this.isSaved.set(true);
     setTimeout(() => this.isSaved.set(false), 3000);
   }
 
-  protected toggleLock(): void {
-    const status = this.selected().status === 'LOCKED' ? 'ACTIVE' : 'LOCKED';
-    this.store.updateStaff(this.selected().idNumber, { status });
+  protected openPopup(type: ActionPopup): void {
+    if (type === 'suspend') this.selectedDuration.set(null);
+    this.popupAnimatingOut.set(false);
+    this.activePopup.set(type);
+  }
+
+  protected closePopup(): void {
+    this.popupAnimatingOut.set(true);
+    setTimeout(() => {
+      this.activePopup.set(null);
+      this.popupAnimatingOut.set(false);
+    }, 220);
+  }
+
+  protected onPopupBackdrop(event: MouseEvent): void {
+    if (event.target === event.currentTarget) this.closePopup();
+  }
+
+  protected confirmAction(): void {
+    const popup = this.activePopup();
+    this.closePopup();
+    switch (popup) {
+      case 'restrict': return this.executeRestrict();
+      case 'unrestrict': return this.executeUnrestrict();
+      case 'suspend': return this.executeSuspend();
+      case 'unsuspend': return this.executeUnsuspend();
+      case 'deactivate': return this.executeDeactivate();
+    }
+  }
+
+  private executeRestrict(): void {
+    const member = this.selected();
+    if (!member) return;
+    this.actionLoading.set(true);
+    this.api.restrict(Number(member.idNumber)).subscribe({
+      next: (res) => {
+        this.updateMember(member.idNumber, res);
+        this.actionLoading.set(false);
+      },
+      error: (err) => {
+        this.actionLoading.set(false);
+        this.notify(err?.error?.detail ?? 'Error al restringir usuario');
+      },
+    });
+  }
+
+  private executeUnrestrict(): void {
+    const member = this.selected();
+    if (!member) return;
+    this.actionLoading.set(true);
+    this.api.unrestrict(Number(member.idNumber)).subscribe({
+      next: (res) => {
+        this.updateMember(member.idNumber, res);
+        this.actionLoading.set(false);
+      },
+      error: (err) => {
+        this.actionLoading.set(false);
+        this.notify(err?.error?.detail ?? 'Error al quitar restricción');
+      },
+    });
+  }
+
+  private executeSuspend(): void {
+    const member = this.selected();
+    const duration = this.selectedDuration();
+    if (!member || !duration) return;
+    this.actionLoading.set(true);
+    this.api.suspend(Number(member.idNumber), duration).subscribe({
+      next: (res) => {
+        this.updateMember(member.idNumber, res);
+        this.actionLoading.set(false);
+      },
+      error: (err) => {
+        this.actionLoading.set(false);
+        this.notify(err?.error?.detail ?? 'Error al suspender usuario');
+      },
+    });
+  }
+
+  private executeUnsuspend(): void {
+    const member = this.selected();
+    if (!member) return;
+    this.actionLoading.set(true);
+    this.api.unsuspend(Number(member.idNumber)).subscribe({
+      next: (res) => {
+        this.updateMember(member.idNumber, res);
+        this.actionLoading.set(false);
+      },
+      error: (err) => {
+        this.actionLoading.set(false);
+        this.notify(err?.error?.detail ?? 'Error al reactivar usuario');
+      },
+    });
+  }
+
+  private executeDeactivate(): void {
+    const member = this.selected();
+    if (!member) return;
+    this.actionLoading.set(true);
+    this.api.deactivate(Number(member.idNumber)).subscribe({
+      next: () => {
+        this.staff.update((list) => list.filter((m) => m.idNumber !== member.idNumber));
+        this.syncDraft();
+        this.actionLoading.set(false);
+      },
+      error: (err) => {
+        this.actionLoading.set(false);
+        this.notify(err?.error?.detail ?? 'Error al desactivar cuenta');
+      },
+    });
+  }
+
+  private updateMember(idNumber: string, res: UserResponse): void {
+    const mapped = UsersView.mapUser(res);
+    this.staff.update((list) => list.map((m) => (m.idNumber === idNumber ? mapped : m)));
     this.syncDraft();
   }
 
-  protected toggleSuspend(): void {
-    const status = this.selected().status === 'SUSPENDED' ? 'ACTIVE' : 'SUSPENDED';
-    this.store.updateStaff(this.selected().idNumber, { status });
-    this.syncDraft();
-  }
-
-  protected disableAccount(): void {
-    this.notify(`Cuenta de ${this.selected().username} desactivada`);
+  protected formatSuspensionRemaining(): string {
+    const until = this.selected()?.suspendedUntil;
+    if (!until) return '';
+    const remaining = new Date(until).getTime() - Date.now();
+    if (remaining <= 0) return 'Expirada';
+    const hours = Math.floor(remaining / 3600000);
+    const days = Math.floor(hours / 24);
+    if (days > 0) return `${days}d ${hours % 24}h restantes`;
+    const mins = Math.floor((remaining % 3600000) / 60000);
+    return `${hours}h ${mins}m restantes`;
   }
 
   protected clearHistory(): void {
-    this.store.clearStaffActivity(this.selected().idNumber);
+    const member = this.selected();
+    if (!member) return;
+    this.staff.update((list) =>
+      list.map((m) => (m.idNumber === member.idNumber ? { ...m, activities: [] } : m)),
+    );
     this.syncDraft();
   }
 
@@ -175,7 +371,17 @@ export class UsersView {
   }
 
   private syncDraft(): void {
-    this.draft.set({ ...this.selected() });
+    const sel = this.selected();
+    if (!sel) return;
+    this.draft.set({ ...sel });
     this.isSaved.set(false);
+  }
+
+  private static emptyMember(): StaffMember {
+    return {
+      username: '', fullName: '', idNumber: '', memberSince: '', dateOfBirth: '',
+      age: 0, phone: '', landline: '', email: '', role: '', positionName: '',
+      avatarUrl: '', status: 'ACTIVE', suspendedUntil: null, group: 'Auxiliares', activities: [],
+    };
   }
 }

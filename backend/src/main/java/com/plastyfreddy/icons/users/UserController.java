@@ -83,4 +83,49 @@ public class UserController {
         userService.unlock(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/{id}/restrict")
+    @PreAuthorize("hasAuthority('USERS_BLOCK')")
+    @Operation(summary = "Restringir acceso de un usuario (solo lectura)")
+    public ResponseEntity<UserResponse> restrict(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.restrict(id));
+    }
+
+    @PostMapping("/{id}/unrestrict")
+    @PreAuthorize("hasAuthority('USERS_BLOCK')")
+    @Operation(summary = "Quitar restricción de un usuario")
+    public ResponseEntity<UserResponse> unrestrict(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.unrestrict(id));
+    }
+
+    @PostMapping("/{id}/suspend")
+    @PreAuthorize("hasAuthority('USERS_BLOCK')")
+    @Operation(summary = "Suspender un usuario por tiempo determinado")
+    public ResponseEntity<UserResponse> suspend(
+            @PathVariable Long id,
+            @Valid @RequestBody SuspendRequest request) {
+        return ResponseEntity.ok(userService.suspend(id, request.duration()));
+    }
+
+    @PostMapping("/{id}/unsuspend")
+    @PreAuthorize("hasAuthority('USERS_BLOCK')")
+    @Operation(summary = "Reactivar un usuario suspendido")
+    public ResponseEntity<UserResponse> unsuspend(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.unsuspend(id));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('USERS_DELETE')")
+    @Operation(summary = "Desactivar (eliminar) una cuenta de usuario")
+    public ResponseEntity<Void> deactivate(@PathVariable Long id) {
+        userService.deactivate(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/reactivate")
+    @PreAuthorize("hasAuthority('USERS_DELETE')")
+    @Operation(summary = "Reactivar una cuenta desactivada")
+    public ResponseEntity<UserResponse> reactivate(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.reactivate(id));
+    }
 }

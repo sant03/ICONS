@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   LucideCheckCircle2,
@@ -14,6 +14,7 @@ import {
 } from '@lucide/angular';
 import { Client } from '../../core/models/types';
 import { AppStore } from '../../core/state/app-store';
+import { CustomersApi, CustomerResponse } from '../../core/api';
 
 /**
  * Clientes tab of the Clients/Prov module: tab bar, client list, detail card
@@ -40,16 +41,39 @@ import { AppStore } from '../../core/state/app-store';
   ],
   templateUrl: './clients-view.html',
 })
-export class ClientsView {
+export class ClientsView implements OnInit {
   protected readonly store = inject(AppStore);
+  private readonly api = inject(CustomersApi);
 
-  /** The mockup opens with the first client selected. */
-  protected readonly selectedId = signal(this.store.clients()[0]?.id ?? '');
+  protected readonly clients = signal<Client[]>([]);
+  protected readonly selectedId = signal('');
 
-  protected readonly selected = computed<Client>(
+  protected readonly selected = computed<Client | null>(
     () =>
-      this.store.clients().find((c) => c.id === this.selectedId()) ?? this.store.clients()[0],
+      this.clients().find((c) => c.id === this.selectedId()) ?? this.clients()[0] ?? null,
   );
+
+  ngOnInit(): void {
+    this.api.list({ size: 200 }).subscribe({
+      next: (page) => {
+        const mapped = page.content.map((c) => ClientsView.mapCustomer(c));
+        this.clients.set(mapped);
+        if (mapped.length && !this.selectedId()) this.selectedId.set(mapped[0].id);
+      },
+    });
+  }
+
+  private static mapCustomer(c: CustomerResponse): Client {
+    return {
+      id: String(c.id),
+      name: c.name,
+      docId: c.docId ?? '',
+      phone: c.phone ?? '',
+      email: c.email ?? '',
+      address: c.address ?? '',
+      avatarUrl: c.avatarUrl ?? undefined,
+    };
+  }
 
   protected readonly modalOpen = signal(false);
   protected readonly editingId = signal('');
@@ -79,8 +103,10 @@ export class ClientsView {
   }
 
   protected openEdit(): void {
-    this.editingId.set(this.selected().id);
-    this.draft.set({ ...this.selected() });
+    const sel = this.selected();
+    if (!sel) return;
+    this.editingId.set(sel.id);
+    this.draft.set({ ...sel });
     this.modalOpen.set(true);
   }
 
@@ -94,29 +120,44 @@ export class ClientsView {
 
   protected save(): void {
     const draft = this.draft();
-    if (!draft.name.trim() || !draft.docId.trim()) return;
+    if (!draft.name.trim()) return;
 
     const editingId = this.editingId();
     if (editingId) {
-      this.store.updateClient(editingId, {
+      this.api.update(Number(editingId), {
         name: draft.name,
         docId: draft.docId,
         phone: draft.phone,
         email: draft.email,
         address: draft.address,
+      }).subscribe({
+        next: (res) => {
+          const mapped = ClientsView.mapCustomer(res);
+          this.clients.update((list) => list.map((c) => (c.id === editingId ? mapped : c)));
+          this.selectedId.set(editingId);
+        },
       });
-      this.selectedId.set(editingId);
     } else {
-      const id = `cli-${Date.now()}`;
-      this.store.addClient({ ...draft, id });
-      this.selectedId.set(id);
+      this.api.create({
+        name: draft.name,
+        docId: draft.docId,
+        phone: draft.phone,
+        email: draft.email,
+        address: draft.address,
+      }).subscribe({
+        next: (res) => {
+          const mapped = ClientsView.mapCustomer(res);
+          this.clients.update((list) => [...list, mapped]);
+          this.selectedId.set(mapped.id);
+        },
+      });
     }
     this.modalOpen.set(false);
   }
 
   /** WhatsApp deep link for the floating chat button of the detail card. */
   protected chatHref(): string {
-    return `https://wa.me/57${this.selected().phone.replace(/\D/g, '')}`;
+    return `https://wa.me/57${(this.selected()?.phone ?? '').replace(/\D/g, '')}`;
   }
 
   private static emptyDraft(): Client {
