@@ -1,13 +1,13 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CustomDatePickerComponent } from '../../shared/ui/custom-datepicker/custom-datepicker';
+import { ScrollRevealDirective } from '../../shared/directives/scroll-reveal.directive';
 import {
   LucideAlertTriangle,
   LucideCamera,
   LucideCheckCircle2,
   LucideClock,
   LucideEdit,
-  LucideLock,
   LucidePower,
   LucideShieldAlert,
   LucideTrash2,
@@ -35,10 +35,10 @@ type ActionPopup = 'restrict' | 'unrestrict' | 'suspend' | 'unsuspend' | 'deacti
   imports: [
     FormsModule,
     CustomDatePickerComponent,
+    ScrollRevealDirective,
     LucideAlertTriangle,
     LucideEdit,
     LucideCamera,
-    LucideLock,
     LucidePower,
     LucideShieldAlert,
     LucideClock,

@@ -428,11 +428,17 @@ p-datepicker,
 @keyframes springBounceIn {
   0% {
     opacity: 0;
-    transform: scale(0.88) translateY(12px);
+    transform: translateY(16px);
   }
-  70% {
+  55% {
     opacity: 1;
-    transform: scale(1.02) translateY(-2px);
+    transform: translateY(-5px);
+  }
+  75% {
+    transform: translateY(2px);
+  }
+  90% {
+    transform: translateY(-1px);
   }
   100% {
     opacity: 1;

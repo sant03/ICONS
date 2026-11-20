@@ -1,7 +1,6 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { environment } from '../../../environments/environment';
-import { PageResponse } from './api.types';
 
 export interface CategoryResponse {
   id: number;
@@ -15,11 +14,8 @@ export class CategoriesApi {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/categories`;
 
-  list(params?: { page?: number; size?: number }) {
-    let p = new HttpParams();
-    if (params?.page != null) p = p.set('page', params.page);
-    if (params?.size != null) p = p.set('size', params.size);
-    return this.http.get<PageResponse<CategoryResponse>>(this.base, { params: p });
+  list() {
+    return this.http.get<CategoryResponse[]>(this.base);
   }
 
   getById(id: number) {

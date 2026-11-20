@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { CustomSelectComponent } from '../../shared/ui/custom-select/custom-select';
 import {
   LucideAlertCircle,
+  LucideAlertTriangle,
   LucideBox,
   LucideEdit,
   LucideFolderPlus,
@@ -10,39 +11,20 @@ import {
   LucidePackage,
   LucidePlus,
   LucideSearch,
+  LucideTrash2,
   LucideX,
 } from '@lucide/angular';
 import { ProductCatalogItem, ProductUnit } from '../../core/models/types';
 import { AppStore } from '../../core/state/app-store';
 import { ProductsApi, ProductResponse, CategoriesApi, CategoryResponse } from '../../core/api';
 
-/**
- * Productos: grilla por categoria + panel lateral de detalle, portado de
- * "ICONS COMPLETE/src/views/ProductsView.tsx".
- *
- * Mapeo del source (props/state) a signals de Angular:
- *   products            -> store.products()
- *   searchQuery         -> searchTerm
- *   selectedProduct     -> selectedProductId (computed)
- *   showStockOnly       -> showStockOnly
- *   showAddProductModal -> isProductModalOpen
- *   showAddCategoryModal-> isCategoryModalOpen
- *   newCategoryName     -> newCategoryName
- *   newProduct          -> formulario (referencia/codigo/categoria/cantidad/...)
- *   onAddProduct        -> saveProduct()
- *   onUpdateProduct     -> saveProduct() en modo edicion (el source solo avisa)
- *   handleAddCategory   -> saveCategory() sobre store.productCategories
- *
- * Se conservan los chips de busqueda por categoria y la barra de busqueda, y
- * el estado de stock se muestra con el formato de chip del Design System
- * (DISPONIBLE / STOCK BAJO / AGOTADO) dentro de la card del producto.
- */
 @Component({
   selector: 'app-products-view',
   imports: [
     FormsModule,
     CustomSelectComponent,
     LucideAlertCircle,
+    LucideAlertTriangle,
     LucideBox,
     LucideEdit,
     LucideFolderPlus,
@@ -50,6 +32,7 @@ import { ProductsApi, ProductResponse, CategoriesApi, CategoryResponse } from '.
     LucidePackage,
     LucidePlus,
     LucideSearch,
+    LucideTrash2,
     LucideX,
   ],
   templateUrl: './products-view.html',
@@ -62,7 +45,6 @@ export class ProductsView implements OnInit {
   protected readonly products = signal<ProductCatalogItem[]>([]);
   private readonly apiCategories = signal<CategoryResponse[]>([]);
 
-  /** Primera categoria; el source deriva las categorias de `products`. */
   protected readonly allCategory = 'Todas';
 
   protected readonly searchTerm = signal('');
@@ -71,11 +53,15 @@ export class ProductsView implements OnInit {
 
   protected readonly selectedProductId = signal<string | null>(null);
   protected readonly isProductModalOpen = signal(false);
+  protected readonly productModalAnimatingOut = signal(false);
   protected readonly isCategoryModalOpen = signal(false);
+  protected readonly categoryModalAnimatingOut = signal(false);
   protected readonly editingProductId = signal<string | null>(null);
   protected readonly newCategoryName = signal('');
 
-  // Formulario de producto (alta y edicion comparten modal).
+  protected readonly deletePopupOpen = signal(false);
+  protected readonly deletePopupAnimatingOut = signal(false);
+
   protected readonly reference = signal('');
   protected readonly code = signal('1247');
   protected readonly category = signal('');
@@ -87,7 +73,7 @@ export class ProductsView implements OnInit {
 
   protected readonly units: ProductUnit[] = ['Und', 'Pqt', 'Kg', 'Lb'];
 
-  protected readonly categoryNames = computed(() => this.apiCategories().map((c) => c.name));
+  protected readonly categoryNames = computed(() => (this.apiCategories() ?? []).map((c) => c.name));
 
   protected readonly categories = computed(() => [
     this.allCategory,
@@ -97,17 +83,22 @@ export class ProductsView implements OnInit {
   protected readonly formCategories = computed(() => this.categories().slice(1));
 
   ngOnInit(): void {
-    this.categoriesApi.list({ size: 100 }).subscribe({
-      next: (page) => this.apiCategories.set(page.content),
+    this.categoriesApi.list().subscribe({
+      next: (list) => this.apiCategories.set(list),
+      error: (err) => this.notify(err?.error?.detail ?? 'Error al cargar categorías'),
     });
     this.productsApi.list({ size: 500 }).subscribe({
       next: (page) => this.products.set(page.content.map((p) => this.mapProduct(p))),
+      error: (err) => this.notify(err?.error?.detail ?? 'Error al cargar productos'),
     });
   }
 
   private mapProduct(p: ProductResponse): ProductCatalogItem {
     const status: ProductCatalogItem['status'] =
       p.stock <= 0 ? 'OUT_OF_STOCK' : p.stock <= p.minPurchase ? 'LOW_STOCK' : 'IN_STOCK';
+    const category = p.categoryName
+      ?? this.apiCategories().find((c) => c.id === p.categoryId)?.name
+      ?? '';
     return {
       id: String(p.id),
       name: p.reference,
@@ -118,7 +109,7 @@ export class ProductsView implements OnInit {
       minPurchase: p.minPurchase,
       unit: (p.unit as ProductUnit) || 'Und',
       status,
-      category: p.categoryName,
+      category,
     };
   }
 
@@ -136,7 +127,6 @@ export class ProductsView implements OnInit {
     });
   });
 
-  /** `categories.map(...)` del source: un panel por categoria con productos. */
   protected readonly groupedProducts = computed(() => {
     const groups = new Map<string, ProductCatalogItem[]>();
     for (const product of this.filteredProducts()) {
@@ -157,13 +147,11 @@ export class ProductsView implements OnInit {
 
   protected readonly isEditing = computed(() => this.editingProductId() !== null);
 
-  /** Etiqueta del chip de estado de stock. */
   protected stockLabel(product: ProductCatalogItem): string {
     if (product.status === 'OUT_OF_STOCK') return 'AGOTADO';
     return product.status === 'LOW_STOCK' ? 'STOCK BAJO' : 'DISPONIBLE';
   }
 
-  /** Mobile bottom drawer state */
   protected readonly isMobileDrawerOpen = signal(false);
   protected readonly isMobileDrawerReady = signal(false);
 
@@ -188,10 +176,10 @@ export class ProductsView implements OnInit {
     this.purchasePrice.set(1000);
     this.minPurchase.set(10);
     this.unit.set('Und');
+    this.productModalAnimatingOut.set(false);
     this.isProductModalOpen.set(true);
   }
 
-  /** El source abre el modal con `onUpdateProduct` (stub alert). */
   protected openEditProduct(product: ProductCatalogItem): void {
     this.editingProductId.set(product.id);
     this.reference.set(product.name);
@@ -202,11 +190,20 @@ export class ProductsView implements OnInit {
     this.purchasePrice.set(product.purchasePrice);
     this.minPurchase.set(product.minPurchase);
     this.unit.set(product.unit);
+    this.productModalAnimatingOut.set(false);
     this.isProductModalOpen.set(true);
   }
 
   protected closeProductModal(): void {
-    this.isProductModalOpen.set(false);
+    this.productModalAnimatingOut.set(true);
+    setTimeout(() => {
+      this.isProductModalOpen.set(false);
+      this.productModalAnimatingOut.set(false);
+    }, 220);
+  }
+
+  protected onProductModalBackdrop(event: MouseEvent): void {
+    if (event.target === event.currentTarget) this.closeProductModal();
   }
 
   protected saveProduct(): void {
@@ -227,6 +224,7 @@ export class ProductsView implements OnInit {
           const mapped = this.mapProduct(res);
           this.products.update((list) => list.map((p) => (p.id === editingId ? mapped : p)));
         },
+        error: (err) => this.notify(err?.error?.detail ?? 'Error al actualizar producto'),
       });
     } else {
       this.productsApi.create({
@@ -242,9 +240,28 @@ export class ProductsView implements OnInit {
           const mapped = this.mapProduct(res);
           this.products.update((list) => [...list, mapped]);
         },
+        error: (err) => this.notify(err?.error?.detail ?? 'Error al crear producto'),
       });
     }
-    this.isProductModalOpen.set(false);
+    this.closeProductModal();
+  }
+
+  protected openCategoryModal(): void {
+    this.newCategoryName.set('');
+    this.categoryModalAnimatingOut.set(false);
+    this.isCategoryModalOpen.set(true);
+  }
+
+  protected closeCategoryModal(): void {
+    this.categoryModalAnimatingOut.set(true);
+    setTimeout(() => {
+      this.isCategoryModalOpen.set(false);
+      this.categoryModalAnimatingOut.set(false);
+    }, 220);
+  }
+
+  protected onCategoryModalBackdrop(event: MouseEvent): void {
+    if (event.target === event.currentTarget) this.closeCategoryModal();
   }
 
   protected saveCategory(): void {
@@ -255,8 +272,41 @@ export class ProductsView implements OnInit {
         this.apiCategories.update((list) => [...list, res]);
         this.selectedCategory.set(res.name);
       },
+      error: (err) => this.notify(err?.error?.detail ?? 'Error al crear categoría'),
     });
-    this.newCategoryName.set('');
-    this.isCategoryModalOpen.set(false);
+    this.closeCategoryModal();
+  }
+
+  protected openDeletePopup(): void {
+    this.deletePopupAnimatingOut.set(false);
+    this.deletePopupOpen.set(true);
+  }
+
+  protected closeDeletePopup(): void {
+    this.deletePopupAnimatingOut.set(true);
+    setTimeout(() => {
+      this.deletePopupOpen.set(false);
+      this.deletePopupAnimatingOut.set(false);
+    }, 220);
+  }
+
+  protected onDeleteBackdrop(event: MouseEvent): void {
+    if (event.target === event.currentTarget) this.closeDeletePopup();
+  }
+
+  protected confirmDelete(): void {
+    const sel = this.selectedProduct();
+    if (!sel) return;
+    this.closeDeletePopup();
+    this.productsApi.delete(Number(sel.id)).subscribe({
+      next: () => {
+        this.products.update((list) => list.filter((p) => p.id !== sel.id));
+      },
+      error: (err) => this.notify(err?.error?.detail ?? 'Error al eliminar producto'),
+    });
+  }
+
+  protected notify(message: string): void {
+    window.alert(message);
   }
 }

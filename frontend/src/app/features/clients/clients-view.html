@@ -1,7 +1,7 @@
 <div class="h-full overflow-y-auto overflow-x-hidden lg:overflow-hidden lg:flex lg:flex-col lg:min-h-0 p-4 lg:p-8 space-y-6">
   <!-- Tab bar + primary action -->
   <div
-    class="shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+    class="shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-down"
   >
     <div class="flex items-center gap-6">
       <button
@@ -49,13 +49,14 @@
     <div class="lg:col-span-8 lg:h-full lg:min-h-0 flex flex-col space-y-4">
       <h2 class="shrink-0 text-lg font-bold text-[var(--text-primary)]">Todos los Clientes</h2>
 
-      <div class="lg:flex-1 lg:min-h-0 lg:overflow-y-auto space-y-3 pr-2">
+      <div class="lg:flex-1 lg:min-h-0 lg:overflow-y-auto space-y-3 pr-2 pt-1 pb-2">
         @for (client of filteredClients(); track client.id) {
           <button
             type="button"
             (click)="select(client.id)"
+            [style.animation-delay.ms]="$index * 45 + 100"
             [class]="
-              'w-full p-4 rounded-2xl border-2 flex items-center gap-4 text-left transition-all duration-150 cursor-pointer ' +
+              'w-full p-4 rounded-2xl border-2 flex items-center gap-4 text-left transition-all duration-150 cursor-pointer animate-spring-bounce ' +
               (selected()?.id === client.id
                 ? 'border-cyan-500 bg-[var(--bg-card)] shadow-md'
                 : 'border-[var(--border-color)] bg-[var(--bg-card)] hover:border-cyan-500/40 hover:shadow-sm')
@@ -90,7 +91,7 @@
     <!-- Backdrop overlay for mobile bottom drawer -->
     @if (isMobileDrawerOpen()) {
       <div
-        class="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs lg:hidden transition-opacity duration-300"
+        class="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs lg:hidden animate-fade-in"
         (click)="closeMobileDrawer()"
         aria-hidden="true"
       ></div>
@@ -131,7 +132,7 @@
       <!-- Drawer body -->
       <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-0 lg:overflow-visible">
         <div
-          class="lg:p-6 lg:rounded-3xl lg:bg-[var(--bg-card)] lg:border lg:border-[var(--border-color)] lg:shadow-sm relative"
+          class="lg:p-6 lg:rounded-3xl lg:bg-[var(--bg-card)] lg:border lg:border-[var(--border-color)] lg:shadow-sm relative animate-fade-up stagger-1"
         >
           <div class="absolute top-5 right-5 flex items-center gap-1">
             <button
@@ -152,7 +153,7 @@
             </button>
           </div>
 
-          <div class="flex flex-col items-center text-center pt-2">
+          <div class="flex flex-col items-center text-center pt-2 animate-scale-in stagger-2">
             <div
               class="w-32 h-32 rounded-full overflow-hidden bg-[var(--bg-tertiary)] border border-[var(--border-color)] flex items-center justify-center text-[var(--text-muted)]"
             >
@@ -172,7 +173,7 @@
             <p class="text-xs text-[var(--text-muted)]">CC / ID: {{ selected()?.docId }}</p>
           </div>
 
-          <div class="mt-6 space-y-4 relative pr-10">
+          <div class="mt-6 space-y-4 relative pr-10 animate-fade-up stagger-3">
             <div class="flex items-start gap-3">
               <svg lucideMapPin class="w-4 h-4 mt-0.5 shrink-0 text-[var(--text-muted)]"></svg>
               <div class="min-w-0">
@@ -410,7 +411,7 @@
   type="button"
   (click)="openCreate()"
   aria-label="Añadir nuevo cliente"
-  class="sm:hidden fixed bottom-6 right-6 w-14 h-14 rounded-full bg-cyan-500 hover:bg-cyan-600 text-white shadow-2xl shadow-cyan-500/50 flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-pointer z-40 border-2 border-white/20"
+  class="sm:hidden fixed bottom-6 right-6 w-14 h-14 rounded-full bg-cyan-500 hover:bg-cyan-600 text-white shadow-2xl shadow-cyan-500/50 flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-pointer z-40 border-2 border-white/20 animate-spring-bounce stagger-4"
 >
   <svg lucidePlus class="w-6 h-6"></svg>
 </button>
