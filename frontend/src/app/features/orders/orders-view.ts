@@ -2,9 +2,11 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CustomSelectComponent } from '../../shared/ui/custom-select/custom-select';
 import {
+  LucideAlertCircle,
   LucideArrowUpDown,
   LucideBox,
   LucideCalendar,
+  LucideCheckCircle,
   LucideDatabase,
   LucideFilter,
   LucidePlus,
@@ -15,22 +17,25 @@ import {
 import { OrderItem } from '../../core/models/types';
 import { AppStore } from '../../core/state/app-store';
 import { OrdersApi, CustomerOrderResponse } from '../../core/api';
+import { CustomersApi, CustomerResponse } from '../../core/api/customers.api';
 
-type NewOrderStatus = 'COMPLETED' | 'PENDING' | 'SHIPPED';
+type SortOption = 'date_desc' | 'date_asc' | 'alpha_asc' | 'alpha_desc';
 
 @Component({
   selector: 'app-orders-view',
   imports: [
     FormsModule,
     CustomSelectComponent,
-    LucideDatabase,
-    LucideSearch,
+    LucideAlertCircle,
     LucideArrowUpDown,
-    LucideFilter,
     LucideBox,
-    LucideUser,
     LucideCalendar,
+    LucideCheckCircle,
+    LucideDatabase,
+    LucideFilter,
     LucidePlus,
+    LucideSearch,
+    LucideUser,
     LucideX,
   ],
   templateUrl: './orders-view.html',
@@ -38,20 +43,55 @@ type NewOrderStatus = 'COMPLETED' | 'PENDING' | 'SHIPPED';
 export class OrdersView implements OnInit {
   protected readonly store = inject(AppStore);
   private readonly api = inject(OrdersApi);
+  private readonly customersApi = inject(CustomersApi);
 
+  protected readonly isLoading = signal(true);
   protected readonly orders = signal<OrderItem[]>([]);
   protected readonly searchTerm = signal('');
   protected readonly selectedOrder = signal<OrderItem | null>(null);
   protected readonly isModalOpen = signal(false);
+  protected readonly sortOption = signal<SortOption>('date_desc');
+  protected readonly isSortModalOpen = signal(false);
 
+  protected readonly apiCustomers = signal<CustomerResponse[]>([]);
   protected readonly clientName = signal('');
-  protected readonly units = signal(10);
-  protected readonly status = signal<NewOrderStatus>('PENDING');
-  protected readonly orderStatusOptions = ['PENDING', 'SHIPPED', 'COMPLETED'];
+  protected readonly submitting = signal(false);
+
+  protected readonly toastOpen = signal(false);
+  protected readonly toastMessage = signal('');
+  protected readonly toastType = signal<'success' | 'error'>('success');
+  private toastTimer: ReturnType<typeof setTimeout> | null = null;
+
+  protected readonly customerOptions = computed(() =>
+    this.apiCustomers().map((c) => c.name),
+  );
+
+  protected readonly sortOptions: { value: SortOption; label: string }[] = [
+    { value: 'date_desc', label: 'Más recientes' },
+    { value: 'date_asc', label: 'Más antiguos' },
+    { value: 'alpha_asc', label: 'Cliente A-Z' },
+    { value: 'alpha_desc', label: 'Cliente Z-A' },
+  ];
+
+  protected readonly statusOptions = ['PENDING', 'SHIPPED', 'COMPLETED', 'CANCELLED'];
 
   ngOnInit(): void {
+    this.loadOrders();
+    this.customersApi.list({ size: 500 }).subscribe({
+      next: (page) => this.apiCustomers.set(page.content),
+    });
+  }
+
+  private loadOrders(): void {
     this.api.list({ size: 200 }).subscribe({
-      next: (page) => this.orders.set(page.content.map((o) => OrdersView.mapOrder(o))),
+      next: (page) => {
+        this.orders.set(page.content.map((o) => OrdersView.mapOrder(o)));
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        this.isLoading.set(false);
+        this.showToast(err?.error?.detail ?? 'Error al cargar pedidos', 'error');
+      },
     });
   }
 
@@ -70,23 +110,81 @@ export class OrdersView implements OnInit {
 
   protected readonly filteredOrders = computed(() => {
     const term = this.searchTerm().toLowerCase();
-    return this.orders().filter(
+    const list = this.orders().filter(
       (o) => o.orderNumber.toLowerCase().includes(term) || o.client.toLowerCase().includes(term),
     );
+    return this.sortOrders(list);
   });
 
+  private sortOrders(list: OrderItem[]): OrderItem[] {
+    const option = this.sortOption();
+    return [...list].sort((a, b) => {
+      switch (option) {
+        case 'alpha_asc':
+          return a.client.localeCompare(b.client);
+        case 'alpha_desc':
+          return b.client.localeCompare(a.client);
+        case 'date_asc':
+          return a.date.localeCompare(b.date);
+        default:
+          return b.date.localeCompare(a.date);
+      }
+    });
+  }
+
   protected handleCreateOrderSubmit(): void {
-    if (!this.clientName()) return;
+    if (!this.clientName().trim()) return;
+    if (this.submitting()) return;
+
+    this.submitting.set(true);
+
+    const customer = this.apiCustomers().find((c) => c.name === this.clientName().trim());
+
     this.api.create({
-      customerId: 0,
-      customerName: this.clientName(),
+      customerId: customer?.id,
+      customerName: this.clientName().trim(),
       date: new Date().toISOString().slice(0, 10),
     }).subscribe({
-      next: (res) => {
-        this.orders.update((list) => [...list, OrdersView.mapOrder(res)]);
+      next: () => {
+        this.showToast('Pedido creado exitosamente', 'success');
+        this.loadOrders();
+        this.clientName.set('');
+        this.isModalOpen.set(false);
+        this.submitting.set(false);
+      },
+      error: (err) => {
+        this.showToast(err?.error?.detail ?? 'Error al crear el pedido', 'error');
+        this.submitting.set(false);
       },
     });
-    this.clientName.set('');
-    this.isModalOpen.set(false);
+  }
+
+  protected updateOrderStatus(order: OrderItem, newStatus: string): void {
+    this.api.updateStatus(Number(order.id), newStatus).subscribe({
+      next: (res) => {
+        const updated = OrdersView.mapOrder(res);
+        this.orders.update((list) => list.map((o) => (o.id === updated.id ? updated : o)));
+        this.selectedOrder.set(updated);
+        this.showToast('Estado actualizado exitosamente', 'success');
+      },
+      error: (err) => this.showToast(err?.error?.detail ?? 'Error al actualizar estado', 'error'),
+    });
+  }
+
+  protected formatMoney(value: number): string {
+    return `$${value.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  }
+
+  private showToast(message: string, type: 'success' | 'error'): void {
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.toastMessage.set(message);
+    this.toastType.set(type);
+    this.toastOpen.set(true);
+    this.toastTimer = setTimeout(() => this.toastOpen.set(false), 4000);
+  }
+
+  protected closeToast(): void {
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.toastOpen.set(false);
   }
 }

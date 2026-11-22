@@ -46,7 +46,7 @@ public class CustomerOrderService {
 
     @Transactional
     public CustomerOrderResponse create(CreateOrderRequest request) {
-        String code = sequenceService.nextCode("ORDER");
+        String code = sequenceService.nextCode("CUSTOMER_ORDER");
 
         CustomerOrder order = CustomerOrder.builder()
             .code(code)

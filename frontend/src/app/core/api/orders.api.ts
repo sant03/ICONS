@@ -13,13 +13,15 @@ export interface CustomerOrderResponse {
   totalUnits: number;
   totalAmount: number;
   itemsSummary: string | null;
+  saleIds: number[];
   createdAt: string;
 }
 
 export interface CreateOrderRequest {
-  customerId: number;
+  customerId?: number;
   customerName: string;
   date: string;
+  itemsSummary?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -49,8 +51,6 @@ export class OrdersApi {
   }
 
   updateStatus(id: number, status: string) {
-    return this.http.patch<CustomerOrderResponse>(`${this.base}/${id}/status`, null, {
-      params: new HttpParams().set('status', status),
-    });
+    return this.http.patch<CustomerOrderResponse>(`${this.base}/${id}/status`, { status });
   }
 }
