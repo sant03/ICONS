@@ -46,4 +46,11 @@ public class PurchaseOrderController {
             @RequestParam String status) {
         return orderService.updateStatus(id, status);
     }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('PURCHASE_ORDER_DELETE')")
+    public void delete(@PathVariable Long id) {
+        orderService.delete(id);
+    }
 }

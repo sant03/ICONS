@@ -2,27 +2,21 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
+  LucideAlertCircle,
   LucideCalendar,
+  LucideCheckCircle,
   LucideFileText,
   LucidePlus,
   LucideSearch,
+  LucideX,
 } from '@lucide/angular';
 import { PurchaseOrder } from '../../core/models/types';
 import { AppStore } from '../../core/state/app-store';
 import { PurchaseOrdersApi, PurchaseOrderResponse } from '../../core/api';
 
-/**
- * "Todas las Órdenes de Compra" — first view of the Orden de Compra module.
- *
- * Ported 1:1 from "ICONS COMPLETE/src/views/PurchaseOrdersView.tsx" (VIEW 1:
- * grid list of purchase orders). The other two sub-views of that React screen
- * live here as their own routes: "Crear Nueva Orden de Compra" is the existing
- * `PurchaseOrderView` (`/purchase-order`) and the document detail is
- * `PurchaseOrderDetailView` (`/purchase-order-detail/:id`).
- */
 @Component({
   selector: 'app-purchase-orders-view',
-  imports: [FormsModule, LucideCalendar, LucideFileText, LucidePlus, LucideSearch],
+  imports: [FormsModule, LucideAlertCircle, LucideCalendar, LucideCheckCircle, LucideFileText, LucidePlus, LucideSearch, LucideX],
   templateUrl: './purchase-orders-view.html',
 })
 export class PurchaseOrdersView implements OnInit {
@@ -33,15 +27,21 @@ export class PurchaseOrdersView implements OnInit {
   protected readonly purchaseOrders = signal<PurchaseOrder[]>([]);
   protected readonly searchTerm = signal('');
 
+  protected readonly toastOpen = signal(false);
+  protected readonly toastMessage = signal('');
+  protected readonly toastType = signal<'success' | 'error'>('success');
+  private toastTimer: ReturnType<typeof setTimeout> | null = null;
+
   ngOnInit(): void {
     this.api.list({ size: 200 }).subscribe({
       next: (page) => this.purchaseOrders.set(page.content.map((po) => PurchaseOrdersView.mapPO(po))),
+      error: (err) => this.showToast(err?.error?.detail ?? 'Error al cargar órdenes de compra', 'error'),
     });
   }
 
   private static mapPO(po: PurchaseOrderResponse): PurchaseOrder {
     const statusMap: Record<string, PurchaseOrder['status']> = {
-      AVAILABLE: 'Disponible', USED: 'Usada', PENDING: 'Pendiente', CANCELLED: 'Cancelada',
+      DISPONIBLE: 'Disponible', USADA: 'Usada', PENDIENTE: 'Pendiente', CANCELADA: 'Cancelada',
       Disponible: 'Disponible', Usada: 'Usada', Pendiente: 'Pendiente', Cancelada: 'Cancelada',
     };
     return {
@@ -85,12 +85,10 @@ export class PurchaseOrdersView implements OnInit {
     () => this.purchaseOrders().filter((po) => po.status === 'Disponible').length,
   );
 
-  /** Every card is a link to the document detail of that order. */
   protected openDetail(order: PurchaseOrder): void {
     void this.router.navigate(['/purchase-order-detail', order.orderNo]);
   }
 
-  /** Maps the four states to the fixed badge palette (§7.5). */
   protected statusBadgeClass(status: PurchaseOrder['status']): string {
     const base =
       'px-2.5 py-0.5 text-[10px] font-mono font-extrabold uppercase rounded-full border ';
@@ -108,5 +106,18 @@ export class PurchaseOrdersView implements OnInit {
 
   protected formatMoney(value: number): string {
     return `$${value.toLocaleString('es-CO')}`;
+  }
+
+  protected showToast(message: string, type: 'success' | 'error'): void {
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.toastMessage.set(message);
+    this.toastType.set(type);
+    this.toastOpen.set(true);
+    this.toastTimer = setTimeout(() => this.toastOpen.set(false), 4000);
+  }
+
+  protected closeToast(): void {
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.toastOpen.set(false);
   }
 }

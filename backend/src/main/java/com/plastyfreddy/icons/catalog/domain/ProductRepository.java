@@ -31,4 +31,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Optional<Product> findForUpdate(Long id, Long tenantId);
 
     long countByTenantIdAndDeletedAtIsNull(Long tenantId);
+
+    @Query(value = "SELECT COALESCE(MAX(CAST(SUBSTRING(code, LENGTH(:prefix) + 2) AS UNSIGNED)), 0) " +
+                   "FROM products WHERE tenant_id = :tenantId AND code LIKE CONCAT(:prefix, '-%')",
+           nativeQuery = true)
+    int findMaxCodeNumberByPrefix(Long tenantId, String prefix);
 }

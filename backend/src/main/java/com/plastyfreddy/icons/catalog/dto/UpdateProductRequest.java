@@ -12,6 +12,9 @@ public record UpdateProductRequest(
 
     Long categoryId,
 
+    @Min(value = 0, message = "El stock no puede ser negativo")
+    Integer stock,
+
     @Min(value = 0, message = "El stock mínimo de compra no puede ser negativo")
     Integer minPurchase,
 

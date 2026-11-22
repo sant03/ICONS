@@ -1,10 +1,10 @@
-import { Component, computed, inject, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { map } from 'rxjs';
 import {
+  LucideAlertCircle,
   LucideArrowLeft,
   LucideCheck,
+  LucideCheckCircle,
   LucideCreditCard,
   LucideDownload,
   LucideEdit,
@@ -16,23 +16,20 @@ import {
   LucideShieldCheck,
   LucideTrash2,
   LucideUser,
+  LucideX,
 } from '@lucide/angular';
 import { PurchaseOrder } from '../../core/models/types';
 import { AppStore } from '../../core/state/app-store';
+import { PurchaseOrdersApi, PurchaseOrderResponse } from '../../core/api';
 
-/**
- * Document detail of one Orden de Compra ("Documento Orden de Compra").
- *
- * Ported 1:1 from "ICONS COMPLETE/src/views/PurchaseOrdersView.tsx" (VIEW 3).
- * The React screen kept list / create / detail in a single `subView` state;
- * here each of them is its own route, so the detail reads the order number
- * from the URL and every mutation returns to the list.
- */
 @Component({
   selector: 'app-purchase-order-detail-view',
   imports: [
+    LucideAlertCircle,
     LucideArrowLeft,
     LucideCheck,
+    LucideCheckCircle,
+    LucideCreditCard,
     LucideDownload,
     LucideEdit,
     LucideMail,
@@ -40,34 +37,82 @@ import { AppStore } from '../../core/state/app-store';
     LucidePackage,
     LucidePhone,
     LucideShare2,
+    LucideShieldCheck,
     LucideTrash2,
     LucideUser,
-    LucideCreditCard,
-    LucideShieldCheck,
+    LucideX,
   ],
   templateUrl: './purchase-order-detail-view.html',
 })
-export class PurchaseOrderDetailView {
+export class PurchaseOrderDetailView implements OnInit {
   protected readonly store = inject(AppStore);
   private readonly route = inject(ActivatedRoute);
+  private readonly api = inject(PurchaseOrdersApi);
 
-  /** Order number of the URL (`/purchase-order-detail/003`). */
-  private readonly orderNo = toSignal(
-    this.route.paramMap.pipe(map((params) => params.get('id') ?? '')),
-    { initialValue: '' },
-  );
+  private rawId = 0;
 
-  protected readonly order = computed<PurchaseOrder | undefined>(() =>
-    this.store
-      .purchaseOrders()
-      .find((po) => po.orderNo === this.orderNo() || po.id === this.orderNo()),
-  );
+  protected readonly order = signal<PurchaseOrder | undefined>(undefined);
+  protected readonly loading = signal(true);
 
-  /** Two-step delete: the first click arms the button, the second one deletes. */
   protected readonly confirmDelete = signal(false);
-
-  /** Feedback of the share button once the link reached the clipboard. */
   protected readonly copied = signal(false);
+
+  protected readonly toastOpen = signal(false);
+  protected readonly toastMessage = signal('');
+  protected readonly toastType = signal<'success' | 'error'>('success');
+  private toastTimer: ReturnType<typeof setTimeout> | null = null;
+
+  ngOnInit(): void {
+    const idStr = this.route.snapshot.paramMap.get('id') ?? '';
+    const id = parseInt(idStr, 10);
+    if (!id || isNaN(id)) {
+      this.loading.set(false);
+      return;
+    }
+    this.rawId = id;
+    this.api.getById(id).subscribe({
+      next: (po) => {
+        this.order.set(this.mapPO(po));
+        this.loading.set(false);
+      },
+      error: (err) => {
+        this.showToast(err?.error?.detail ?? 'Error al cargar la orden', 'error');
+        this.loading.set(false);
+      },
+    });
+  }
+
+  private mapPO(po: PurchaseOrderResponse): PurchaseOrder {
+    const statusMap: Record<string, PurchaseOrder['status']> = {
+      DISPONIBLE: 'Disponible', USADA: 'Usada', PENDIENTE: 'Pendiente', CANCELADA: 'Cancelada',
+    };
+    return {
+      id: po.code ?? `Orden ${String(po.id).padStart(3, '0')}`,
+      orderNo: String(po.id).padStart(3, '0'),
+      date: po.date,
+      madeOn: po.madeOn,
+      receptionDate: po.receptionDate ?? '',
+      status: statusMap[po.status] ?? 'Pendiente',
+      supplier: po.supplierName,
+      supplierAddress: po.supplierAddress ?? undefined,
+      supplierPhone: po.supplierPhone ?? undefined,
+      supplierEmail: po.supplierEmail ?? undefined,
+      madeBy: po.madeBy,
+      user: po.userUsername,
+      area: po.area ?? '',
+      paymentMethod: po.paymentMethod ?? '',
+      items: po.items.map((i) => ({
+        productId: String(i.productId),
+        product: i.productName,
+        quantity: i.quantity,
+        unitPrice: i.unitPrice,
+        total: i.total,
+      })),
+      total: po.total,
+      totalProducts: po.totalProducts,
+      approvedBy: po.approvedBy ?? undefined,
+    };
+  }
 
   protected backToList(): void {
     this.store.navigate('purchase-orders');
@@ -77,26 +122,30 @@ export class PurchaseOrderDetailView {
     window.print();
   }
 
-  /** Replaces the `alert(...)` of the original: copies the link and confirms in-place. */
   protected async share(): Promise<void> {
     try {
       await navigator.clipboard.writeText(window.location.href);
-    } catch {
-      // Clipboard blocked (no permission / insecure context): still confirm the action.
-    }
+    } catch {}
     this.copied.set(true);
     setTimeout(() => this.copied.set(false), 2000);
   }
 
-  /** Deletes the document and returns to the list, like the original did. */
   protected requestDelete(): void {
     if (!this.confirmDelete()) {
       this.confirmDelete.set(true);
       return;
     }
-    const po = this.order();
-    if (po) this.store.deletePurchaseOrder(po.id);
-    this.backToList();
+    if (!this.rawId) return;
+    this.api.delete(this.rawId).subscribe({
+      next: () => {
+        this.showToast('Orden eliminada exitosamente', 'success');
+        setTimeout(() => this.backToList(), 500);
+      },
+      error: (err) => {
+        this.showToast(err?.error?.detail ?? 'Error al eliminar la orden', 'error');
+        this.confirmDelete.set(false);
+      },
+    });
   }
 
   protected statusBadgeClass(status: PurchaseOrder['status']): string {
@@ -116,5 +165,18 @@ export class PurchaseOrderDetailView {
 
   protected formatMoney(value: number): string {
     return `$${value.toLocaleString('es-CO')}`;
+  }
+
+  protected showToast(message: string, type: 'success' | 'error'): void {
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.toastMessage.set(message);
+    this.toastType.set(type);
+    this.toastOpen.set(true);
+    this.toastTimer = setTimeout(() => this.toastOpen.set(false), 4000);
+  }
+
+  protected closeToast(): void {
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.toastOpen.set(false);
   }
 }

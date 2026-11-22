@@ -12,6 +12,9 @@ public record CreateProductRequest(
     @NotNull(message = "La categoría es obligatoria")
     Long categoryId,
 
+    @Min(value = 0, message = "El stock inicial no puede ser negativo")
+    int stock,
+
     @Min(value = 0, message = "El stock mínimo de compra no puede ser negativo")
     int minPurchase,
 

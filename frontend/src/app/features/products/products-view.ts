@@ -5,6 +5,7 @@ import {
   LucideAlertCircle,
   LucideAlertTriangle,
   LucideBox,
+  LucideCheckCircle,
   LucideEdit,
   LucideFolderPlus,
   LucideImage,
@@ -26,6 +27,7 @@ import { ProductsApi, ProductResponse, CategoriesApi, CategoryResponse } from '.
     LucideAlertCircle,
     LucideAlertTriangle,
     LucideBox,
+    LucideCheckCircle,
     LucideEdit,
     LucideFolderPlus,
     LucideImage,
@@ -62,6 +64,11 @@ export class ProductsView implements OnInit {
   protected readonly deletePopupOpen = signal(false);
   protected readonly deletePopupAnimatingOut = signal(false);
 
+  protected readonly toastOpen = signal(false);
+  protected readonly toastMessage = signal('');
+  protected readonly toastType = signal<'success' | 'error'>('success');
+  private toastTimer: ReturnType<typeof setTimeout> | null = null;
+
   protected readonly reference = signal('');
   protected readonly code = signal('1247');
   protected readonly category = signal('');
@@ -85,11 +92,11 @@ export class ProductsView implements OnInit {
   ngOnInit(): void {
     this.categoriesApi.list().subscribe({
       next: (list) => this.apiCategories.set(list),
-      error: (err) => this.notify(err?.error?.detail ?? 'Error al cargar categorías'),
+      error: (err) => this.showToast(err?.error?.detail ?? 'Error al cargar categorías', 'error'),
     });
     this.productsApi.list({ size: 500 }).subscribe({
       next: (page) => this.products.set(page.content.map((p) => this.mapProduct(p))),
-      error: (err) => this.notify(err?.error?.detail ?? 'Error al cargar productos'),
+      error: (err) => this.showToast(err?.error?.detail ?? 'Error al cargar productos', 'error'),
     });
   }
 
@@ -167,14 +174,15 @@ export class ProductsView implements OnInit {
 
   protected openProductModal(): void {
     this.editingProductId.set(null);
-    const [firstCategory] = this.categoryNames();
+    const activeFilter = this.selectedCategory();
+    const preselected = activeFilter !== this.allCategory ? activeFilter : '';
     this.reference.set('');
-    this.code.set('1247');
-    this.category.set(firstCategory ?? '');
-    this.stock.set(10);
-    this.salePrice.set(1500);
-    this.purchasePrice.set(1000);
-    this.minPurchase.set(10);
+    this.code.set('');
+    this.category.set(preselected);
+    this.stock.set(0);
+    this.salePrice.set(0);
+    this.purchasePrice.set(0);
+    this.minPurchase.set(0);
     this.unit.set('Und');
     this.productModalAnimatingOut.set(false);
     this.isProductModalOpen.set(true);
@@ -208,13 +216,14 @@ export class ProductsView implements OnInit {
 
   protected saveProduct(): void {
     const reference = this.reference().trim();
-    if (!reference) return;
+    if (!reference || !this.category()) return;
     const catObj = this.apiCategories().find((c) => c.name === this.category());
     const editingId = this.editingProductId();
     if (editingId) {
       this.productsApi.update(Number(editingId), {
         reference,
         categoryId: catObj?.id,
+        stock: Math.max(0, this.stock()),
         minPurchase: Math.max(0, this.minPurchase()),
         purchasePrice: this.purchasePrice(),
         salePrice: this.salePrice(),
@@ -223,8 +232,9 @@ export class ProductsView implements OnInit {
         next: (res) => {
           const mapped = this.mapProduct(res);
           this.products.update((list) => list.map((p) => (p.id === editingId ? mapped : p)));
+          this.showToast('Producto actualizado exitosamente', 'success');
         },
-        error: (err) => this.notify(err?.error?.detail ?? 'Error al actualizar producto'),
+        error: (err) => this.showToast(err?.error?.detail ?? 'Error al actualizar producto', 'error'),
       });
     } else {
       this.productsApi.create({
@@ -239,8 +249,9 @@ export class ProductsView implements OnInit {
         next: (res) => {
           const mapped = this.mapProduct(res);
           this.products.update((list) => [...list, mapped]);
+          this.showToast('Producto creado exitosamente', 'success');
         },
-        error: (err) => this.notify(err?.error?.detail ?? 'Error al crear producto'),
+        error: (err) => this.showToast(err?.error?.detail ?? 'Error al crear producto', 'error'),
       });
     }
     this.closeProductModal();
@@ -271,8 +282,9 @@ export class ProductsView implements OnInit {
       next: (res) => {
         this.apiCategories.update((list) => [...list, res]);
         this.selectedCategory.set(res.name);
+        this.showToast('Categoría creada exitosamente', 'success');
       },
-      error: (err) => this.notify(err?.error?.detail ?? 'Error al crear categoría'),
+      error: (err) => this.showToast(err?.error?.detail ?? 'Error al crear categoría', 'error'),
     });
     this.closeCategoryModal();
   }
@@ -301,12 +313,22 @@ export class ProductsView implements OnInit {
     this.productsApi.delete(Number(sel.id)).subscribe({
       next: () => {
         this.products.update((list) => list.filter((p) => p.id !== sel.id));
+        this.showToast('Producto eliminado exitosamente', 'success');
       },
-      error: (err) => this.notify(err?.error?.detail ?? 'Error al eliminar producto'),
+      error: (err) => this.showToast(err?.error?.detail ?? 'Error al eliminar producto', 'error'),
     });
   }
 
-  protected notify(message: string): void {
-    window.alert(message);
+  protected showToast(message: string, type: 'success' | 'error'): void {
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.toastMessage.set(message);
+    this.toastType.set(type);
+    this.toastOpen.set(true);
+    this.toastTimer = setTimeout(() => this.toastOpen.set(false), 4000);
+  }
+
+  protected closeToast(): void {
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.toastOpen.set(false);
   }
 }

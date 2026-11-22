@@ -46,8 +46,15 @@
 
   <div class="lg:flex-1 lg:min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
     <!-- Client list -->
-    <div class="lg:col-span-8 lg:h-full lg:min-h-0 flex flex-col space-y-4">
-      <h2 class="shrink-0 text-lg font-bold text-[var(--text-primary)]">Todos los Clientes</h2>
+    <div [class]="(selected() ? 'lg:col-span-8' : 'lg:col-span-12') + ' lg:h-full lg:min-h-0 flex flex-col space-y-4 transition-all duration-300'">
+      <div class="shrink-0 flex items-center justify-between">
+        <h2 class="text-lg font-bold text-[var(--text-primary)]">Todos los Clientes</h2>
+        @if (filteredClients().length > 0) {
+          <span class="text-xs text-[var(--text-muted)] font-medium">
+            {{ filteredClients().length }} {{ filteredClients().length === 1 ? 'cliente' : 'clientes' }}
+          </span>
+        }
+      </div>
 
       <div class="lg:flex-1 lg:min-h-0 lg:overflow-y-auto space-y-3 pr-2 pt-1 pb-2">
         @for (client of filteredClients(); track client.id) {
@@ -80,16 +87,62 @@
             </span>
           </button>
         } @empty {
-          <div class="text-center py-12 text-[var(--text-muted)]">
-            <svg lucideUsers class="w-10 h-10 mx-auto mb-3 opacity-40"></svg>
-            <p class="text-sm font-semibold">No se encontraron clientes</p>
-          </div>
+          @if (clients().length === 0) {
+            <!-- Empty state: sin clientes registrados -->
+            <div class="flex flex-col items-center justify-center py-12 px-4 text-center animate-fade-up">
+              <div class="w-52 h-40 sm:w-64 sm:h-48 mb-6 flex items-center justify-center">
+                <img
+                  src="/illustrations/undraw_empty.svg"
+                  alt="Sin clientes registrados"
+                  class="max-w-full max-h-full object-contain"
+                />
+              </div>
+              <h3 class="text-lg font-bold text-[var(--text-primary)]">
+                Aún no tienes clientes registrados
+              </h3>
+              <p class="mt-1.5 text-xs sm:text-sm text-[var(--text-muted)] max-w-sm">
+                Registra a tu primer cliente para comenzar a asociar ventas, historial y datos de contacto.
+              </p>
+              <button
+                type="button"
+                (click)="openCreate()"
+                class="mt-5 px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white text-xs sm:text-sm font-semibold shadow-lg shadow-cyan-500/25 flex items-center gap-2 transition-all cursor-pointer hover:scale-105 active:scale-95"
+              >
+                <svg lucidePlus class="w-4 h-4"></svg>
+                <span>Añadir cliente</span>
+              </button>
+            </div>
+          } @else {
+            <!-- No coincidencia: búsqueda sin resultados -->
+            <div class="flex flex-col items-center justify-center py-12 px-4 text-center animate-fade-up">
+              <div class="w-52 h-40 sm:w-64 sm:h-48 mb-6 flex items-center justify-center">
+                <img
+                  src="/illustrations/undraw_no_results.svg"
+                  alt="Sin coincidencias"
+                  class="max-w-full max-h-full object-contain"
+                />
+              </div>
+              <h3 class="text-lg font-bold text-[var(--text-primary)]">
+                No se encontraron coincidencias
+              </h3>
+              <p class="mt-1.5 text-xs sm:text-sm text-[var(--text-muted)] max-w-sm">
+                No encontramos ningún cliente que coincida con <span class="font-semibold text-cyan-500">"{{ searchTerm() }}"</span>. Intenta con otro término o número de documento.
+              </p>
+              <button
+                type="button"
+                (click)="searchTerm.set('')"
+                class="mt-5 px-4 py-2 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border-color)] border border-[var(--border-color)] text-xs font-semibold text-[var(--text-primary)] transition-colors cursor-pointer"
+              >
+                Limpiar búsqueda
+              </button>
+            </div>
+          }
         }
       </div>
     </div>
 
     <!-- Backdrop overlay for mobile bottom drawer -->
-    @if (isMobileDrawerOpen()) {
+    @if (selected() && isMobileDrawerOpen()) {
       <div
         class="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs lg:hidden animate-fade-in"
         (click)="closeMobileDrawer()"
@@ -98,16 +151,17 @@
     }
 
     <!-- Detail card -->
-    <div
-      [class]="
-        'fixed inset-x-0 bottom-0 top-16 z-50 flex flex-col overflow-hidden bg-[var(--bg-primary)] rounded-t-3xl shadow-2xl border-t border-[var(--border-color)] ' +
-        'lg:static lg:inset-auto lg:z-auto lg:col-span-4 lg:h-full lg:min-h-0 lg:translate-y-0 lg:pointer-events-auto lg:bg-transparent lg:rounded-none lg:border-t-0 lg:shadow-none lg:overflow-y-auto lg:block ' +
-        (isMobileDrawerReady() ? 'transition-transform duration-300 ease-out ' : '') +
-        (isMobileDrawerOpen()
-          ? 'translate-y-0 pointer-events-auto'
-          : 'translate-y-full pointer-events-none' + (isMobileDrawerReady() ? '' : ' hidden lg:block'))
-      "
-    >
+    @if (selected()) {
+      <div
+        [class]="
+          'fixed inset-x-0 bottom-0 top-16 z-50 flex flex-col overflow-hidden bg-[var(--bg-primary)] rounded-t-3xl shadow-2xl border-t border-[var(--border-color)] ' +
+          'lg:static lg:inset-auto lg:z-auto lg:col-span-4 lg:h-full lg:min-h-0 lg:translate-y-0 lg:pointer-events-auto lg:bg-transparent lg:rounded-none lg:border-t-0 lg:shadow-none lg:overflow-y-auto lg:block ' +
+          (isMobileDrawerReady() ? 'transition-transform duration-300 ease-out ' : '') +
+          (isMobileDrawerOpen()
+            ? 'translate-y-0 pointer-events-auto'
+            : 'translate-y-full pointer-events-none' + (isMobileDrawerReady() ? '' : ' hidden lg:block'))
+        "
+      >
       <!-- Mobile Drawer Top Bar -->
       <div class="lg:hidden shrink-0 px-5 pt-3.5 pb-3 border-b border-[var(--border-color)] bg-[var(--bg-card)] rounded-t-3xl flex items-center justify-between">
         <div class="flex items-center gap-2.5">
@@ -223,6 +277,7 @@
         </div>
       </div>
     </div>
+    }
   </div>
 </div>
 

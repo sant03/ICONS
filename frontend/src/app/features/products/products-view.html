@@ -439,8 +439,9 @@
                 name="code"
                 type="text"
                 [ngModel]="code()"
-                (ngModelChange)="code.set($event)"
-                class="w-full px-3.5 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] font-mono focus:outline-none focus:border-cyan-500"
+                disabled
+                [placeholder]="isEditing() ? '' : 'Auto-generado'"
+                class="w-full px-3.5 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-muted)] border border-[var(--border-color)] font-mono cursor-not-allowed"
               />
             </div>
 
@@ -468,6 +469,7 @@
               [options]="formCategories()"
               [ngModel]="category()"
               (ngModelChange)="category.set($event)"
+              placeholder="Seleccionar categoría..."
             />
           </div>
 
@@ -545,7 +547,8 @@
             </button>
             <button
               type="submit"
-              class="flex-1 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white text-xs font-semibold shadow-md shadow-cyan-500/20 cursor-pointer"
+              [disabled]="!reference().trim() || !category()"
+              class="flex-1 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 disabled:opacity-40 disabled:hover:bg-cyan-500 text-white text-xs font-semibold shadow-md shadow-cyan-500/20 cursor-pointer"
             >
               Guardar
             </button>
@@ -597,6 +600,30 @@
           </button>
         </div>
       </div>
+    </div>
+  }
+
+  <!-- Toast notification -->
+  @if (toastOpen()) {
+    <div
+      [class]="'fixed bottom-6 right-6 z-[60] flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl border backdrop-blur-sm max-w-sm animate-fade-in '
+        + (toastType() === 'success'
+          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+          : 'bg-rose-500/10 border-rose-500/30 text-rose-400')"
+    >
+      @if (toastType() === 'success') {
+        <svg lucideCheckCircle class="w-5 h-5 shrink-0"></svg>
+      } @else {
+        <svg lucideAlertCircle class="w-5 h-5 shrink-0"></svg>
+      }
+      <span class="text-sm font-medium">{{ toastMessage() }}</span>
+      <button
+        type="button"
+        (click)="closeToast()"
+        class="ml-auto p-0.5 rounded-full hover:bg-white/10 cursor-pointer"
+      >
+        <svg lucideX class="w-3.5 h-3.5"></svg>
+      </button>
     </div>
   }
 </div>

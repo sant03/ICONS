@@ -111,6 +111,14 @@ public class PurchaseOrderService {
         return toResponse(order);
     }
 
+    @Transactional
+    public void delete(Long id) {
+        Long tenantId = TenantContext.require();
+        PurchaseOrder order = orderRepository.findByIdAndTenantIdWithItems(id, tenantId)
+            .orElseThrow(() -> BusinessException.notFound("Orden de compra", id));
+        orderRepository.delete(order);
+    }
+
     private PurchaseOrderResponse toResponse(PurchaseOrder po) {
         var items = po.getItems().stream()
             .map(i -> new PurchaseOrderItemResponse(

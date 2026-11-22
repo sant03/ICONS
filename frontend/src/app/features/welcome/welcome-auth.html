@@ -4,7 +4,7 @@
   <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-b from-cyan-500/10 via-sky-500/5 to-transparent blur-3xl pointer-events-none"></div>
 
   <!-- Top navbar -->
-  <div class="flex items-center justify-between max-w-5xl mx-auto w-full z-10">
+  <div class="flex items-center justify-between max-w-5xl mx-auto w-full z-10 animate-fade-down">
     <div class="flex items-center gap-3">
       <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-sky-600 via-cyan-500 to-teal-400 p-0.5 shadow-lg shadow-cyan-500/20">
         <div class="w-full h-full bg-[var(--bg-secondary)] rounded-[14px] flex items-center justify-center">
@@ -37,12 +37,12 @@
   <div class="max-w-xl mx-auto w-full my-auto z-10 py-8">
     <!-- VIEW 1: WELCOME SCREEN -->
     @if (mode() === 'welcome') {
-      <div class="bg-[var(--bg-card)] rounded-3xl border border-[var(--border-color)] shadow-2xl p-8 text-center space-y-8 animate-in fade-in zoom-in-95 duration-200">
-        <div class="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-500 mx-auto flex items-center justify-center shadow-inner">
+      <div class="bg-[var(--bg-card)] rounded-3xl border border-[var(--border-color)] shadow-2xl p-8 text-center space-y-8 animate-scale-in">
+        <div class="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-500 mx-auto flex items-center justify-center shadow-inner animate-spring-bounce stagger-1">
           <svg lucideLayoutGrid class="w-8 h-8"></svg>
         </div>
 
-        <div>
+        <div class="animate-fade-up stagger-2">
           <span class="px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-500 text-xs font-mono font-semibold border border-cyan-500/20">
             ICONS (SISTEMA DE CONTROL DE INVENTARIO)
           </span>
@@ -58,7 +58,7 @@
           <button
             type="button"
             (click)="setMode('login')"
-            class="w-full py-3.5 px-6 rounded-2xl bg-cyan-500 hover:bg-cyan-600 text-white font-semibold text-sm shadow-lg shadow-cyan-500/25 flex items-center justify-between transition-all cursor-pointer group"
+            class="w-full py-3.5 px-6 rounded-2xl bg-cyan-500 hover:bg-cyan-600 text-white font-semibold text-sm shadow-lg shadow-cyan-500/25 flex items-center justify-between transition-all cursor-pointer group animate-fade-up stagger-3"
           >
             <div class="flex items-center gap-3">
               <svg lucideLogIn class="w-4 h-4"></svg>
@@ -70,7 +70,7 @@
           <button
             type="button"
             (click)="setMode('register')"
-            class="w-full py-3.5 px-6 rounded-2xl bg-[var(--bg-tertiary)] hover:bg-[var(--border-color)] text-[var(--text-primary)] border border-[var(--border-color)] font-semibold text-sm flex items-center justify-between transition-all cursor-pointer group"
+            class="w-full py-3.5 px-6 rounded-2xl bg-[var(--bg-tertiary)] hover:bg-[var(--border-color)] text-[var(--text-primary)] border border-[var(--border-color)] font-semibold text-sm flex items-center justify-between transition-all cursor-pointer group animate-fade-up stagger-4"
           >
             <div class="flex items-center gap-3">
               <svg lucideUserPlus class="w-4 h-4 text-cyan-500"></svg>
@@ -80,7 +80,7 @@
           </button>
         </div>
 
-        <div class="pt-4 border-t border-[var(--border-color)] text-[11px] text-[var(--text-muted)] flex items-center justify-center gap-4">
+        <div class="pt-4 border-t border-[var(--border-color)] text-[11px] text-[var(--text-muted)] flex items-center justify-center gap-4 animate-fade-in stagger-5">
           <span class="font-mono">v2.4.0 — PROD_STABLE</span>
           <span>•</span>
           <a href="#privacy" class="hover:underline">Privacy Policy</a>
@@ -92,9 +92,9 @@
 
     <!-- VIEW 2: LOGIN MODAL / CARD -->
     @if (mode() === 'login') {
-      <div class="md:bg-[var(--bg-card)] md:rounded-3xl md:border md:border-[var(--border-color)] md:shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <div class="md:bg-[var(--bg-card)] md:rounded-3xl md:border md:border-[var(--border-color)] md:shadow-2xl overflow-hidden animate-scale-in">
         <div class="py-6 md:p-8 space-y-6">
-          <div class="text-center space-y-1">
+          <div class="text-center space-y-1 animate-fade-down stagger-1">
             <button
               type="button"
               (click)="setMode('welcome')"
@@ -107,9 +107,9 @@
             <p class="text-xs text-[var(--text-muted)]">Sign in to continue to your dashboard</p>
           </div>
 
-          <form (ngSubmit)="onAuthenticate()" class="space-y-4">
+          <form (ngSubmit)="onAuthenticate()" class="space-y-4 animate-fade-up stagger-2">
             @if (auth.loginError()) {
-              <div class="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium">
+              <div class="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium animate-fade-down">
                 {{ auth.loginError() }}
               </div>
             }
@@ -228,8 +228,8 @@
 
     <!-- VIEW 3: CREATE ACCOUNT / REGISTER -->
     @if (mode() === 'register') {
-      <div class="md:bg-[var(--bg-card)] md:rounded-3xl md:border md:border-[var(--border-color)] md:shadow-2xl py-6 md:p-8 space-y-6 animate-in fade-in zoom-in-95 duration-200 max-w-2xl mx-auto">
-        <div class="flex items-center justify-between border-b border-[var(--border-color)] pb-4">
+      <div class="md:bg-[var(--bg-card)] md:rounded-3xl md:border md:border-[var(--border-color)] md:shadow-2xl py-6 md:p-8 space-y-6 animate-scale-in max-w-2xl mx-auto">
+        <div class="flex items-center justify-between border-b border-[var(--border-color)] pb-4 animate-fade-down stagger-1">
           <div>
             <h2 class="text-2xl font-bold text-[var(--text-primary)] tracking-tight">
               Create a new account
@@ -248,7 +248,7 @@
           </button>
         </div>
 
-        <form (ngSubmit)="onRegister()" class="space-y-4">
+        <form (ngSubmit)="onRegister()" class="space-y-4 animate-fade-up stagger-2">
           @if (auth.loginError()) {
             <div class="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium">
               {{ auth.loginError() }}
@@ -494,7 +494,7 @@
   </div>
 
   <!-- Footer -->
-  <div class="max-w-5xl mx-auto w-full text-center text-[11px] text-[var(--text-muted)] z-10 font-mono">
+  <div class="max-w-5xl mx-auto w-full text-center text-[11px] text-[var(--text-muted)] z-10 font-mono animate-fade-in stagger-3">
     © 2026 PLASTYFREDDY SYSTEMA DE CONTROL DE INVENTARIO. ALL RIGHTS RESERVED.
   </div>
 </div>

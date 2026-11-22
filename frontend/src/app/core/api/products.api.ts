@@ -34,6 +34,7 @@ export interface CreateProductRequest {
 export interface UpdateProductRequest {
   reference?: string;
   categoryId?: number;
+  stock?: number;
   minPurchase?: number;
   purchasePrice?: number;
   salePrice?: number;

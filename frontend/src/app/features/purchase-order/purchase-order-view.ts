@@ -1,33 +1,37 @@
 import {
   AfterViewInit,
   Component,
-  ElementRef,
   computed,
+  ElementRef,
   inject,
+  OnInit,
   signal,
   viewChild,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
+  LucideAlertCircle,
   LucideArrowLeft,
-  LucideCheck,
+  LucideCheckCircle,
   LucideChevronLeft,
   LucideChevronRight,
-  LucideClock,
   LucideFileCheck,
-  LucideFilter,
   LucideGrid,
   LucidePackage,
   LucideSparkles,
   LucideTrash2,
   LucideX,
 } from '@lucide/angular';
-import { CustomSelectComponent, SelectOption } from '../../shared/ui/custom-select/custom-select';
+import { CustomSelectComponent } from '../../shared/ui/custom-select/custom-select';
 import { CustomDatePickerComponent } from '../../shared/ui/custom-datepicker/custom-datepicker';
 import { AppStore } from '../../core/state/app-store';
+import { PurchaseOrdersApi, CreatePurchaseOrderRequest } from '../../core/api/purchase-orders.api';
+import { SuppliersApi, SupplierResponse } from '../../core/api/suppliers.api';
+import { ProductsApi } from '../../core/api/products.api';
 
 interface OrderLineItem {
   id: string;
+  productId: number;
   description: string;
   quantity: number;
   unitPrice: number;
@@ -47,65 +51,82 @@ interface CatalogProduct {
     FormsModule,
     CustomSelectComponent,
     CustomDatePickerComponent,
+    LucideAlertCircle,
     LucideArrowLeft,
-    LucideClock,
-    LucideFileCheck,
-    LucideSparkles,
-    LucidePackage,
-    LucideFilter,
-    LucideCheck,
-    LucideTrash2,
+    LucideCheckCircle,
     LucideChevronLeft,
     LucideChevronRight,
+    LucideFileCheck,
     LucideGrid,
+    LucidePackage,
+    LucideSparkles,
+    LucideTrash2,
     LucideX,
   ],
   templateUrl: './purchase-order-view.html',
 })
-export class PurchaseOrderView implements AfterViewInit {
+export class PurchaseOrderView implements OnInit, AfterViewInit {
   protected readonly store = inject(AppStore);
+  private readonly api = inject(PurchaseOrdersApi);
+  private readonly suppliersApi = inject(SuppliersApi);
+  private readonly productsApi = inject(ProductsApi);
 
-  protected readonly poStatus = signal('Draft');
-  protected readonly statusOptions: SelectOption[] = [
-    { value: 'Draft', label: 'Draft (Editing)' },
-    { value: 'Submitted', label: 'Submitted' },
-    { value: 'Approved', label: 'Approved' },
-  ];
+  private readonly apiSuppliers = signal<SupplierResponse[]>([]);
+  protected readonly supplierOptions = computed(() => this.apiSuppliers().map((s) => s.name));
+  protected readonly availableProducts = signal<CatalogProduct[]>([]);
 
-  protected readonly supplier = signal('Global Logistics S.A.');
-  protected readonly supplierOptions = [
-    'Global Logistics S.A.',
-    'Plásticos del Norte Ltda',
-    'Empaques Especiales',
-  ];
+  protected readonly supplier = signal('');
+  protected readonly creationDate = signal(new Date().toISOString().slice(0, 10));
+  protected readonly receptionDate = signal('');
+  protected readonly madeBy = signal('');
+  protected readonly department = signal('');
+  protected readonly departmentOptions = ['Operaciones', 'Logística', 'Ventas', 'Administración'];
+  protected readonly paymentMethod = signal('');
+  protected readonly paymentMethodOptions = ['Transferencia', 'Efectivo', 'Crédito 30 días'];
 
-  protected readonly department = signal('Operations');
-  protected readonly departmentOptions = ['Operations', 'Logistics', 'Sales'];
+  protected readonly selectedSupplier = computed(() => {
+    const name = this.supplier();
+    return this.apiSuppliers().find((s) => s.name === name) ?? null;
+  });
 
-  protected readonly paymentMethod = signal('Bank Transfer');
-  protected readonly paymentMethodOptions = [
-    'Bank Transfer',
-    'Credit Card',
-    'Net 30 Days',
-  ];
-
-  protected readonly poCategory = signal('Category');
-  protected readonly categoryOptions = ['Category', 'Plásticos', 'Empaques', 'Bolsas', 'Vasos'];
-
-  protected readonly poStockStatus = signal('Stock Status');
-  protected readonly stockStatusOptions = ['Stock Status', 'In Stock', 'Low Stock', 'Out of Stock'];
-
-  protected readonly orderNumber = signal('PO-003');
-  protected readonly creationDate = signal('2022-02-15');
-
-  // Carousel controls for Select Products
   protected readonly productsContainer = viewChild<ElementRef<HTMLDivElement>>('productsContainer');
   protected readonly canScrollLeft = signal(false);
   protected readonly canScrollRight = signal(true);
 
-  // Bottom drawer state for "Ver todos"
   protected readonly isAllProductsDrawerOpen = signal(false);
   protected readonly isAllProductsDrawerReady = signal(false);
+
+  protected readonly lineItems = signal<OrderLineItem[]>([]);
+
+  protected readonly totalEstimate = computed(() =>
+    this.lineItems().reduce((acc, item) => acc + item.quantity * item.unitPrice, 0),
+  );
+
+  protected readonly toastOpen = signal(false);
+  protected readonly toastMessage = signal('');
+  protected readonly toastType = signal<'success' | 'error'>('success');
+  private toastTimer: ReturnType<typeof setTimeout> | null = null;
+
+  ngOnInit(): void {
+    this.suppliersApi.list({ size: 500 }).subscribe({
+      next: (page) => this.apiSuppliers.set(page.content),
+      error: (err) => this.showToast(err?.error?.detail ?? 'Error al cargar proveedores', 'error'),
+    });
+    this.productsApi.list({ size: 500 }).subscribe({
+      next: (page) => {
+        this.availableProducts.set(
+          page.content.filter((p) => !p.blocked).map((p) => ({
+            id: String(p.id),
+            name: p.reference,
+            stockText: p.stock === 0 ? 'AGOTADO' : p.stock <= p.minPurchase ? `SOLO ${p.stock}` : `STOCK: ${p.stock}`,
+            stock: p.stock,
+            price: p.purchasePrice,
+          })),
+        );
+      },
+      error: (err) => this.showToast(err?.error?.detail ?? 'Error al cargar productos', 'error'),
+    });
+  }
 
   ngAfterViewInit(): void {
     setTimeout(() => this.checkScroll(), 100);
@@ -122,9 +143,8 @@ export class PurchaseOrderView implements AfterViewInit {
   protected scrollProducts(direction: 'left' | 'right'): void {
     const el = this.productsContainer()?.nativeElement;
     if (!el) return;
-    const scrollAmount = 240;
     el.scrollBy({
-      left: direction === 'right' ? scrollAmount : -scrollAmount,
+      left: direction === 'right' ? 240 : -240,
       behavior: 'smooth',
     });
     setTimeout(() => this.checkScroll(), 350);
@@ -139,43 +159,18 @@ export class PurchaseOrderView implements AfterViewInit {
     this.isAllProductsDrawerOpen.set(false);
   }
 
-  // Selectable Products from Catalog
-  protected readonly availableProducts = signal<CatalogProduct[]>([
-    { id: '1', name: 'P/B 1 LIBRA', stockText: 'ONLY 3 LEFT', stock: 3, price: 350 },
-    { id: '2', name: 'P/B 2 LIBRAS', stockText: 'STOCK: 7', stock: 7, price: 500 },
-    { id: '3', name: 'P/B 3 LIBRAS', stockText: 'OUT OF STOCK', stock: 0, price: 650 },
-    { id: '4', name: 'PQTE PITILLO', stockText: 'STOCK: 13', stock: 13, price: 700 },
-    { id: '5', name: 'BAGS XL', stockText: 'STOCK: 25', stock: 25, price: 900 },
-  ]);
-
-  // Items added to the PO
-  protected readonly lineItems = signal<OrderLineItem[]>([
-    { id: 'l1', description: 'P/B 1 Libra', quantity: 5, unitPrice: 350 },
-    { id: 'l2', description: 'Pqte Pitillo', quantity: 3, unitPrice: 700 },
-    { id: 'l3', description: 'P/B Hielo Azul', quantity: 6, unitPrice: 1200 },
-    { id: 'l4', description: 'P/B Boli Corto', quantity: 10, unitPrice: 900 },
-  ]);
-
-  protected readonly totalEstimate = computed(() =>
-    this.lineItems().reduce((acc, item) => acc + item.quantity * item.unitPrice, 0),
-  );
-
   protected addProductToPO(prod: CatalogProduct): void {
+    const prodId = parseInt(prod.id, 10);
     this.lineItems.update((items) => {
-      const existing = items.find((item) => item.description === prod.name);
+      const existing = items.find((item) => item.productId === prodId);
       if (existing) {
         return items.map((item) =>
-          item.description === prod.name ? { ...item, quantity: item.quantity + 1 } : item,
+          item.productId === prodId ? { ...item, quantity: item.quantity + 1 } : item,
         );
       }
       return [
         ...items,
-        {
-          id: Date.now().toString(),
-          description: prod.name,
-          quantity: 1,
-          unitPrice: prod.price,
-        },
+        { id: Date.now().toString(), productId: prodId, description: prod.name, quantity: 1, unitPrice: prod.price },
       ];
     });
   }
@@ -192,8 +187,59 @@ export class PurchaseOrderView implements AfterViewInit {
     this.lineItems.update((items) => items.filter((i) => i.id !== id));
   }
 
-  /** Mirrors the `alert(...)` calls of the original React component. */
-  protected notify(message: string): void {
-    window.alert(message);
+  protected createOrder(): void {
+    const supplierObj = this.selectedSupplier();
+    if (!supplierObj) {
+      this.showToast('Selecciona un proveedor', 'error');
+      return;
+    }
+    if (this.lineItems().length === 0) {
+      this.showToast('Agrega al menos un producto a la orden', 'error');
+      return;
+    }
+    if (!this.madeBy().trim()) {
+      this.showToast('El campo "Elaborado por" es obligatorio', 'error');
+      return;
+    }
+
+    const request: CreatePurchaseOrderRequest = {
+      supplierId: supplierObj.id,
+      supplierName: supplierObj.name,
+      supplierAddress: supplierObj.address,
+      supplierPhone: supplierObj.phone,
+      supplierEmail: supplierObj.email,
+      date: this.creationDate(),
+      madeOn: this.creationDate(),
+      receptionDate: this.receptionDate() || undefined,
+      madeBy: this.madeBy().trim(),
+      area: this.department() || undefined,
+      paymentMethod: this.paymentMethod() || undefined,
+      items: this.lineItems().map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+      })),
+    };
+
+    this.api.create(request).subscribe({
+      next: () => {
+        this.showToast('Orden de compra creada exitosamente', 'success');
+        setTimeout(() => this.store.navigate('purchase-orders'), 500);
+      },
+      error: (err) => this.showToast(err?.error?.detail ?? 'Error al crear la orden', 'error'),
+    });
+  }
+
+  protected showToast(message: string, type: 'success' | 'error'): void {
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.toastMessage.set(message);
+    this.toastType.set(type);
+    this.toastOpen.set(true);
+    this.toastTimer = setTimeout(() => this.toastOpen.set(false), 4000);
+  }
+
+  protected closeToast(): void {
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.toastOpen.set(false);
   }
 }

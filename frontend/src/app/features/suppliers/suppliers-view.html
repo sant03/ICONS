@@ -1,7 +1,7 @@
 <div class="h-full overflow-y-auto overflow-x-hidden lg:overflow-hidden lg:flex lg:flex-col lg:min-h-0 p-4 lg:p-8 space-y-6">
   <!-- Tab bar + primary action -->
   <div
-    class="shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+    class="shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-down"
   >
     <div class="flex items-center gap-6">
       <button
@@ -46,16 +46,24 @@
 
   <div class="lg:flex-1 lg:min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
     <!-- Supplier list -->
-    <div class="lg:col-span-8 lg:h-full lg:min-h-0 flex flex-col space-y-4">
-      <h2 class="shrink-0 text-lg font-bold text-[var(--text-primary)]">Todos los Proveedores</h2>
+    <div [class]="(selected() ? 'lg:col-span-8' : 'lg:col-span-12') + ' lg:h-full lg:min-h-0 flex flex-col space-y-4 transition-all duration-300'">
+      <div class="shrink-0 flex items-center justify-between">
+        <h2 class="text-lg font-bold text-[var(--text-primary)]">Todos los Proveedores</h2>
+        @if (filteredSuppliers().length > 0) {
+          <span class="text-xs text-[var(--text-muted)] font-medium">
+            {{ filteredSuppliers().length }} {{ filteredSuppliers().length === 1 ? 'proveedor' : 'proveedores' }}
+          </span>
+        }
+      </div>
 
-      <div class="lg:flex-1 lg:min-h-0 lg:overflow-y-auto space-y-3 pr-2">
+      <div class="lg:flex-1 lg:min-h-0 lg:overflow-y-auto space-y-3 pr-2 pt-1 pb-2">
         @for (supplier of filteredSuppliers(); track supplier.id) {
           <button
             type="button"
             (click)="select(supplier.id)"
+            [style.animation-delay.ms]="$index * 45 + 100"
             [class]="
-              'w-full p-4 rounded-2xl border-2 flex items-center gap-4 text-left transition-all duration-150 cursor-pointer ' +
+              'w-full p-4 rounded-2xl border-2 flex items-center gap-4 text-left transition-all duration-150 cursor-pointer animate-spring-bounce ' +
               (selected()?.id === supplier.id
                 ? 'border-cyan-500 bg-[var(--bg-card)] shadow-md'
                 : 'border-[var(--border-color)] bg-[var(--bg-card)] hover:border-cyan-500/40 hover:shadow-sm')
@@ -79,34 +87,81 @@
             </span>
           </button>
         } @empty {
-          <div class="text-center py-12 text-[var(--text-muted)]">
-            <svg lucideBuilding class="w-10 h-10 mx-auto mb-3 opacity-40"></svg>
-            <p class="text-sm font-semibold">No se encontraron proveedores</p>
-          </div>
+          @if (suppliers().length === 0) {
+            <!-- Empty state: sin proveedores registrados -->
+            <div class="flex flex-col items-center justify-center py-12 px-4 text-center animate-fade-up">
+              <div class="w-52 h-40 sm:w-64 sm:h-48 mb-6 flex items-center justify-center">
+                <img
+                  src="/illustrations/undraw_empty.svg"
+                  alt="Sin proveedores registrados"
+                  class="max-w-full max-h-full object-contain"
+                />
+              </div>
+              <h3 class="text-lg font-bold text-[var(--text-primary)]">
+                Aún no tienes proveedores registrados
+              </h3>
+              <p class="mt-1.5 text-xs sm:text-sm text-[var(--text-muted)] max-w-sm">
+                Registra a tu primer proveedor para gestionar compras, pedidos de stock y suministros.
+              </p>
+              <button
+                type="button"
+                (click)="openCreate()"
+                class="mt-5 px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white text-xs sm:text-sm font-semibold shadow-lg shadow-cyan-500/25 flex items-center gap-2 transition-all cursor-pointer hover:scale-105 active:scale-95"
+              >
+                <svg lucidePlus class="w-4 h-4"></svg>
+                <span>Añadir proveedor</span>
+              </button>
+            </div>
+          } @else {
+            <!-- No coincidencia: búsqueda sin resultados -->
+            <div class="flex flex-col items-center justify-center py-12 px-4 text-center animate-fade-up">
+              <div class="w-52 h-40 sm:w-64 sm:h-48 mb-6 flex items-center justify-center">
+                <img
+                  src="/illustrations/undraw_no_results.svg"
+                  alt="Sin coincidencias"
+                  class="max-w-full max-h-full object-contain"
+                />
+              </div>
+              <h3 class="text-lg font-bold text-[var(--text-primary)]">
+                No se encontraron coincidencias
+              </h3>
+              <p class="mt-1.5 text-xs sm:text-sm text-[var(--text-muted)] max-w-sm">
+                No hay proveedores que coincidan con <span class="font-semibold text-cyan-500">"{{ searchTerm() }}"</span>. Intenta con otro código o razón social.
+              </p>
+              <button
+                type="button"
+                (click)="searchTerm.set('')"
+                class="mt-5 px-4 py-2 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border-color)] border border-[var(--border-color)] text-xs font-semibold text-[var(--text-primary)] transition-colors cursor-pointer"
+              >
+                Limpiar búsqueda
+              </button>
+            </div>
+          }
         }
       </div>
     </div>
 
     <!-- Backdrop overlay for mobile bottom drawer -->
-    @if (isMobileDrawerOpen()) {
+    @if (selected() && isMobileDrawerOpen()) {
       <div
-        class="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs lg:hidden transition-opacity duration-300"
+        class="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs lg:hidden animate-fade-in"
         (click)="closeMobileDrawer()"
         aria-hidden="true"
       ></div>
     }
 
     <!-- Detail card -->
-    <div
-      [class]="
-        'fixed inset-x-0 bottom-0 top-16 z-50 flex flex-col overflow-hidden bg-[var(--bg-primary)] rounded-t-3xl shadow-2xl border-t border-[var(--border-color)] ' +
-        'lg:static lg:inset-auto lg:z-auto lg:col-span-4 lg:h-full lg:min-h-0 lg:translate-y-0 lg:pointer-events-auto lg:bg-transparent lg:rounded-none lg:border-t-0 lg:shadow-none lg:overflow-y-auto lg:block ' +
-        (isMobileDrawerReady() ? 'transition-transform duration-300 ease-out ' : '') +
-        (isMobileDrawerOpen()
-          ? 'translate-y-0 pointer-events-auto'
-          : 'translate-y-full pointer-events-none' + (isMobileDrawerReady() ? '' : ' hidden lg:block'))
-      "
-    >
+    @if (selected()) {
+      <div
+        [class]="
+          'fixed inset-x-0 bottom-0 top-16 z-50 flex flex-col overflow-hidden bg-[var(--bg-primary)] rounded-t-3xl shadow-2xl border-t border-[var(--border-color)] ' +
+          'lg:static lg:inset-auto lg:z-auto lg:col-span-4 lg:h-full lg:min-h-0 lg:translate-y-0 lg:pointer-events-auto lg:bg-transparent lg:rounded-none lg:border-t-0 lg:shadow-none lg:overflow-y-auto lg:block ' +
+          (isMobileDrawerReady() ? 'transition-transform duration-300 ease-out ' : '') +
+          (isMobileDrawerOpen()
+            ? 'translate-y-0 pointer-events-auto'
+            : 'translate-y-full pointer-events-none' + (isMobileDrawerReady() ? '' : ' hidden lg:block'))
+        "
+      >
       <!-- Mobile Drawer Top Bar -->
       <div class="lg:hidden shrink-0 px-5 pt-3.5 pb-3 border-b border-[var(--border-color)] bg-[var(--bg-card)] rounded-t-3xl flex items-center justify-between">
         <div class="flex items-center gap-2.5">
@@ -131,7 +186,7 @@
       <!-- Drawer body -->
       <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-0 lg:overflow-visible">
         <div
-          class="lg:p-6 lg:rounded-3xl lg:bg-[var(--bg-card)] lg:border lg:border-[var(--border-color)] lg:shadow-sm relative"
+          class="lg:p-6 lg:rounded-3xl lg:bg-[var(--bg-card)] lg:border lg:border-[var(--border-color)] lg:shadow-sm relative animate-fade-up stagger-1"
         >
           <div class="absolute top-5 right-5 flex items-center gap-1">
             <button
@@ -152,7 +207,7 @@
             </button>
           </div>
 
-          <div class="flex flex-col items-center text-center pt-2">
+          <div class="flex flex-col items-center text-center pt-2 animate-scale-in stagger-2">
             <div
               class="w-32 h-32 rounded-full overflow-hidden bg-[var(--bg-tertiary)] border border-[var(--border-color)] flex items-center justify-center text-[var(--text-muted)]"
             >
@@ -174,7 +229,7 @@
             </p>
           </div>
 
-          <div class="mt-6 space-y-4 relative pr-10">
+          <div class="mt-6 space-y-4 relative pr-10 animate-fade-up stagger-3">
             <div class="flex items-start gap-3">
               <svg lucideMapPin class="w-4 h-4 mt-0.5 shrink-0 text-[var(--text-muted)]"></svg>
               <div class="min-w-0">
@@ -224,6 +279,7 @@
         </div>
       </div>
     </div>
+    }
   </div>
 </div>
 
@@ -412,7 +468,7 @@
   type="button"
   (click)="openCreate()"
   aria-label="Añadir nuevo proveedor"
-  class="sm:hidden fixed bottom-6 right-6 w-14 h-14 rounded-full bg-cyan-500 hover:bg-cyan-600 text-white shadow-2xl shadow-cyan-500/50 flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-pointer z-40 border-2 border-white/20"
+  class="sm:hidden fixed bottom-6 right-6 w-14 h-14 rounded-full bg-cyan-500 hover:bg-cyan-600 text-white shadow-2xl shadow-cyan-500/50 flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-pointer z-40 border-2 border-white/20 animate-spring-bounce stagger-4"
 >
   <svg lucidePlus class="w-6 h-6"></svg>
 </button>

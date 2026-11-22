@@ -1,5 +1,9 @@
 <div class="h-full overflow-y-auto overflow-x-hidden md:overflow-hidden md:flex md:flex-col md:min-h-0 overscroll-contain">
-  @if (order(); as po) {
+  @if (loading()) {
+    <div class="flex items-center justify-center h-full py-20">
+      <div class="animate-spin w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full"></div>
+    </div>
+  } @else if (order(); as po) {
     <!-- Document header: back link, number, state and document actions -->
     <div
       class="shrink-0 p-4 lg:p-8 pb-6 border-b border-[var(--border-color)] bg-[var(--bg-primary)]"
@@ -104,17 +108,17 @@
           <p class="flex items-center gap-1.5">
             <svg lucideMapPin class="w-3.5 h-3.5 shrink-0 text-[var(--text-muted)]"></svg>
             <span>Dirección:</span>
-            <strong class="truncate">{{ po.supplierAddress ?? 'Calle 43 # 58 30' }}</strong>
+            <strong class="truncate">{{ po.supplierAddress ?? 'No disponible' }}</strong>
           </p>
           <p class="flex items-center gap-1.5">
             <svg lucidePhone class="w-3.5 h-3.5 shrink-0 text-[var(--text-muted)]"></svg>
             <span>Teléfono:</span>
-            <strong class="font-mono">{{ po.supplierPhone ?? '3045678493' }}</strong>
+            <strong class="font-mono">{{ po.supplierPhone ?? '-' }}</strong>
           </p>
           <p class="flex items-center gap-1.5 min-w-0">
             <svg lucideMail class="w-3.5 h-3.5 shrink-0 text-[var(--text-muted)]"></svg>
             <span>Email:</span>
-            <strong class="truncate">{{ po.supplierEmail ?? 'plastidias@gmail.com' }}</strong>
+            <strong class="truncate">{{ po.supplierEmail ?? '-' }}</strong>
           </p>
         </div>
       </div>
@@ -348,6 +352,26 @@
         class="px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white text-xs font-bold cursor-pointer"
       >
         Volver a todas las órdenes
+      </button>
+    </div>
+  }
+
+  <!-- Toast -->
+  @if (toastOpen()) {
+    <div
+      [class]="'fixed top-6 right-6 z-[60] max-w-xs w-full px-4 py-3 rounded-2xl shadow-xl border flex items-center gap-3 transition-all duration-300 ' +
+        (toastType() === 'success'
+          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
+          : 'bg-rose-500/10 border-rose-500/30 text-rose-500')"
+    >
+      @if (toastType() === 'success') {
+        <svg lucideCheckCircle class="w-5 h-5 shrink-0"></svg>
+      } @else {
+        <svg lucideAlertCircle class="w-5 h-5 shrink-0"></svg>
+      }
+      <span class="text-xs font-semibold flex-1">{{ toastMessage() }}</span>
+      <button type="button" (click)="closeToast()" class="p-1 hover:opacity-70 cursor-pointer">
+        <svg lucideX class="w-3.5 h-3.5"></svg>
       </button>
     </div>
   }

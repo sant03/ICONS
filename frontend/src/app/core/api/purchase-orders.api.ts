@@ -80,4 +80,8 @@ export class PurchaseOrdersApi {
       params: new HttpParams().set('status', status),
     });
   }
+
+  delete(id: number) {
+    return this.http.delete<void>(`${this.base}/${id}`);
+  }
 }

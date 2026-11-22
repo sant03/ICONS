@@ -448,9 +448,21 @@
           </div>
         } @else {
           <div
-            class="p-5 rounded-2xl border border-dashed border-[var(--border-color)] text-center text-xs text-[var(--text-muted)]"
+            class="py-8 px-4 rounded-2xl border border-dashed border-[var(--border-color)] flex flex-col items-center justify-center text-center animate-fade-up"
           >
-            Sin actividad registrada para este usuario.
+            <div class="w-40 h-32 mb-3 flex items-center justify-center">
+              <img
+                src="/illustrations/undraw_no_activity.svg"
+                alt="Sin actividad reciente"
+                class="max-w-full max-h-full object-contain"
+              />
+            </div>
+            <p class="text-xs font-bold text-[var(--text-primary)]">
+              Sin actividad reciente
+            </p>
+            <p class="text-[11px] text-[var(--text-muted)] mt-1 max-w-xs">
+              Este usuario no ha registrado movimientos, ventas o modificaciones recientes en el sistema.
+            </p>
           </div>
         }
       </div>
