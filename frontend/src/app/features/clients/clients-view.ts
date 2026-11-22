@@ -8,6 +8,7 @@ import {
   LucideMessageCircle,
   LucidePhone,
   LucidePlus,
+  LucideRotateCcw,
   LucideSearch,
   LucideSquarePen,
   LucideTrash2,
@@ -30,6 +31,7 @@ import { CustomersApi, CustomerResponse } from '../../core/api';
     LucideMessageCircle,
     LucidePhone,
     LucidePlus,
+    LucideRotateCcw,
     LucideSearch,
     LucideSquarePen,
     LucideTrash2,
@@ -44,12 +46,15 @@ export class ClientsView implements OnInit {
   private readonly api = inject(CustomersApi);
 
   protected readonly clients = signal<Client[]>([]);
+  protected readonly isLoading = signal(true);
+  protected readonly hasError = signal(false);
+  protected readonly errorMessage = signal('');
   protected readonly selectedId = signal('');
   protected readonly searchTerm = signal('');
 
   protected readonly filteredClients = computed(() => {
     const list = this.clients();
-    const term = this.searchTerm().toLowerCase();
+    const term = this.searchTerm().toLowerCase().trim();
     if (!term) return list;
     return list.filter(
       (c) =>
@@ -66,14 +71,35 @@ export class ClientsView implements OnInit {
       null,
   );
 
+  protected readonly hasDetailVisible = computed(
+    () => !this.isLoading() && !this.hasError() && this.filteredClients().length > 0 && this.selected() !== null
+  );
+
   ngOnInit(): void {
+    this.loadClients();
+  }
+
+  protected loadClients(): void {
+    this.isLoading.set(true);
+    this.hasError.set(false);
+    this.errorMessage.set('');
     this.api.list({ size: 200 }).subscribe({
       next: (page) => {
         const mapped = page.content.map((c) => ClientsView.mapCustomer(c));
         this.clients.set(mapped);
+        this.isLoading.set(false);
         if (mapped.length && !this.selectedId()) this.selectedId.set(mapped[0].id);
       },
+      error: (err) => {
+        this.isLoading.set(false);
+        this.hasError.set(true);
+        this.errorMessage.set(err?.error?.detail || err?.message || 'Error al conectar con el servidor.');
+      },
     });
+  }
+
+  protected clearSearch(): void {
+    this.searchTerm.set('');
   }
 
   private static mapCustomer(c: CustomerResponse): Client {

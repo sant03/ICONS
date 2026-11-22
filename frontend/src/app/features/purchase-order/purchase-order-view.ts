@@ -74,6 +74,7 @@ export class PurchaseOrderView implements OnInit, AfterViewInit {
   private readonly apiSuppliers = signal<SupplierResponse[]>([]);
   protected readonly supplierOptions = computed(() => this.apiSuppliers().map((s) => s.name));
   protected readonly availableProducts = signal<CatalogProduct[]>([]);
+  protected readonly isLoadingProducts = signal(true);
 
   protected readonly supplier = signal('');
   protected readonly creationDate = signal(new Date().toISOString().slice(0, 10));
@@ -123,8 +124,12 @@ export class PurchaseOrderView implements OnInit, AfterViewInit {
             price: p.purchasePrice,
           })),
         );
+        this.isLoadingProducts.set(false);
       },
-      error: (err) => this.showToast(err?.error?.detail ?? 'Error al cargar productos', 'error'),
+      error: (err) => {
+        this.isLoadingProducts.set(false);
+        this.showToast(err?.error?.detail ?? 'Error al cargar productos', 'error');
+      },
     });
   }
 

@@ -109,11 +109,26 @@
           <p class="text-xs font-semibold text-[var(--text-primary)] leading-tight">{{ auth.currentUser()?.username ?? 'user' }}</p>
           <p class="text-[10px] text-[var(--text-muted)] font-mono">{{ auth.currentUser()?.tenantName ?? '' }}</p>
         </div>
-        <svg lucideChevronDown class="w-3.5 h-3.5 text-[var(--text-muted)]"></svg>
+        <svg
+          lucideChevronDown
+          class="w-3.5 h-3.5 text-[var(--text-muted)] transition-transform duration-200"
+          [class.rotate-180]="userMenuOpen()"
+        ></svg>
       </button>
 
       @if (userMenuOpen()) {
-        <div class="absolute right-0 mt-2 w-56 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+        <!-- Backdrop overlay for outside click -->
+        <div
+          class="fixed inset-0 z-40"
+          (click)="closeUserMenu()"
+          aria-hidden="true"
+        ></div>
+
+        <div
+          class="absolute right-0 mt-2 w-56 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-xl py-2 z-50 origin-top-right transition-all"
+          [class.animate-dropdown-in]="!userMenuAnimatingOut()"
+          [class.animate-dropdown-out]="userMenuAnimatingOut()"
+        >
           <div class="px-4 py-2 border-b border-[var(--border-color)]">
             <p class="text-xs font-semibold text-[var(--text-primary)]">{{ auth.currentUser()?.fullName ?? 'Usuario' }}</p>
             <p class="text-[11px] text-[var(--text-muted)]">{{ auth.currentUser()?.email ?? '' }}</p>

@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import {
   LucideAlertTriangle,
   LucideBell,
@@ -36,6 +36,21 @@ type FilterType = 'all' | 'unread';
 export class NotificationsSidebar {
   protected readonly store = inject(AppStore);
   protected readonly activeFilter = signal<FilterType>('all');
+  protected readonly isLoading = signal(false);
+
+  constructor() {
+    effect(() => {
+      if (this.store.notificationsOpen()) {
+        this.isLoading.set(true);
+        setTimeout(() => this.isLoading.set(false), 350);
+      }
+    });
+  }
+
+  protected reload(): void {
+    this.isLoading.set(true);
+    setTimeout(() => this.isLoading.set(false), 500);
+  }
 
   protected readonly filteredNotifications = computed(() => {
     const list = this.store.notifications();

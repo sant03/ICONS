@@ -14,6 +14,7 @@ import {
   LucideFolderPlus,
   LucideLayers,
   LucidePlus,
+  LucideRotateCcw,
   LucideSearch,
   LucideShoppingBag,
   LucideTag,
@@ -50,6 +51,7 @@ type SortOption =
     LucideFolderPlus,
     LucideLayers,
     LucidePlus,
+    LucideRotateCcw,
     LucideSearch,
     LucideShoppingBag,
     LucideTag,
@@ -63,6 +65,7 @@ export class SalesView implements OnInit {
   protected readonly store = inject(AppStore);
   private readonly api = inject(SalesApi);
 
+  protected readonly isLoading = signal(true);
   protected readonly allSales = signal<SaleRecord[]>([]);
   protected readonly searchTerm = signal('');
   protected readonly selectedFilter = signal<string>('all');
@@ -115,8 +118,14 @@ export class SalesView implements OnInit {
 
   private loadSales(): void {
     this.api.list({ size: 500 }).subscribe({
-      next: (page) => this.allSales.set(page.content.map((s) => SalesView.mapSale(s))),
-      error: (err) => this.showToast(err?.error?.detail ?? 'Error al cargar ventas', 'error'),
+      next: (page) => {
+        this.allSales.set(page.content.map((s) => SalesView.mapSale(s)));
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        this.isLoading.set(false);
+        this.showToast(err?.error?.detail ?? 'Error al cargar ventas', 'error');
+      },
     });
   }
 

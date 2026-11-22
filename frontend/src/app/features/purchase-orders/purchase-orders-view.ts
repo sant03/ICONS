@@ -7,6 +7,7 @@ import {
   LucideCheckCircle,
   LucideFileText,
   LucidePlus,
+  LucideRotateCcw,
   LucideSearch,
   LucideX,
 } from '@lucide/angular';
@@ -16,7 +17,17 @@ import { PurchaseOrdersApi, PurchaseOrderResponse } from '../../core/api';
 
 @Component({
   selector: 'app-purchase-orders-view',
-  imports: [FormsModule, LucideAlertCircle, LucideCalendar, LucideCheckCircle, LucideFileText, LucidePlus, LucideSearch, LucideX],
+  imports: [
+    FormsModule,
+    LucideAlertCircle,
+    LucideCalendar,
+    LucideCheckCircle,
+    LucideFileText,
+    LucidePlus,
+    LucideRotateCcw,
+    LucideSearch,
+    LucideX,
+  ],
   templateUrl: './purchase-orders-view.html',
 })
 export class PurchaseOrdersView implements OnInit {
@@ -24,6 +35,7 @@ export class PurchaseOrdersView implements OnInit {
   private readonly router = inject(Router);
   private readonly api = inject(PurchaseOrdersApi);
 
+  protected readonly isLoading = signal(true);
   protected readonly purchaseOrders = signal<PurchaseOrder[]>([]);
   protected readonly searchTerm = signal('');
 
@@ -34,8 +46,14 @@ export class PurchaseOrdersView implements OnInit {
 
   ngOnInit(): void {
     this.api.list({ size: 200 }).subscribe({
-      next: (page) => this.purchaseOrders.set(page.content.map((po) => PurchaseOrdersView.mapPO(po))),
-      error: (err) => this.showToast(err?.error?.detail ?? 'Error al cargar órdenes de compra', 'error'),
+      next: (page) => {
+        this.purchaseOrders.set(page.content.map((po) => PurchaseOrdersView.mapPO(po)));
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        this.isLoading.set(false);
+        this.showToast(err?.error?.detail ?? 'Error al cargar órdenes de compra', 'error');
+      },
     });
   }
 

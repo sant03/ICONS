@@ -359,7 +359,7 @@
   <!-- Toast -->
   @if (toastOpen()) {
     <div
-      [class]="'fixed top-6 right-6 z-[60] max-w-xs w-full px-4 py-3 rounded-2xl shadow-xl border flex items-center gap-3 transition-all duration-300 ' +
+      [class]="'fixed bottom-6 right-6 z-[60] max-w-xs w-full px-4 py-3 rounded-2xl shadow-xl border flex items-center gap-3 transition-all duration-300 animate-fade-in ' +
         (toastType() === 'success'
           ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
           : 'bg-rose-500/10 border-rose-500/30 text-rose-500')"

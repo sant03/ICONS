@@ -37,6 +37,7 @@ export class Header {
   private readonly router = inject(Router);
 
   protected readonly userMenuOpen = signal(false);
+  protected readonly userMenuAnimatingOut = signal(false);
   protected readonly mobileSearchOpen = signal(false);
 
   protected readonly initials = computed(() => {
@@ -51,16 +52,30 @@ export class Header {
   }
 
   protected toggleUserMenu(): void {
-    this.userMenuOpen.update((open) => !open);
+    if (this.userMenuOpen()) {
+      this.closeUserMenu();
+    } else {
+      this.userMenuAnimatingOut.set(false);
+      this.userMenuOpen.set(true);
+    }
+  }
+
+  protected closeUserMenu(): void {
+    if (!this.userMenuOpen() || this.userMenuAnimatingOut()) return;
+    this.userMenuAnimatingOut.set(true);
+    setTimeout(() => {
+      this.userMenuOpen.set(false);
+      this.userMenuAnimatingOut.set(false);
+    }, 180);
   }
 
   protected goToProfile(): void {
-    this.userMenuOpen.set(false);
+    this.closeUserMenu();
     void this.router.navigate(['/profile']);
   }
 
   protected logOut(): void {
-    this.userMenuOpen.set(false);
+    this.closeUserMenu();
     void this.auth.logout();
   }
 }

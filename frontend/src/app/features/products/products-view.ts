@@ -4,14 +4,20 @@ import { CustomSelectComponent } from '../../shared/ui/custom-select/custom-sele
 import {
   LucideAlertCircle,
   LucideAlertTriangle,
-  LucideBox,
+  LucideArrowDownToLine,
+  LucideBarcode,
+  LucideBoxes,
   LucideCheckCircle,
+  LucideDollarSign,
   LucideEdit,
   LucideFolderPlus,
   LucideImage,
   LucidePackage,
   LucidePlus,
+  LucideRotateCcw,
   LucideSearch,
+  LucideShoppingCart,
+  LucideTag,
   LucideTrash2,
   LucideX,
 } from '@lucide/angular';
@@ -26,14 +32,20 @@ import { ProductsApi, ProductResponse, CategoriesApi, CategoryResponse } from '.
     CustomSelectComponent,
     LucideAlertCircle,
     LucideAlertTriangle,
-    LucideBox,
+    LucideArrowDownToLine,
+    LucideBarcode,
+    LucideBoxes,
     LucideCheckCircle,
+    LucideDollarSign,
     LucideEdit,
     LucideFolderPlus,
     LucideImage,
     LucidePackage,
     LucidePlus,
+    LucideRotateCcw,
     LucideSearch,
+    LucideShoppingCart,
+    LucideTag,
     LucideTrash2,
     LucideX,
   ],
@@ -44,6 +56,7 @@ export class ProductsView implements OnInit {
   private readonly productsApi = inject(ProductsApi);
   private readonly categoriesApi = inject(CategoriesApi);
 
+  protected readonly isLoading = signal(true);
   protected readonly products = signal<ProductCatalogItem[]>([]);
   private readonly apiCategories = signal<CategoryResponse[]>([]);
 
@@ -95,9 +108,21 @@ export class ProductsView implements OnInit {
       error: (err) => this.showToast(err?.error?.detail ?? 'Error al cargar categorías', 'error'),
     });
     this.productsApi.list({ size: 500 }).subscribe({
-      next: (page) => this.products.set(page.content.map((p) => this.mapProduct(p))),
-      error: (err) => this.showToast(err?.error?.detail ?? 'Error al cargar productos', 'error'),
+      next: (page) => {
+        this.products.set(page.content.map((p) => this.mapProduct(p)));
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        this.isLoading.set(false);
+        this.showToast(err?.error?.detail ?? 'Error al cargar productos', 'error');
+      },
     });
+  }
+
+  protected clearFilters(): void {
+    this.searchTerm.set('');
+    this.selectedCategory.set(this.allCategory);
+    this.showStockOnly.set(false);
   }
 
   private mapProduct(p: ProductResponse): ProductCatalogItem {
@@ -151,6 +176,10 @@ export class ProductsView implements OnInit {
     const id = this.selectedProductId();
     return list.find((p) => p.id === id) ?? list.at(0) ?? null;
   });
+
+  protected readonly hasDetailVisible = computed(
+    () => !this.isLoading() && this.filteredProducts().length > 0 && this.selectedProduct() !== null,
+  );
 
   protected readonly isEditing = computed(() => this.editingProductId() !== null);
 

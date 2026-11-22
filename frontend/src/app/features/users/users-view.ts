@@ -3,12 +3,16 @@ import { FormsModule } from '@angular/forms';
 import { CustomDatePickerComponent } from '../../shared/ui/custom-datepicker/custom-datepicker';
 import { ScrollRevealDirective } from '../../shared/directives/scroll-reveal.directive';
 import {
+  LucideAlertCircle,
   LucideAlertTriangle,
   LucideCamera,
+  LucideCheckCircle,
   LucideCheckCircle2,
   LucideClock,
   LucideEdit,
   LucidePower,
+  LucideRotateCcw,
+  LucideSearch,
   LucideShieldAlert,
   LucideTrash2,
   LucideUser,
@@ -36,6 +40,7 @@ type ActionPopup = 'restrict' | 'unrestrict' | 'suspend' | 'unsuspend' | 'deacti
     FormsModule,
     CustomDatePickerComponent,
     ScrollRevealDirective,
+    LucideAlertCircle,
     LucideAlertTriangle,
     LucideEdit,
     LucideCamera,
@@ -43,7 +48,10 @@ type ActionPopup = 'restrict' | 'unrestrict' | 'suspend' | 'unsuspend' | 'deacti
     LucideShieldAlert,
     LucideClock,
     LucideTrash2,
+    LucideCheckCircle,
     LucideCheckCircle2,
+    LucideRotateCcw,
+    LucideSearch,
     LucideUser,
     LucideX,
   ],
@@ -55,6 +63,15 @@ export class UsersView implements OnInit {
   private readonly auth = inject(AuthService);
 
   protected readonly staff = signal<StaffMember[]>([]);
+  protected readonly isLoading = signal(true);
+  protected readonly hasError = signal(false);
+  protected readonly errorMessage = signal('');
+  protected readonly searchTerm = signal('');
+
+  protected readonly toastOpen = signal(false);
+  protected readonly toastMessage = signal('');
+  protected readonly toastType = signal<'success' | 'error'>('success');
+  private toastTimer: ReturnType<typeof setTimeout> | null = null;
 
   protected readonly hasBlockPermission = computed(() =>
     this.auth.currentUser()?.permissions?.includes('USERS_BLOCK') ?? false
@@ -91,14 +108,27 @@ export class UsersView implements OnInit {
   protected readonly isSaved = signal(false);
 
   ngOnInit(): void {
+    this.loadUsers();
+  }
+
+  protected loadUsers(): void {
+    this.isLoading.set(true);
+    this.hasError.set(false);
+    this.errorMessage.set('');
     this.api.list({ size: 200 }).subscribe({
       next: (page) => {
         const mapped = page.content.map((u) => UsersView.mapUser(u));
         this.staff.set(mapped);
+        this.isLoading.set(false);
         if (mapped.length) {
           this.selectedId.set(mapped[0].idNumber);
           this.syncDraft();
         }
+      },
+      error: (err) => {
+        this.isLoading.set(false);
+        this.hasError.set(true);
+        this.errorMessage.set(err?.error?.detail || err?.message || 'Error al conectar con el servidor.');
       },
     });
   }
@@ -130,7 +160,21 @@ export class UsersView implements OnInit {
   protected readonly visibleStaff = computed(() => {
     const list = this.staff();
     const filter = this.activeFilter();
-    return filter === 'Todos' ? list : list.filter((m) => m.group === filter);
+    const term = this.searchTerm().trim().toLowerCase();
+
+    return list.filter((m) => {
+      const matchesFilter = filter === 'Todos' || m.group === filter;
+      if (!matchesFilter) return false;
+      if (!term) return true;
+      return (
+        m.fullName.toLowerCase().includes(term) ||
+        m.username.toLowerCase().includes(term) ||
+        m.email.toLowerCase().includes(term) ||
+        (m.positionName && m.positionName.toLowerCase().includes(term)) ||
+        (m.role && m.role.toLowerCase().includes(term)) ||
+        (m.phone && m.phone.includes(term))
+      );
+    });
   });
 
   /** Falls back to the first visible member when the selected one is filtered out. */
@@ -138,6 +182,11 @@ export class UsersView implements OnInit {
     const list = this.visibleStaff();
     return list.find((m) => m.idNumber === this.selectedId()) ?? list[0] ?? null;
   });
+
+  /** Detail form and activity cards are hidden when loading, no matches, or error */
+  protected readonly hasDetailVisible = computed(
+    () => !this.isLoading() && !this.hasError() && this.visibleStaff().length > 0 && this.selected() !== null
+  );
 
   protected readonly draft = signal<StaffMember>(UsersView.emptyMember());
 
@@ -171,6 +220,12 @@ export class UsersView implements OnInit {
 
   protected setFilter(filter: GroupFilter): void {
     this.activeFilter.set(filter);
+    this.syncDraft();
+  }
+
+  protected resetFilters(): void {
+    this.activeFilter.set('Todos');
+    this.searchTerm.set('');
     this.syncDraft();
   }
 
@@ -215,6 +270,10 @@ export class UsersView implements OnInit {
       next: (res) => {
         const mapped = UsersView.mapUser(res);
         this.staff.update((list) => list.map((m) => (m.idNumber === member.idNumber ? mapped : m)));
+        this.showToast('Información de usuario actualizada correctamente', 'success');
+      },
+      error: (err) => {
+        this.showToast(err?.error?.detail ?? 'Error al actualizar usuario', 'error');
       },
     });
     this.isEditing.set(false);
@@ -365,9 +424,20 @@ export class UsersView implements OnInit {
     this.notify(`${activity.description} — Fecha: ${activity.date} • Hora: ${activity.time}`);
   }
 
-  /** Mirrors the `alert(...)` calls allowed for this module by §10.2 of the design system. */
+  protected showToast(message: string, type: 'success' | 'error' = 'success'): void {
+    this.toastMessage.set(message);
+    this.toastType.set(type);
+    this.toastOpen.set(true);
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => this.toastOpen.set(false), 3500);
+  }
+
+  protected closeToast(): void {
+    this.toastOpen.set(false);
+  }
+
   protected notify(message: string): void {
-    window.alert(message);
+    this.showToast(message, 'error');
   }
 
   private syncDraft(): void {
