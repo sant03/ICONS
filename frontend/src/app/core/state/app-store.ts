@@ -87,6 +87,7 @@ export class AppStore {
   readonly notifications = signal<NotificationItem[]>(structuredClone(initialNotifications));
   readonly notificationsOpen = signal(false);
   readonly isNewSaleModalOpen = signal(false);
+  readonly saleCreatedTick = signal(0);
 
   /** Cantidad de notificaciones no leídas para el badge del header */
   readonly unreadNotificationsCount = computed(

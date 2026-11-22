@@ -1,10 +1,11 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CustomSelectComponent } from '../../shared/ui/custom-select/custom-select';
 import {
   LucideAlertCircle,
   LucideArrowUpDown,
   LucideCalendar,
+  LucideCheckCircle,
   LucideChevronDown,
   LucideDollarSign,
   LucideDownload,
@@ -24,7 +25,6 @@ import { OrderItem, PaymentStatus, SaleRecord } from '../../core/models/types';
 import { AppStore } from '../../core/state/app-store';
 import { SalesApi, SaleResponse } from '../../core/api';
 
-/** Sort options of the "Ordenar Por" modal (ported from `sortOption`). */
 type SortOption =
   | 'date_desc'
   | 'date_asc'
@@ -33,12 +33,6 @@ type SortOption =
   | 'amount_desc'
   | 'amount_asc';
 
-/**
- * Sales module: base layout ported from "ICONS UI V.2/src/components/SalesView.tsx"
- * (KPI cards + filter/search bar), extended with the columns and actions of
- * "ICONS COMPLETE/src/views/SalesView.tsx": "ESTADO DE PAGO", "ACCIONES"
- * (edit / delete), row selection + "Agrupar en Pedido" and the "Ordenar Por" modal.
- */
 @Component({
   selector: 'app-sales-view',
   imports: [
@@ -47,6 +41,7 @@ type SortOption =
     LucideAlertCircle,
     LucideArrowUpDown,
     LucideCalendar,
+    LucideCheckCircle,
     LucideChevronDown,
     LucideDollarSign,
     LucideDownload,
@@ -71,26 +66,31 @@ export class SalesView implements OnInit {
   protected readonly allSales = signal<SaleRecord[]>([]);
   protected readonly searchTerm = signal('');
   protected readonly selectedFilter = signal<string>('all');
-  protected readonly todayLabel = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  protected readonly todayLabel = new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
 
-  // Grouping / sorting / row actions (ported from "ICONS COMPLETE/src/views/SalesView.tsx")
   protected readonly selectedSaleIds = signal<string[]>([]);
   protected readonly sortOption = signal<SortOption>('date_desc');
   protected readonly isSortModalOpen = signal(false);
   protected readonly editForm = signal<SaleRecord | null>(null);
   protected readonly deleteSaleId = signal<string | null>(null);
+  protected readonly deleteSaleBackendId = signal<number | null>(null);
   protected readonly isGroupModalOpen = signal(false);
   protected readonly isGroupAlertVisible = signal(false);
   protected readonly groupClient = signal('');
   protected readonly groupPaymentStatus = signal<PaymentStatus>('Pagado');
   protected readonly paymentStatusOptions = ['Pagado', 'Debe'];
 
+  protected readonly toastOpen = signal(false);
+  protected readonly toastMessage = signal('');
+  protected readonly toastType = signal<'success' | 'error'>('success');
+  private toastTimer: ReturnType<typeof setTimeout> | null = null;
+
   protected readonly totalRevenue = computed(() =>
     this.allSales().reduce((sum, s) => sum + s.total, 0),
   );
 
   protected readonly totalRevenueFormatted = computed(() =>
-    this.totalRevenue().toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+    this.totalRevenue().toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 }),
   );
 
   protected readonly avgTicket = computed(() => {
@@ -99,12 +99,24 @@ export class SalesView implements OnInit {
   });
 
   protected readonly avgTicketFormatted = computed(() =>
-    this.avgTicket().toFixed(2),
+    Math.round(this.avgTicket()).toLocaleString('es-CO'),
   );
 
+  constructor() {
+    effect(() => {
+      this.store.saleCreatedTick();
+      this.loadSales();
+    });
+  }
+
   ngOnInit(): void {
+    this.loadSales();
+  }
+
+  private loadSales(): void {
     this.api.list({ size: 500 }).subscribe({
       next: (page) => this.allSales.set(page.content.map((s) => SalesView.mapSale(s))),
+      error: (err) => this.showToast(err?.error?.detail ?? 'Error al cargar ventas', 'error'),
     });
   }
 
@@ -112,6 +124,7 @@ export class SalesView implements OnInit {
     const firstItem = s.items[0];
     return {
       id: s.code ?? String(s.id),
+      backendId: s.id,
       client: s.customerName,
       product: firstItem?.productName ?? '(varios)',
       quantity: firstItem?.quantity ?? s.items.reduce((sum, i) => sum + i.quantity, 0),
@@ -195,7 +208,6 @@ export class SalesView implements OnInit {
     );
   }
 
-  /** "Agrupar en Pedido": warns when nothing is selected, otherwise opens the modal. */
   protected openGroupModal(): void {
     const selected = this.selectedSales();
     if (selected.length === 0) {
@@ -211,7 +223,6 @@ export class SalesView implements OnInit {
     this.isGroupAlertVisible.set(false);
   }
 
-  /** Creates the order from the selected sales, drops the records and opens Pedidos. */
   protected saveGroupedOrder(): void {
     const selected = this.selectedSales();
     if (selected.length === 0) return;
@@ -237,7 +248,6 @@ export class SalesView implements OnInit {
     this.editForm.set({ ...sale });
   }
 
-  /** Recalculates the total on every change (quantity x unit price), as the source does. */
   protected patchEditForm(patch: Partial<SaleRecord>): void {
     const current = this.editForm();
     if (!current) return;
@@ -254,16 +264,35 @@ export class SalesView implements OnInit {
     this.editForm.set(null);
   }
 
-  protected askDelete(id: string): void {
-    this.deleteSaleId.set(id);
+  protected askDelete(sale: SaleRecord): void {
+    this.deleteSaleId.set(sale.id);
+    this.deleteSaleBackendId.set(sale.backendId ?? null);
   }
 
   protected confirmDelete(): void {
     const id = this.deleteSaleId();
+    const backendId = this.deleteSaleBackendId();
     if (!id) return;
-    this.allSales.update((list) => list.filter((s) => s.id !== id));
+
+    if (backendId) {
+      this.api.cancel(backendId).subscribe({
+        next: () => {
+          this.showToast('Venta cancelada exitosamente', 'success');
+          this.loadSales();
+        },
+        error: (err) => this.showToast(err?.error?.detail ?? 'Error al cancelar la venta', 'error'),
+      });
+    } else {
+      this.allSales.update((list) => list.filter((s) => s.id !== id));
+    }
+
     this.selectedSaleIds.update((ids) => ids.filter((item) => item !== id));
     this.deleteSaleId.set(null);
+    this.deleteSaleBackendId.set(null);
+  }
+
+  protected formatMoney(value: number): string {
+    return `$${value.toLocaleString('es-CO')}`;
   }
 
   protected exportCsv(): void {
@@ -283,7 +312,6 @@ export class SalesView implements OnInit {
     a.click();
   }
 
-  /** Accepts the ISO dates of today's records and the DD/MM/YYYY ones of the archive. */
   private static dateValue(date: string): number {
     const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
     if (iso) return new Date(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3])).getTime();
@@ -310,5 +338,18 @@ export class SalesView implements OnInit {
           return SalesView.dateValue(b.date) - SalesView.dateValue(a.date);
       }
     });
+  }
+
+  private showToast(message: string, type: 'success' | 'error'): void {
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.toastMessage.set(message);
+    this.toastType.set(type);
+    this.toastOpen.set(true);
+    this.toastTimer = setTimeout(() => this.toastOpen.set(false), 4000);
+  }
+
+  protected closeToast(): void {
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.toastOpen.set(false);
   }
 }

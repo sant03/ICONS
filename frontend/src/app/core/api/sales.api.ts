@@ -31,11 +31,12 @@ export interface SaleResponse {
 }
 
 export interface CreateSaleRequest {
-  customerId: number;
+  customerId?: number;
   customerName: string;
   date: string;
+  amountPaid: number;
   notes?: string;
-  items: { productId: number; quantity: number; unitPrice: number }[];
+  items: { productId: number; quantity: number }[];
 }
 
 @Injectable({ providedIn: 'root' })

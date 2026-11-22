@@ -48,6 +48,7 @@ export type PaymentStatus = 'Pagado' | 'Debe';
 
 export interface SaleRecord {
   id: string;
+  backendId?: number;
   client: string;
   product: string;
   quantity: number;
