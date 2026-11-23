@@ -266,3 +266,25 @@ export interface DispatchRecord {
   history: DispatchHistoryEntry[];
 }
 
+export type TriggerMode = 'schedule' | 'stock' | 'hybrid';
+export type RecurrenceFrequency = 'once' | 'daily' | 'weekly' | 'biweekly' | 'monthly';
+
+export interface ScheduledOrderRule {
+  id: string;
+  name: string;
+  supplier: string;
+  triggerMode: TriggerMode;
+  frequency: RecurrenceFrequency;
+  startDate: string;
+  executionTime: string;
+  weekDays: string[];
+  minStockThreshold: number;
+  autoApprove: boolean;
+  maxBudget: number;
+  notifyEmail: boolean;
+  estimatedTotal: number;
+  itemsCount: number;
+  active: boolean;
+  createdAt: string;
+}
+

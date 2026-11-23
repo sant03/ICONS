@@ -12,14 +12,24 @@
       </p>
     </div>
 
-    <button
-      type="button"
-      (click)="store.navigate('purchase-order')"
-      class="self-start sm:self-auto px-4 py-2.5 rounded-xl bg-[var(--text-primary)] text-[var(--bg-card)] hover:opacity-90 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-md hover:scale-105 active:scale-95"
-    >
-      <svg lucidePlus class="w-4 h-4"></svg>
-      <span>Crear Orden</span>
-    </button>
+    <div class="flex items-center gap-3">
+      <button
+        type="button"
+        (click)="openScheduleDrawer()"
+        class="self-start sm:self-auto px-4 py-2.5 rounded-xl border border-cyan-500/30 bg-cyan-500/10 text-cyan-500 hover:bg-cyan-500/20 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-sm hover:scale-105 active:scale-95"
+      >
+        <svg lucideClock class="w-4 h-4"></svg>
+        <span>Programar Orden</span>
+      </button>
+      <button
+        type="button"
+        (click)="store.navigate('purchase-order')"
+        class="self-start sm:self-auto px-4 py-2.5 rounded-xl bg-[var(--text-primary)] text-[var(--bg-card)] hover:opacity-90 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-md hover:scale-105 active:scale-95"
+      >
+        <svg lucidePlus class="w-4 h-4"></svg>
+        <span>Crear Orden</span>
+      </button>
+    </div>
   </div>
 
   <!-- Title, count and search of the list -->
@@ -234,3 +244,5 @@
     </div>
   }
 </div>
+
+<app-schedule-order-drawer />

@@ -5,6 +5,7 @@ import {
   LucideAlertCircle,
   LucideCalendar,
   LucideCheckCircle,
+  LucideClock,
   LucideFileText,
   LucidePlus,
   LucideRotateCcw,
@@ -14,14 +15,17 @@ import {
 import { PurchaseOrder } from '../../core/models/types';
 import { AppStore } from '../../core/state/app-store';
 import { PurchaseOrdersApi, PurchaseOrderResponse } from '../../core/api';
+import { ScheduleOrderDrawer } from '../../shared/ui/schedule-order-drawer/schedule-order-drawer';
 
 @Component({
   selector: 'app-purchase-orders-view',
   imports: [
     FormsModule,
+    ScheduleOrderDrawer,
     LucideAlertCircle,
     LucideCalendar,
     LucideCheckCircle,
+    LucideClock,
     LucideFileText,
     LucidePlus,
     LucideRotateCcw,
@@ -137,5 +141,15 @@ export class PurchaseOrdersView implements OnInit {
   protected closeToast(): void {
     if (this.toastTimer) clearTimeout(this.toastTimer);
     this.toastOpen.set(false);
+  }
+
+  protected openScheduleDrawer(): void {
+    this.store.openScheduleDrawer({
+      supplier: 'Global Logistics S.A.',
+      orderNumber: 'Nueva',
+      paymentMethod: 'Transferencia',
+      itemsCount: 0,
+      estimatedTotal: 0,
+    });
   }
 }

@@ -12,6 +12,7 @@ import {
   ProductCatalogItem,
   PurchaseOrder,
   SaleRecord,
+  ScheduledOrderRule,
   StaffMember,
   Supplier,
   ThemeMode,
@@ -26,6 +27,7 @@ import {
   initialDeliveryDrivers,
   initialDispatches,
   initialNotifications,
+  initialScheduledOrderRules,
   initialOrders,
   initialProducts,
   initialProductCategories,
@@ -447,5 +449,33 @@ export class AppStore {
 
   addDispatch(record: DispatchRecord): void {
     this.dispatches.update((list) => [record, ...list]);
+  }
+
+  // ── Scheduled Order Rules ──────────────────────────────────
+  readonly scheduledOrderRules = signal<ScheduledOrderRule[]>(structuredClone(initialScheduledOrderRules));
+  readonly isScheduleDrawerOpen = signal(false);
+  readonly scheduleDrawerContext = signal<{ supplier: string; orderNumber: string; paymentMethod: string; itemsCount: number; estimatedTotal: number } | null>(null);
+
+  openScheduleDrawer(ctx: { supplier: string; orderNumber: string; paymentMethod: string; itemsCount: number; estimatedTotal: number }): void {
+    this.scheduleDrawerContext.set(ctx);
+    this.isScheduleDrawerOpen.set(true);
+  }
+
+  closeScheduleDrawer(): void {
+    this.isScheduleDrawerOpen.set(false);
+  }
+
+  addScheduledRule(rule: ScheduledOrderRule): void {
+    this.scheduledOrderRules.update((list) => [rule, ...list]);
+  }
+
+  toggleScheduledRuleActive(id: string): void {
+    this.scheduledOrderRules.update((list) =>
+      list.map((r) => (r.id === id ? { ...r, active: !r.active } : r)),
+    );
+  }
+
+  deleteScheduledRule(id: string): void {
+    this.scheduledOrderRules.update((list) => list.filter((r) => r.id !== id));
   }
 }

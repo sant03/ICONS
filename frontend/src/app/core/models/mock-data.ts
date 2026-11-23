@@ -15,6 +15,7 @@ import {
   NotificationItem,
   DeliveryDriver,
   DispatchRecord,
+  ScheduledOrderRule,
 } from './types';
 
 export const initialTransactions: Transaction[] = [
@@ -777,5 +778,44 @@ export const initialDispatches: DispatchRecord[] = [
       { timestamp: '16/02/2022 09:20 AM', event: 'Domiciliario inició ruta', actor: 'Jhonatan Rivera' },
       { timestamp: '16/02/2022 10:05 AM', event: 'Entrega confirmada al cliente', actor: 'Jhonatan Rivera' },
     ],
+  },
+];
+
+export const initialScheduledOrderRules: ScheduledOrderRule[] = [
+  {
+    id: 'sch-1',
+    name: 'Reposición Semanal Bolsas',
+    supplier: 'Plásticos del Norte Ltda',
+    triggerMode: 'schedule',
+    frequency: 'weekly',
+    startDate: '2022-02-20',
+    executionTime: '08:00',
+    weekDays: ['L', 'J'],
+    minStockThreshold: 10,
+    autoApprove: true,
+    maxBudget: 120000,
+    notifyEmail: true,
+    estimatedTotal: 54000,
+    itemsCount: 6,
+    active: true,
+    createdAt: '15/02/2022 14:30',
+  },
+  {
+    id: 'sch-2',
+    name: 'Stock Mínimo Empaques',
+    supplier: 'Empaques Especiales',
+    triggerMode: 'stock',
+    frequency: 'once',
+    startDate: '2022-02-18',
+    executionTime: '10:00',
+    weekDays: [],
+    minStockThreshold: 5,
+    autoApprove: false,
+    maxBudget: 80000,
+    notifyEmail: true,
+    estimatedTotal: 32500,
+    itemsCount: 4,
+    active: true,
+    createdAt: '14/02/2022 09:15',
   },
 ];

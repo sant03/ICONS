@@ -15,6 +15,7 @@ import {
   LucideCheckCircle,
   LucideChevronLeft,
   LucideChevronRight,
+  LucideClock,
   LucideFileCheck,
   LucideFilter,
   LucideGripVertical,
@@ -27,6 +28,7 @@ import {
 } from '@lucide/angular';
 import { CustomSelectComponent } from '../../shared/ui/custom-select/custom-select';
 import { CustomDatePickerComponent } from '../../shared/ui/custom-datepicker/custom-datepicker';
+import { ScheduleOrderDrawer } from '../../shared/ui/schedule-order-drawer/schedule-order-drawer';
 import { AppStore } from '../../core/state/app-store';
 import { PurchaseOrdersApi, CreatePurchaseOrderRequest } from '../../core/api/purchase-orders.api';
 import { SuppliersApi, SupplierResponse } from '../../core/api/suppliers.api';
@@ -56,11 +58,13 @@ interface CatalogProduct {
     FormsModule,
     CustomSelectComponent,
     CustomDatePickerComponent,
+    ScheduleOrderDrawer,
     LucideAlertCircle,
     LucideArrowLeft,
     LucideCheckCircle,
     LucideChevronLeft,
     LucideChevronRight,
+    LucideClock,
     LucideFileCheck,
     LucideFilter,
     LucideGripVertical,
@@ -357,5 +361,15 @@ export class PurchaseOrderView implements OnInit, AfterViewInit {
   protected closeToast(): void {
     if (this.toastTimer) clearTimeout(this.toastTimer);
     this.toastOpen.set(false);
+  }
+
+  protected openScheduleDrawer(): void {
+    this.store.openScheduleDrawer({
+      supplier: this.supplier() || 'Global Logistics S.A.',
+      orderNumber: 'Nueva',
+      paymentMethod: this.paymentMethod() || 'Transferencia',
+      itemsCount: this.lineItems().length,
+      estimatedTotal: this.totalEstimate(),
+    });
   }
 }
