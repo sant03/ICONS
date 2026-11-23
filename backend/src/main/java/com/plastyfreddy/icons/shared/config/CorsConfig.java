@@ -18,7 +18,14 @@ public class CorsConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         var config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(allowedOrigins.split(",")));
+        for (String origin : allowedOrigins.split(",")) {
+            String trimmed = origin.trim();
+            if (trimmed.contains("*")) {
+                config.addAllowedOriginPattern(trimmed);
+            } else {
+                config.addAllowedOrigin(trimmed);
+            }
+        }
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Tenant"));
         config.setExposedHeaders(List.of("X-Total-Count"));

@@ -13,6 +13,7 @@ import {
   LucideShoppingBag,
   LucideSparkles,
   LucideTrendingUp,
+  LucideTruck,
   LucideUsers,
   LucideX,
   type LucideIcon,
@@ -52,6 +53,7 @@ export class Sidebar {
     { id: 'products', label: 'Productos', icon: LucidePackage },
     { id: 'purchase-orders', label: 'Orden de Compra', icon: LucideFileText, highlight: true },
     { id: 'clients', label: 'Clientes / Proveedores', icon: LucideHandshake },
+    { id: 'dispatches', label: 'Despachos', icon: LucideTruck, highlight: true },
     { id: 'settings', label: 'Ajustes', icon: LucideSettings },
   ];
 }

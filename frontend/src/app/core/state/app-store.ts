@@ -5,6 +5,9 @@ import { filter, map } from 'rxjs';
 import {
   AuditLog,
   Client,
+  DeliveryDriver,
+  DispatchRecord,
+  DispatchStatus,
   OrderItem,
   ProductCatalogItem,
   PurchaseOrder,
@@ -20,6 +23,8 @@ import {
 import {
   historicalSalesRecords,
   initialClients,
+  initialDeliveryDrivers,
+  initialDispatches,
   initialNotifications,
   initialOrders,
   initialProducts,
@@ -49,6 +54,7 @@ const ALL_VIEW_MODES: ViewMode[] = [
   'settings',
   'clients',
   'suppliers',
+  'dispatches',
 ];
 
 /**
@@ -86,6 +92,8 @@ export class AppStore {
   /** Notificaciones del sistema para el sidebar lateral derecho */
   readonly notifications = signal<NotificationItem[]>(structuredClone(initialNotifications));
   readonly notificationsOpen = signal(false);
+  readonly deliveryDrivers = signal<DeliveryDriver[]>(structuredClone(initialDeliveryDrivers));
+  readonly dispatches = signal<DispatchRecord[]>(structuredClone(initialDispatches));
   readonly isNewSaleModalOpen = signal(false);
   readonly saleCreatedTick = signal(0);
 
@@ -329,5 +337,115 @@ export class AppStore {
           : p,
       ),
     );
+  }
+
+  assignDriver(
+    dispatchId: string,
+    driverId: string,
+    priority?: 'NORMAL' | 'URGENTE',
+    notes?: string,
+    actorName?: string,
+  ): void {
+    const driver = this.deliveryDrivers().find((d) => d.id === driverId);
+    if (!driver) return;
+    const now = new Date().toLocaleString('es-ES', {
+      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    });
+    this.dispatches.update((list) =>
+      list.map((d) =>
+        d.id === dispatchId
+          ? {
+              ...d,
+              assignedDriverId: driverId,
+              status: 'ASIGNADO' as DispatchStatus,
+              priority: priority ?? d.priority,
+              notes: notes || d.notes,
+              assignedAt: now,
+              rejectedByDriverName: undefined,
+              rejectionReason: undefined,
+              history: [
+                ...d.history,
+                { timestamp: now, event: `Asignado a ${driver.name}`, actor: actorName ?? 'Sistema' },
+              ],
+            }
+          : d,
+      ),
+    );
+  }
+
+  updateDispatchStatus(dispatchId: string, status: DispatchStatus, actorName: string): void {
+    const now = new Date().toLocaleString('es-ES', {
+      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    });
+    const eventMap: Record<string, string> = {
+      EN_CAMINO: 'Domiciliario inició ruta de entrega',
+      ENTREGADO: 'Entrega confirmada al cliente',
+    };
+    this.dispatches.update((list) =>
+      list.map((d) =>
+        d.id === dispatchId
+          ? {
+              ...d,
+              status,
+              history: [
+                ...d.history,
+                { timestamp: now, event: eventMap[status] ?? `Estado cambiado a ${status}`, actor: actorName },
+              ],
+            }
+          : d,
+      ),
+    );
+  }
+
+  rejectDispatch(dispatchId: string, driverName: string, reason: string): void {
+    const now = new Date().toLocaleString('es-ES', {
+      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    });
+    this.dispatches.update((list) =>
+      list.map((d) =>
+        d.id === dispatchId
+          ? {
+              ...d,
+              status: 'RECHAZADO' as DispatchStatus,
+              assignedDriverId: null,
+              rejectedByDriverName: driverName,
+              rejectionReason: reason,
+              history: [...d.history, { timestamp: now, event: `Rechazado: ${reason}`, actor: driverName }],
+            }
+          : d,
+      ),
+    );
+  }
+
+  reassignDispatch(dispatchId: string, fromDriverName: string, toDriverId: string, reason?: string): void {
+    const toDriver = this.deliveryDrivers().find((d) => d.id === toDriverId);
+    if (!toDriver) return;
+    const now = new Date().toLocaleString('es-ES', {
+      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    });
+    this.dispatches.update((list) =>
+      list.map((d) =>
+        d.id === dispatchId
+          ? {
+              ...d,
+              assignedDriverId: toDriverId,
+              status: 'ASIGNADO' as DispatchStatus,
+              assignedAt: now,
+              history: [
+                ...d.history,
+                {
+                  timestamp: now,
+                  event: `Reasignado de ${fromDriverName} a ${toDriver.name}${reason ? ` — ${reason}` : ''}`,
+                  actor: 'Freddy60',
+                },
+              ],
+            }
+          : d,
+      ),
+    );
+  }
+
+  addDispatch(record: DispatchRecord): void {
+    this.dispatches.update((list) => [record, ...list]);
   }
 }

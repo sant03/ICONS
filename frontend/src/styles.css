@@ -103,6 +103,7 @@ app-purchase-order-detail-view,
 app-purchase-order-view,
 app-clients-view,
 app-suppliers-view,
+app-dispatches-view,
 app-settings-view,
 app-profile {
   display: flex;

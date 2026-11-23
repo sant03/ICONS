@@ -13,6 +13,7 @@ import { ClientsView } from './features/clients/clients-view';
 import { SuppliersView } from './features/suppliers/suppliers-view';
 import { PurchaseOrdersView } from './features/purchase-orders/purchase-orders-view';
 import { PurchaseOrderDetailView } from './features/purchase-order-detail/purchase-order-detail-view';
+import { DispatchesView } from './features/dispatches/dispatches-view';
 import { authGuard } from './core/auth/auth.guard';
 
 /**
@@ -57,6 +58,7 @@ export const routes: Routes = [
       { path: 'settings', component: SettingsView },
       { path: 'clients', component: ClientsView },
       { path: 'suppliers', component: SuppliersView },
+      { path: 'dispatches', component: DispatchesView },
     ],
   },
 

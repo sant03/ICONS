@@ -26,7 +26,8 @@ export type ViewMode =
   | 'products'
   | 'settings'
   | 'clients'
-  | 'suppliers';
+  | 'suppliers'
+  | 'dispatches';
 
 export type ThemeMode = 'light' | 'dark';
 
@@ -220,5 +221,48 @@ export interface NotificationItem {
   type: NotificationType;
   read: boolean;
   link?: ViewMode;
+}
+
+export type DispatchStatus = 'POR_ASIGNAR' | 'ASIGNADO' | 'EN_CAMINO' | 'ENTREGADO' | 'RECHAZADO';
+
+export type DriverStatus = 'DISPONIBLE' | 'EN_RUTA' | 'INACTIVO';
+
+export interface DeliveryDriver {
+  id: string;
+  name: string;
+  phone: string;
+  vehicle: string;
+  plate: string;
+  zone: string;
+  status: DriverStatus;
+  avatarInitials: string;
+}
+
+export interface DispatchHistoryEntry {
+  timestamp: string;
+  event: string;
+  actor: string;
+}
+
+export interface DispatchRecord {
+  id: string;
+  dispatchCode: string;
+  orderId: string;
+  orderNumber: string;
+  client: string;
+  address: string;
+  phone: string;
+  zone: string;
+  units: number;
+  totalAmount: number;
+  assignedDriverId: string | null;
+  status: DispatchStatus;
+  priority: 'NORMAL' | 'URGENTE';
+  scheduledDate: string;
+  assignedAt?: string;
+  rejectedByDriverName?: string;
+  rejectionReason?: string;
+  notes?: string;
+  history: DispatchHistoryEntry[];
 }
 
