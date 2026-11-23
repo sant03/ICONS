@@ -16,8 +16,11 @@ import {
   LucideChevronLeft,
   LucideChevronRight,
   LucideFileCheck,
+  LucideFilter,
+  LucideGripVertical,
   LucideGrid,
   LucidePackage,
+  LucideSearch,
   LucideSparkles,
   LucideTrash2,
   LucideX,
@@ -39,7 +42,9 @@ interface OrderLineItem {
 
 interface CatalogProduct {
   id: string;
+  code: string;
   name: string;
+  category: string;
   stockText: string;
   stock: number;
   price: number;
@@ -57,8 +62,11 @@ interface CatalogProduct {
     LucideChevronLeft,
     LucideChevronRight,
     LucideFileCheck,
+    LucideFilter,
+    LucideGripVertical,
     LucideGrid,
     LucidePackage,
+    LucideSearch,
     LucideSparkles,
     LucideTrash2,
     LucideX,
@@ -73,8 +81,47 @@ export class PurchaseOrderView implements OnInit, AfterViewInit {
 
   private readonly apiSuppliers = signal<SupplierResponse[]>([]);
   protected readonly supplierOptions = computed(() => this.apiSuppliers().map((s) => s.name));
-  protected readonly availableProducts = signal<CatalogProduct[]>([]);
+  protected readonly allProducts = signal<CatalogProduct[]>([]);
   protected readonly isLoadingProducts = signal(true);
+
+  protected readonly poSearch = signal('');
+  protected readonly poCategory = signal('');
+  protected readonly poStockStatus = signal('');
+
+  protected readonly categoryOptions = computed(() => {
+    const cats = [...new Set(this.allProducts().map((p) => p.category))].filter(Boolean).sort();
+    return ['Todas', ...cats];
+  });
+  protected readonly stockStatusOptions = ['Todos', 'En Stock', 'Stock Bajo', 'Agotado'];
+
+  protected readonly availableProducts = computed(() => {
+    let products = this.allProducts();
+    const search = this.poSearch().trim().toLowerCase();
+    if (search) {
+      products = products.filter(
+        (p) => p.name.toLowerCase().includes(search) || p.code.toLowerCase().includes(search),
+      );
+    }
+    const cat = this.poCategory();
+    if (cat && cat !== 'Todas') {
+      products = products.filter((p) => p.category === cat);
+    }
+    const status = this.poStockStatus();
+    if (status && status !== 'Todos') {
+      if (status === 'En Stock') products = products.filter((p) => p.stock >= 5);
+      else if (status === 'Stock Bajo') products = products.filter((p) => p.stock > 0 && p.stock < 5);
+      else if (status === 'Agotado') products = products.filter((p) => p.stock === 0);
+    }
+    return products;
+  });
+
+  protected readonly activeFilterCount = computed(() => {
+    let count = 0;
+    if (this.poSearch().trim()) count++;
+    if (this.poCategory() && this.poCategory() !== 'Todas') count++;
+    if (this.poStockStatus() && this.poStockStatus() !== 'Todos') count++;
+    return count;
+  });
 
   protected readonly supplier = signal('');
   protected readonly creationDate = signal(new Date().toISOString().slice(0, 10));
@@ -97,6 +144,11 @@ export class PurchaseOrderView implements OnInit, AfterViewInit {
   protected readonly isAllProductsDrawerOpen = signal(false);
   protected readonly isAllProductsDrawerReady = signal(false);
 
+  protected readonly isDragging = signal(false);
+  protected readonly isOverDropZone = signal(false);
+  protected readonly justDropped = signal(false);
+  private draggedProduct: CatalogProduct | null = null;
+
   protected readonly lineItems = signal<OrderLineItem[]>([]);
 
   protected readonly totalEstimate = computed(() =>
@@ -115,10 +167,12 @@ export class PurchaseOrderView implements OnInit, AfterViewInit {
     });
     this.productsApi.list({ size: 500 }).subscribe({
       next: (page) => {
-        this.availableProducts.set(
+        this.allProducts.set(
           page.content.filter((p) => !p.blocked).map((p) => ({
             id: String(p.id),
+            code: p.code,
             name: p.reference,
+            category: p.categoryName,
             stockText: p.stock === 0 ? 'AGOTADO' : p.stock <= p.minPurchase ? `SOLO ${p.stock}` : `STOCK: ${p.stock}`,
             stock: p.stock,
             price: p.purchasePrice,
@@ -162,6 +216,63 @@ export class PurchaseOrderView implements OnInit, AfterViewInit {
 
   protected closeAllProductsDrawer(): void {
     this.isAllProductsDrawerOpen.set(false);
+  }
+
+  protected clearFilters(): void {
+    this.poSearch.set('');
+    this.poCategory.set('');
+    this.poStockStatus.set('');
+  }
+
+  protected onDragStart(event: DragEvent, product: CatalogProduct): void {
+    this.draggedProduct = product;
+    this.isDragging.set(true);
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'copy';
+      event.dataTransfer.setData('text/plain', product.id);
+      const el = event.target as HTMLElement;
+      const ghost = el.cloneNode(true) as HTMLElement;
+      ghost.style.width = `${el.offsetWidth}px`;
+      ghost.style.opacity = '0.9';
+      ghost.style.transform = 'rotate(3deg) scale(1.05)';
+      ghost.style.borderColor = 'rgb(6, 182, 212)';
+      ghost.style.boxShadow = '0 20px 40px rgba(6, 182, 212, 0.3)';
+      document.body.appendChild(ghost);
+      event.dataTransfer.setDragImage(ghost, el.offsetWidth / 2, el.offsetHeight / 2);
+      requestAnimationFrame(() => document.body.removeChild(ghost));
+    }
+  }
+
+  protected onDragEnd(): void {
+    this.isDragging.set(false);
+    this.isOverDropZone.set(false);
+    this.draggedProduct = null;
+  }
+
+  protected onDropZoneDragOver(event: DragEvent): void {
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+    this.isOverDropZone.set(true);
+  }
+
+  protected onDropZoneDragLeave(event: DragEvent): void {
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    const { clientX: x, clientY: y } = event;
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      this.isOverDropZone.set(false);
+    }
+  }
+
+  protected onDropZoneDrop(event: DragEvent): void {
+    event.preventDefault();
+    this.isOverDropZone.set(false);
+    if (this.draggedProduct) {
+      this.addProductToPO(this.draggedProduct);
+      this.justDropped.set(true);
+      setTimeout(() => this.justDropped.set(false), 600);
+    }
+    this.draggedProduct = null;
+    this.isDragging.set(false);
   }
 
   protected addProductToPO(prod: CatalogProduct): void {
