@@ -11,7 +11,17 @@ import { authInterceptor } from './core/auth/auth.interceptor';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes, withHashLocation(), withViewTransitions()),
+    provideRouter(
+      routes,
+      withHashLocation(),
+      withViewTransitions({
+        onViewTransitionCreated: ({ transition }) => {
+          if (window.innerWidth < 1024) {
+            transition.skipTransition();
+          }
+        },
+      }),
+    ),
     provideHttpClient(withInterceptors([authInterceptor])),
     provideAnimationsAsync(),
     providePrimeNG({
