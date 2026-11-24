@@ -202,6 +202,7 @@ export class AppStore {
   /** Replaces the `onNavigate` callback of the original components. */
   navigate(view: ViewMode): void {
     this.closeSidebar();
+    this.closeNotifications();
     void this.router.navigate([`/${view}`]);
   }
 

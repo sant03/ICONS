@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { AfterViewInit, Component, effect, inject, signal } from '@angular/core';
 import {
   LucideChevronLeft,
   LucideChevronRight,
@@ -42,8 +42,42 @@ interface MenuItem {
   ],
   templateUrl: './sidebar.html',
 })
-export class Sidebar {
+export class Sidebar implements AfterViewInit {
   protected readonly store = inject(AppStore);
+  protected readonly desktopReady = signal(false);
+  protected readonly isVisibleOnMobile = signal(false);
+  protected readonly isAnimatingOut = signal(false);
+  protected readonly isAnimatingIn = signal(false);
+  private animTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  constructor() {
+    effect(() => {
+      const open = this.store.sidebarOpen();
+      if (open) {
+        if (this.animTimeout) clearTimeout(this.animTimeout);
+        this.isAnimatingOut.set(false);
+        this.isAnimatingIn.set(true);
+        this.isVisibleOnMobile.set(true);
+        this.animTimeout = setTimeout(() => {
+          this.isAnimatingIn.set(false);
+        }, 420);
+      } else if (this.isVisibleOnMobile()) {
+        this.isAnimatingIn.set(false);
+        this.isAnimatingOut.set(true);
+        if (this.animTimeout) clearTimeout(this.animTimeout);
+        this.animTimeout = setTimeout(() => {
+          this.isVisibleOnMobile.set(false);
+          this.isAnimatingOut.set(false);
+        }, 280);
+      }
+    });
+  }
+
+  ngAfterViewInit(): void {
+    requestAnimationFrame(() => {
+      this.desktopReady.set(true);
+    });
+  }
 
   protected readonly menuItems: MenuItem[] = [
     { id: 'dashboard', label: 'Inicio', icon: LucideHome },

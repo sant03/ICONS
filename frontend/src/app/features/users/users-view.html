@@ -172,10 +172,10 @@
                     : 'bg-[var(--bg-tertiary)] border-[var(--border-color)] hover:border-cyan-500/40')
                 "
               >
-                <div
-                  class="w-11 h-11 mx-auto rounded-full overflow-hidden bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center justify-center text-[var(--text-muted)]"
-                >
-                  @if (member.avatarUrl) {
+                @if (member.avatarUrl) {
+                  <div
+                    class="w-11 h-11 mx-auto rounded-full overflow-hidden bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center justify-center text-[var(--text-muted)] shrink-0"
+                  >
                     <img
                       [src]="member.avatarUrl"
                       [alt]="member.fullName"
@@ -184,10 +184,14 @@
                       [style.filter]="avatarFilter(member.avatarConfig)"
                       draggable="false"
                     />
-                  } @else {
-                    <svg lucideUser class="w-5 h-5"></svg>
-                  }
-                </div>
+                  </div>
+                } @else {
+                  <div
+                    [class]="'w-11 h-11 mx-auto rounded-full bg-gradient-to-tr ' + getAvatarGradient(member.username || member.fullName) + ' flex items-center justify-center text-white font-bold text-xs shadow-sm ring-2 ring-cyan-500/20 select-none shrink-0'"
+                  >
+                    {{ getInitials(member.fullName || member.username) }}
+                  </div>
+                }
                 <div class="space-y-0.5">
                   <p class="text-xs font-bold text-[var(--text-primary)]">{{ member.username }}</p>
                   <p class="text-[10px] text-[var(--text-muted)]">{{ member.group }}</p>
@@ -224,9 +228,23 @@
       <!-- Mobile Drawer Header with close button (lg:hidden) -->
       <div class="lg:hidden shrink-0 px-5 pt-3.5 pb-3 border-b border-[var(--border-color)] bg-[var(--bg-card)] rounded-t-3xl flex items-center justify-between">
         <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-full bg-cyan-500/10 text-cyan-500 flex items-center justify-center font-bold text-xs">
-            <svg lucideUser class="w-4 h-4"></svg>
-          </div>
+          @if (selected()?.avatarUrl) {
+            <div class="w-8 h-8 rounded-full overflow-hidden bg-[var(--bg-card)] border border-[var(--border-color)]">
+              <img
+                [src]="selected()?.avatarUrl"
+                [alt]="selected()?.fullName"
+                class="w-full h-full object-cover"
+                [style.transform]="avatarTransform(selected()?.avatarConfig)"
+                [style.filter]="avatarFilter(selected()?.avatarConfig)"
+              />
+            </div>
+          } @else {
+            <div
+              [class]="'w-8 h-8 rounded-full bg-gradient-to-tr ' + getAvatarGradient(selected()?.username || selected()?.fullName) + ' flex items-center justify-center text-white font-bold text-xs shadow-sm ring-1 ring-cyan-500/20 select-none'"
+            >
+              {{ getInitials(selected()?.fullName || selected()?.username) }}
+            </div>
+          }
           <div>
             <h3 class="text-xs font-bold text-[var(--text-primary)]">Detalle de Usuario</h3>
             <p class="text-[10px] text-[var(--text-muted)] font-mono">{{ selected()?.username }}</p>
@@ -318,8 +336,10 @@
                     draggable="false"
                   />
                 } @else {
-                  <div class="w-full h-full bg-[var(--bg-tertiary)] flex items-center justify-center text-[var(--text-muted)]">
-                    <svg lucideUser class="w-12 h-12"></svg>
+                  <div
+                    [class]="'w-full h-full bg-gradient-to-tr ' + getAvatarGradient(selected()?.username || selected()?.fullName) + ' flex items-center justify-center text-white font-extrabold text-3xl shadow-inner select-none group-hover:scale-105 transition-transform duration-300'"
+                  >
+                    {{ getInitials(selected()?.fullName || selected()?.username) }}
                   </div>
                 }
                 <div class="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 text-white backdrop-blur-[2px]">

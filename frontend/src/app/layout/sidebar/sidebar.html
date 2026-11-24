@@ -1,10 +1,10 @@
 <aside
   [class]="
-    'fixed inset-y-0 left-0 z-50 w-72 lg:relative lg:z-20 border-r border-[var(--border-color)] bg-[var(--bg-secondary)] flex flex-col justify-between shrink-0 h-full shadow-2xl lg:shadow-none transition-all duration-500 ease-in-out ' +
-    (store.sidebarOpen()
-      ? 'translate-x-0'
-      : '-translate-x-full lg:translate-x-0') +
-    ' ' +
+    'fixed inset-y-0 left-0 z-50 w-72 lg:relative lg:z-20 border-r border-[var(--border-color)] bg-[var(--bg-secondary)] flex-col justify-between shrink-0 h-full shadow-2xl lg:shadow-none lg:transition-all lg:duration-350 lg:ease-[cubic-bezier(0.34,1.56,0.64,1)] ' +
+    (!isVisibleOnMobile() ? 'hidden lg:flex ' : 'flex ') +
+    (isAnimatingIn() ? 'sidebar-animate-in ' : '') +
+    (isAnimatingOut() ? 'sidebar-animate-out ' : '') +
+    (desktopReady() ? 'sidebar-desktop-enter ' : 'lg:opacity-0 ') +
     (store.sidebarCollapsed()
       ? 'lg:w-20 lg:p-3 p-4 lg:overflow-visible overflow-y-auto no-scrollbar'
       : 'lg:w-64 p-4 lg:p-3 overflow-y-auto no-scrollbar')

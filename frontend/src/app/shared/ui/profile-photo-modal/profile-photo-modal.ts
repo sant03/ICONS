@@ -180,6 +180,7 @@ export class ProfilePhotoModalComponent implements OnChanges {
   }
 
   protected onMouseDown(e: MouseEvent): void {
+    e.preventDefault();
     this.isDragging.set(true);
     this.dragStart = {
       x: e.clientX,
@@ -205,6 +206,9 @@ export class ProfilePhotoModalComponent implements OnChanges {
 
   protected onTouchStart(e: TouchEvent): void {
     if (e.touches.length !== 1) return;
+    if (e.cancelable) {
+      e.preventDefault();
+    }
     const touch = e.touches[0];
     this.isDragging.set(true);
     this.dragStart = {
@@ -217,6 +221,9 @@ export class ProfilePhotoModalComponent implements OnChanges {
 
   protected onTouchMove(e: TouchEvent): void {
     if (!this.isDragging() || !this.dragStart || e.touches.length !== 1) return;
+    if (e.cancelable) {
+      e.preventDefault();
+    }
     const touch = e.touches[0];
     const dx = touch.clientX - this.dragStart.x;
     const dy = touch.clientY - this.dragStart.y;

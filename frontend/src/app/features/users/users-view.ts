@@ -16,7 +16,6 @@ import {
   LucideSearch,
   LucideShieldAlert,
   LucideTrash2,
-  LucideUser,
   LucideX,
 } from '@lucide/angular';
 import { StaffGroup, StaffMember, UserProfile, UserActivity, AvatarConfig } from '../../core/models/types';
@@ -56,7 +55,6 @@ type ActionPopup = 'restrict' | 'unrestrict' | 'suspend' | 'unsuspend' | 'deacti
     LucideCheckCircle2,
     LucideRotateCcw,
     LucideSearch,
-    LucideUser,
     LucideX,
   ],
   templateUrl: './users-view.html',
@@ -291,6 +289,30 @@ export class UsersView implements OnInit {
       none: 'ring-4 ring-transparent',
     };
     return map[cfg.ringColor] || 'ring-4 ring-cyan-500/20';
+  }
+
+  protected getInitials(name?: string): string {
+    if (!name) return '??';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    return name.substring(0, 2).toUpperCase() || '??';
+  }
+
+  protected getAvatarGradient(seed?: string): string {
+    const gradients = [
+      'from-sky-500 to-indigo-600',
+      'from-cyan-500 to-blue-600',
+      'from-indigo-500 to-violet-600',
+      'from-teal-500 to-cyan-600',
+      'from-blue-600 to-teal-500',
+    ];
+    if (!seed) return gradients[0];
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) {
+      hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % gradients.length;
+    return gradients[index];
   }
 
   protected startEdit(): void {

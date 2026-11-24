@@ -447,6 +447,41 @@ p-datepicker,
   }
 }
 
+@keyframes drawerSlideUp {
+  0% {
+    transform: translateY(100%);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes drawerSlideDown {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+.animate-drawer-in {
+  animation: drawerSlideUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-drawer-out {
+  animation: drawerSlideDown 0.22s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@media (min-width: 640px) {
+  .animate-drawer-in {
+    animation: modalIn 0.35s var(--ease-spring) both;
+  }
+  .animate-drawer-out {
+    animation: modalOut 0.22s cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+}
+
 @keyframes modalIn {
   0% {
     opacity: 0;
@@ -599,10 +634,65 @@ p-datepicker,
   transform: translateY(-4px) !important;
 }
 
-/* Routing View Transitions */
+/* Routing View Transitions – isolate layout chrome from the root crossfade */
+app-header {
+  view-transition-name: app-header;
+}
+app-sidebar {
+  view-transition-name: app-sidebar;
+}
+app-notifications-sidebar > aside {
+  view-transition-name: app-notifications;
+}
+
+::view-transition-old(app-header),
+::view-transition-new(app-header),
+::view-transition-old(app-sidebar),
+::view-transition-new(app-sidebar),
+::view-transition-old(app-notifications),
+::view-transition-new(app-notifications) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation-duration: 0.24s;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Sidebar entrance & mobile slide animations */
+@keyframes sidebarSlideIn {
+  0% { transform: translateX(-100%); }
+  60% { transform: translateX(4%); }
+  80% { transform: translateX(-2%); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes sidebarSlideOut {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+
+@keyframes sidebarDesktopIn {
+  0% { opacity: 0; transform: translateX(-24px); }
+  60% { opacity: 1; transform: translateX(4px); }
+  80% { transform: translateX(-2px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+@media (max-width: 1023px) {
+  .sidebar-animate-in {
+    animation: sidebarSlideIn 0.42s var(--ease-spring) forwards;
+  }
+  .sidebar-animate-out {
+    animation: sidebarSlideOut 0.26s ease-in forwards;
+  }
+}
+
+@media (min-width: 1024px) {
+  .sidebar-desktop-enter {
+    animation: sidebarDesktopIn 0.5s var(--ease-spring) both;
+  }
 }
 

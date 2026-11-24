@@ -1,26 +1,31 @@
 @if (isOpen) {
   <div
-    class="fixed inset-0 bg-black/65 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+    class="fixed inset-0 bg-black/65 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
     [class.animate-fade-in]="!animatingOut()"
     [class.animate-fade-out]="animatingOut()"
     (click)="$event.target === $event.currentTarget && close()"
   >
     <div
-      class="bg-[var(--bg-card)] rounded-3xl border border-[var(--border-color)] shadow-2xl w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden"
-      [class.animate-modal-in]="!animatingOut()"
-      [class.animate-modal-out]="animatingOut()"
+      class="bg-[var(--bg-card)] rounded-none sm:rounded-3xl border-0 sm:border sm:border-[var(--border-color)] shadow-2xl w-full h-[100dvh] sm:h-auto sm:max-h-[92vh] sm:max-w-4xl flex flex-col overflow-hidden"
+      [class.animate-drawer-in]="!animatingOut()"
+      [class.animate-drawer-out]="animatingOut()"
     >
+      <!-- Mobile Drawer Pull Indicator (sm:hidden) -->
+      <div class="sm:hidden pt-2.5 pb-1 flex justify-center bg-[var(--bg-secondary)]/80 shrink-0">
+        <div class="w-10 h-1 rounded-full bg-[var(--border-color)]"></div>
+      </div>
+
       <!-- Header -->
-      <div class="px-6 py-4 border-b border-[var(--border-color)] flex items-center justify-between bg-[var(--bg-secondary)]/60">
-        <div class="flex items-center gap-2.5">
-          <div class="p-2 rounded-xl bg-cyan-500/10 text-cyan-500">
+      <div class="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-[var(--border-color)] flex items-center justify-between bg-[var(--bg-secondary)]/80 shrink-0">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="p-2 rounded-xl bg-cyan-500/10 text-cyan-500 shrink-0">
             <svg lucideImage class="w-4 h-4"></svg>
           </div>
-          <div>
-            <h2 class="text-base font-extrabold text-[var(--text-primary)]">
+          <div class="min-w-0">
+            <h2 class="text-sm sm:text-base font-extrabold text-[var(--text-primary)] truncate">
               Personalizar Foto de Perfil
             </h2>
-            <p class="text-[11px] text-[var(--text-muted)]">
+            <p class="text-[10px] sm:text-[11px] text-[var(--text-muted)] line-clamp-1 sm:line-clamp-none">
               Selecciona, ajusta el encuadre y previsualiza cómo se verá tu foto en toda la app.
             </p>
           </div>
@@ -28,19 +33,22 @@
         <button
           type="button"
           (click)="close()"
-          class="p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] cursor-pointer transition-colors"
+          class="p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] cursor-pointer transition-colors shrink-0"
+          aria-label="Cerrar"
         >
           <svg lucideX class="w-4 h-4"></svg>
         </button>
       </div>
 
-      <!-- Content -->
-      <div class="flex-1 overflow-y-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <!-- Content (desactiva scroll del contenedor mientras se encuadra/arrastra) -->
+      <div
+        [class]="'flex-1 p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 ' + (isDragging() ? 'overflow-hidden touch-none select-none' : 'overflow-y-auto overscroll-contain')"
+      >
         <!-- Left Column: Selector & Adjustment Controls -->
         <div class="lg:col-span-7 flex flex-col justify-between gap-4">
-          <!-- Upload bar -->
-          <div class="p-3.5 rounded-2xl bg-[var(--bg-tertiary)]/50 border border-[var(--border-color)] flex items-center justify-between gap-3">
-            <div class="flex items-center gap-3 min-w-0">
+          <!-- Upload bar (sin formato de tarjeta en móvil) -->
+          <div class="p-0 sm:p-3.5 sm:rounded-2xl sm:bg-[var(--bg-tertiary)]/50 sm:border sm:border-[var(--border-color)] flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
               <div class="p-2 rounded-xl bg-cyan-500/10 text-cyan-500 shrink-0">
                 <svg lucideFileImage class="w-4 h-4"></svg>
               </div>
@@ -48,7 +56,7 @@
                 <p class="text-xs font-bold text-[var(--text-primary)] truncate">
                   {{ fileName() }}
                 </p>
-                <p class="text-[10px] text-[var(--text-muted)]">
+                <p class="text-[10px] text-[var(--text-muted)] truncate">
                   Formatos JPG, PNG o WEBP &bull; Recomendado 400&times;400 px
                 </p>
               </div>
@@ -70,8 +78,11 @@
             </button>
           </div>
 
-          <!-- Interactive Crop / Pan Area & Sliders -->
-          <div class="p-4 rounded-2xl bg-[var(--bg-tertiary)]/50 border border-[var(--border-color)] space-y-4">
+          <!-- Separador sutil en móvil -->
+          <div class="h-px bg-[var(--border-color)]/60 sm:hidden"></div>
+
+          <!-- Interactive Crop / Pan Area & Sliders (sin formato de tarjeta en móvil) -->
+          <div class="p-0 sm:p-4 sm:rounded-2xl sm:bg-[var(--bg-tertiary)]/50 sm:border sm:border-[var(--border-color)] space-y-4">
             <div class="flex items-center justify-between">
               <span class="text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
                 1. Ajustar Encuadre y Estilo
@@ -87,7 +98,7 @@
             </div>
 
             <div class="flex flex-col sm:flex-row items-center gap-5">
-              <!-- Interactive Draggable Frame -->
+              <!-- Interactive Draggable Frame (touch-none previene scroll nativo durante el arrastre) -->
               <div class="flex flex-col items-center gap-2 shrink-0">
                 <div
                   (mousedown)="onMouseDown($event)"
@@ -97,12 +108,12 @@
                   (touchstart)="onTouchStart($event)"
                   (touchmove)="onTouchMove($event)"
                   (touchend)="onTouchEnd()"
-                  [class]="'relative w-40 h-40 rounded-3xl overflow-hidden bg-[var(--bg-primary)] border-2 border-dashed border-cyan-500/40 cursor-grab active:cursor-grabbing ' + ringClassMap[config().ringColor]"
+                  [class]="'relative w-44 h-44 sm:w-40 sm:h-40 rounded-3xl overflow-hidden bg-[var(--bg-primary)] border-2 border-dashed border-cyan-500/40 cursor-grab active:cursor-grabbing touch-none select-none overscroll-none ' + ringClassMap[config().ringColor]"
                 >
                   <img
                     [src]="selectedUrl()"
                     alt="Ajuste de avatar"
-                    class="w-full h-full object-cover select-none"
+                    class="w-full h-full object-cover select-none pointer-events-none"
                     [style.transform]="imgStyle().transform"
                     [style.filter]="imgStyle().filter"
                     [style.transition]="imgStyle().transition"
@@ -118,7 +129,7 @@
               </div>
 
               <!-- Sliders -->
-              <div class="flex-1 w-full space-y-3">
+              <div class="flex-1 w-full space-y-3.5">
                 <div class="space-y-1">
                   <div class="flex justify-between text-[11px]">
                     <span class="font-semibold text-[var(--text-primary)] flex items-center gap-1">
@@ -135,7 +146,7 @@
                     step="0.05"
                     [value]="config().zoom"
                     (input)="onZoomChange($event)"
-                    class="w-full accent-cyan-500 cursor-pointer"
+                    class="w-full accent-cyan-500 cursor-pointer touch-pan-x"
                   />
                 </div>
 
@@ -151,7 +162,7 @@
                       max="50"
                       [value]="config().offsetX"
                       (input)="onOffsetXChange($event)"
-                      class="w-full accent-cyan-500 cursor-pointer"
+                      class="w-full accent-cyan-500 cursor-pointer touch-pan-x"
                     />
                   </div>
                   <div class="space-y-1">
@@ -165,7 +176,7 @@
                       max="50"
                       [value]="config().offsetY"
                       (input)="onOffsetYChange($event)"
-                      class="w-full accent-cyan-500 cursor-pointer"
+                      class="w-full accent-cyan-500 cursor-pointer touch-pan-x"
                     />
                   </div>
                 </div>
@@ -200,8 +211,11 @@
             </div>
           </div>
 
-          <!-- Section 2: Quick Image Filters -->
-          <div class="p-4 rounded-2xl bg-[var(--bg-tertiary)]/50 border border-[var(--border-color)] space-y-3">
+          <!-- Separador sutil en móvil -->
+          <div class="h-px bg-[var(--border-color)]/60 sm:hidden"></div>
+
+          <!-- Section 2: Quick Image Filters (sin formato de tarjeta en móvil) -->
+          <div class="p-0 sm:p-4 sm:rounded-2xl sm:bg-[var(--bg-tertiary)]/50 sm:border sm:border-[var(--border-color)] space-y-3">
             <div class="flex items-center justify-between">
               <span class="text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)] flex items-center gap-1.5">
                 <svg lucideSlidersHorizontal class="w-3.5 h-3.5 text-cyan-500"></svg>
@@ -222,28 +236,31 @@
                 <button
                   type="button"
                   (click)="setFilter(flt.id)"
-                  [class]="'p-2 rounded-xl border flex flex-col items-center gap-1.5 transition-all cursor-pointer ' +
+                  [class]="'p-1.5 sm:p-2 rounded-xl border flex flex-col items-center gap-1 sm:gap-1.5 transition-all cursor-pointer ' +
                     (active
                       ? 'border-cyan-500 bg-cyan-500/10 text-cyan-500'
                       : 'border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-secondary)] hover:border-cyan-500/40')"
                 >
-                  <div class="w-10 h-10 rounded-full overflow-hidden bg-[var(--bg-tertiary)] shrink-0">
+                  <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden bg-[var(--bg-tertiary)] shrink-0">
                     <img
                       [src]="selectedUrl()"
                       [alt]="flt.label"
-                      class="w-full h-full object-cover select-none"
+                      class="w-full h-full object-cover select-none pointer-events-none"
                       [style.filter]="flt.css"
                       draggable="false"
                     />
                   </div>
-                  <span class="text-[10px] font-semibold">{{ flt.label }}</span>
+                  <span class="text-[9px] sm:text-[10px] font-semibold truncate max-w-full">{{ flt.label }}</span>
                 </button>
               }
             </div>
           </div>
         </div>
 
-        <!-- Right Column: Live Multi-Surface App Previews -->
+        <!-- Separador sutil en móvil antes de vistas previas -->
+        <div class="h-px bg-[var(--border-color)]/60 sm:hidden"></div>
+
+        <!-- Right Column: Live Multi-Surface App Previews (se conservan como tarjeticas) -->
         <div class="lg:col-span-5 space-y-4">
           <div class="flex items-center gap-1.5">
             <svg lucideSparkles class="w-3.5 h-3.5 text-cyan-500"></svg>
@@ -373,7 +390,7 @@
       </div>
 
       <!-- Footer -->
-      <div class="px-6 py-4 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]/60 flex items-center justify-end gap-3">
+      <div class="px-4 sm:px-6 py-3.5 sm:py-4 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]/90 backdrop-blur-md flex items-center justify-end gap-3 shrink-0 pb-[max(0.875rem,env(safe-area-inset-bottom))]">
         <button
           type="button"
           (click)="close()"
