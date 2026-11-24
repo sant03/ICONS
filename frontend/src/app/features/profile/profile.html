@@ -45,14 +45,41 @@
         <div class="lg:col-span-4 space-y-6 animate-fade-up stagger-1">
           <div class="lg:p-6 lg:rounded-3xl lg:bg-[var(--bg-card)] lg:border lg:border-[var(--border-color)] lg:shadow-sm text-center space-y-4">
             <!-- Avatar -->
-            <div class="relative w-36 h-36 mx-auto rounded-3xl overflow-hidden ring-4 ring-cyan-500/20 animate-scale-in stagger-2">
+            <div
+              (click)="openPhotoModal()"
+              [class]="'group relative w-36 h-36 mx-auto rounded-3xl overflow-hidden animate-scale-in stagger-2 cursor-pointer shadow-lg transition-all ' + avatarRingClass(p.avatarConfig)"
+              title="Haz clic para personalizar tu foto de perfil"
+            >
               @if (p.avatarUrl) {
-                <img [src]="p.avatarUrl" [alt]="p.fullName" class="w-full h-full object-cover" />
+                <img
+                  [src]="p.avatarUrl"
+                  [alt]="p.fullName"
+                  class="w-full h-full object-cover select-none group-hover:scale-105 transition-transform duration-300"
+                  [style.transform]="avatarTransform(p.avatarConfig)"
+                  [style.filter]="avatarFilter(p.avatarConfig)"
+                  draggable="false"
+                />
               } @else {
                 <div class="w-full h-full bg-[var(--bg-tertiary)] flex items-center justify-center">
                   <svg lucideUser class="w-16 h-16 text-[var(--text-muted)]"></svg>
                 </div>
               }
+              <div class="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 text-white backdrop-blur-[2px]">
+                <svg lucideCamera class="w-6 h-6"></svg>
+                <span class="text-[11px] font-bold">Personalizar</span>
+              </div>
+            </div>
+
+            <!-- Botón directo para abrir modal -->
+            <div>
+              <button
+                type="button"
+                (click)="openPhotoModal()"
+                class="px-3.5 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 border border-cyan-500/30 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <svg lucideImage class="w-3.5 h-3.5"></svg>
+                <span>Cambiar Foto</span>
+              </button>
             </div>
 
             <div class="space-y-1 animate-fade-up stagger-2">
@@ -305,5 +332,13 @@
       </div>
 
     </div>
+
+    <!-- Modal de personalización de foto de perfil -->
+    <app-profile-photo-modal
+      [isOpen]="isPhotoModalOpen()"
+      [user]="p"
+      (closed)="closePhotoModal()"
+      (saved)="handlePhotoSaved($event)"
+    />
   }
 </div>

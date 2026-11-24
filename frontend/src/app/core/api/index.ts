@@ -41,3 +41,12 @@ export type { AuditLogResponse } from './audit.api';
 
 export { DashboardApi } from './dashboard.api';
 export type { DashboardStats, RecentTransaction } from './dashboard.api';
+
+export { StorageApi } from './storage.api';
+export type { UploadResponse, UploadProgress } from './storage.api';
+
+export { DispatchesApi } from './dispatches.api';
+export type { DispatchResponse, DispatchHistoryResponse, CreateDispatchRequest, AssignDriverRequest } from './dispatches.api';
+
+export { DriversApi } from './drivers.api';
+export type { DeliveryDriverResponse, CreateDriverRequest as CreateDriverApiRequest, UpdateDriverRequest as UpdateDriverApiRequest } from './drivers.api';

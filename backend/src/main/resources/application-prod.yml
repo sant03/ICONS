@@ -19,6 +19,13 @@ icons:
       secret: ${JWT_SECRET}
     cors:
       allowed-origins: ${CORS_ORIGINS}
+  storage:
+    endpoint: ${R2_ENDPOINT}
+    region: auto
+    bucket: ${R2_BUCKET}
+    access-key: ${R2_ACCESS_KEY}
+    secret-key: ${R2_SECRET_KEY}
+    public-url: ${R2_PUBLIC_URL}
 
 logging:
   level:

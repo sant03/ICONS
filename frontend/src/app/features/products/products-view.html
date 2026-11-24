@@ -321,12 +321,18 @@
                 </button>
               </div>
 
-              <div
-                class="h-40 rounded-2xl bg-[var(--bg-tertiary)] border border-dashed border-[var(--border-color)] flex flex-col items-center justify-center gap-2 animate-scale-in stagger-2"
-              >
-                <svg lucideImage class="w-6 h-6 text-[var(--text-muted)]"></svg>
-                <span class="text-[10px] font-mono text-[var(--text-muted)]">Sin imagen asignada</span>
-              </div>
+              @if (product.imageUrl) {
+                <div class="h-40 rounded-2xl overflow-hidden border border-[var(--border-color)] animate-scale-in stagger-2">
+                  <img [src]="product.imageUrl" alt="Imagen del producto" class="w-full h-full object-cover" />
+                </div>
+              } @else {
+                <div
+                  class="h-40 rounded-2xl bg-[var(--bg-tertiary)] border border-dashed border-[var(--border-color)] flex flex-col items-center justify-center gap-2 animate-scale-in stagger-2"
+                >
+                  <svg lucideImage class="w-6 h-6 text-[var(--text-muted)]"></svg>
+                  <span class="text-[10px] font-mono text-[var(--text-muted)]">Sin imagen asignada</span>
+                </div>
+              }
 
               <div class="flex flex-wrap items-center gap-2 animate-fade-up stagger-2">
                 <span
@@ -625,6 +631,19 @@
                 class="w-full px-3.5 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] font-mono focus:outline-none focus:border-cyan-500"
               />
             </div>
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-xs font-semibold text-[var(--text-primary)]">
+              Imagen del Producto
+            </label>
+            <app-image-upload
+              [currentUrl]="productImageUrl()"
+              folder="products"
+              shape="square"
+              (uploaded)="productImageUrl.set($event)"
+              (removed)="productImageUrl.set(null)"
+            />
           </div>
 
           <div class="pt-3 flex gap-3">

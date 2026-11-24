@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { environment } from '../../../environments/environment';
+import { AvatarConfig } from '../models/types';
 
 export interface LoginRequest {
   tenant: string;
@@ -56,6 +57,7 @@ export interface ProfileResponse {
   landline: string | null;
   positionName: string | null;
   avatarUrl: string | null;
+  avatarConfig?: AvatarConfig;
   roleName: string | null;
   status: string;
   createdAt: string;

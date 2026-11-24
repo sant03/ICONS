@@ -27,5 +27,8 @@ public record CreateProductRequest(
     BigDecimal salePrice,
 
     @Size(max = 10)
-    String unit
+    String unit,
+
+    @Size(max = 500)
+    String imageUrl
 ) {}

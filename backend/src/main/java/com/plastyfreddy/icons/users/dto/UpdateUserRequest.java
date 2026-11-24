@@ -17,5 +17,7 @@ public record UpdateUserRequest(
     String phone,
     String landline,
     String positionName,
+    @Size(max = 500)
+    String avatarUrl,
     Long roleId
 ) {}

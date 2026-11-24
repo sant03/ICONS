@@ -40,6 +40,7 @@ export const routes: Routes = [
   { path: 'welcome', component: WelcomeAuth, data: { mode: 'welcome' } },
   { path: 'login', component: WelcomeAuth, data: { mode: 'login' } },
   { path: 'register', component: WelcomeAuth, data: { mode: 'register' } },
+  { path: 'forgot', component: WelcomeAuth, data: { mode: 'forgot' } },
 
   {
     path: '',

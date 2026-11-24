@@ -15,6 +15,15 @@ spring:
   flyway:
     clean-disabled: false
 
+icons:
+  storage:
+    endpoint: http://localhost:9000
+    region: us-east-1
+    bucket: icons
+    access-key: minioadmin
+    secret-key: minioadmin
+    public-url: http://localhost:9000/icons
+
 logging:
   level:
     com.plastyfreddy.icons: DEBUG

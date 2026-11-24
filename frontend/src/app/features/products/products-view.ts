@@ -1,6 +1,7 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CustomSelectComponent } from '../../shared/ui/custom-select/custom-select';
+import { ImageUploadComponent } from '../../shared/ui/image-upload/image-upload';
 import {
   LucideAlertCircle,
   LucideAlertTriangle,
@@ -30,6 +31,7 @@ import { ProductsApi, ProductResponse, CategoriesApi, CategoryResponse } from '.
   imports: [
     FormsModule,
     CustomSelectComponent,
+    ImageUploadComponent,
     LucideAlertCircle,
     LucideAlertTriangle,
     LucideArrowDownToLine,
@@ -90,6 +92,7 @@ export class ProductsView implements OnInit {
   protected readonly purchasePrice = signal(1000);
   protected readonly minPurchase = signal(10);
   protected readonly unit = signal<ProductUnit>('Und');
+  protected readonly productImageUrl = signal<string | null>(null);
 
   protected readonly units: ProductUnit[] = ['Und', 'Pqt', 'Kg', 'Lb'];
 
@@ -142,6 +145,7 @@ export class ProductsView implements OnInit {
       unit: (p.unit as ProductUnit) || 'Und',
       status,
       category,
+      imageUrl: p.imageUrl,
     };
   }
 
@@ -213,6 +217,7 @@ export class ProductsView implements OnInit {
     this.purchasePrice.set(0);
     this.minPurchase.set(0);
     this.unit.set('Und');
+    this.productImageUrl.set(null);
     this.productModalAnimatingOut.set(false);
     this.isProductModalOpen.set(true);
   }
@@ -227,6 +232,7 @@ export class ProductsView implements OnInit {
     this.purchasePrice.set(product.purchasePrice);
     this.minPurchase.set(product.minPurchase);
     this.unit.set(product.unit);
+    this.productImageUrl.set(product.imageUrl ?? null);
     this.productModalAnimatingOut.set(false);
     this.isProductModalOpen.set(true);
   }
@@ -257,6 +263,7 @@ export class ProductsView implements OnInit {
         purchasePrice: this.purchasePrice(),
         salePrice: this.salePrice(),
         unit: this.unit(),
+        imageUrl: this.productImageUrl() ?? undefined,
       }).subscribe({
         next: (res) => {
           const mapped = this.mapProduct(res);
@@ -274,6 +281,7 @@ export class ProductsView implements OnInit {
         purchasePrice: this.purchasePrice(),
         salePrice: this.salePrice(),
         unit: this.unit(),
+        imageUrl: this.productImageUrl() ?? undefined,
       }).subscribe({
         next: (res) => {
           const mapped = this.mapProduct(res);

@@ -2,6 +2,7 @@ package com.plastyfreddy.icons.shared.config;
 
 import com.plastyfreddy.icons.shared.security.UserStatusFilter;
 import com.plastyfreddy.icons.shared.tenant.TenantFilter;
+import com.plastyfreddy.icons.shared.config.StorageProperties;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,16 +37,19 @@ public class SecurityConfig {
     private final CorsConfigurationSource corsConfigurationSource;
     private final TenantFilter tenantFilter;
     private final UserStatusFilter userStatusFilter;
+    private final StorageProperties storageProperties;
 
     @Value("${icons.security.jwt.secret}")
     private String jwtSecret;
 
     public SecurityConfig(CorsConfigurationSource corsConfigurationSource,
                           TenantFilter tenantFilter,
-                          UserStatusFilter userStatusFilter) {
+                          UserStatusFilter userStatusFilter,
+                          StorageProperties storageProperties) {
         this.corsConfigurationSource = corsConfigurationSource;
         this.tenantFilter = tenantFilter;
         this.userStatusFilter = userStatusFilter;
+        this.storageProperties = storageProperties;
     }
 
     @Bean
@@ -55,7 +59,8 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .headers(headers -> headers
-                .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'"))
+                .contentSecurityPolicy(csp -> csp.policyDirectives(
+                    "default-src 'self'; img-src 'self' " + storageProperties.getPublicUrl()))
                 .referrerPolicy(ref -> ref.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
                 .frameOptions(frame -> frame.deny())
             )

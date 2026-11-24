@@ -4,15 +4,19 @@ import { CustomDatePickerComponent } from '../../shared/ui/custom-datepicker/cus
 import {
   LucideBriefcase,
   LucideCalendar,
+  LucideCamera,
   LucideCheckCircle2,
   LucideCreditCard,
   LucideEdit,
+  LucideImage,
   LucideMail,
   LucidePhone,
   LucideShieldCheck,
   LucideUser,
 } from '@lucide/angular';
 import { AuthApi, ProfileResponse, UpdateProfileRequest } from '../../core/api/auth.api';
+import { AvatarConfig } from '../../core/models/types';
+import { ProfilePhotoModalComponent, FILTER_OPTIONS } from '../../shared/ui/profile-photo-modal/profile-photo-modal';
 import { firstValueFrom } from 'rxjs';
 
 @Component({
@@ -20,15 +24,18 @@ import { firstValueFrom } from 'rxjs';
   imports: [
     FormsModule,
     CustomDatePickerComponent,
-    LucideEdit,
-    LucideUser,
-    LucideCalendar,
-    LucidePhone,
-    LucideMail,
+    ProfilePhotoModalComponent,
     LucideBriefcase,
+    LucideCalendar,
+    LucideCamera,
     LucideCheckCircle2,
     LucideCreditCard,
+    LucideEdit,
+    LucideImage,
+    LucideMail,
+    LucidePhone,
     LucideShieldCheck,
+    LucideUser,
   ],
   templateUrl: './profile.html',
 })
@@ -41,6 +48,7 @@ export class Profile implements OnInit {
   protected readonly isSaved = signal(false);
   protected readonly editing = signal(false);
   protected readonly error = signal<string | null>(null);
+  protected readonly isPhotoModalOpen = signal(false);
 
   protected readonly editFullName = signal('');
   protected readonly editEmail = signal('');
@@ -118,5 +126,46 @@ export class Profile implements OnInit {
     } finally {
       this.saving.set(false);
     }
+  }
+
+  protected openPhotoModal(): void {
+    this.isPhotoModalOpen.set(true);
+  }
+
+  protected closePhotoModal(): void {
+    this.isPhotoModalOpen.set(false);
+  }
+
+  protected handlePhotoSaved(event: { avatarUrl: string; config: AvatarConfig }): void {
+    const current = this.profile();
+    if (current) {
+      this.profile.set({
+        ...current,
+        avatarUrl: event.avatarUrl,
+        avatarConfig: event.config,
+      });
+    }
+  }
+
+  protected avatarTransform(cfg?: AvatarConfig): string {
+    if (!cfg) return 'none';
+    return `translate(${cfg.offsetX}%, ${cfg.offsetY}%) scale(${cfg.zoom}) rotate(${cfg.rotation}deg)`;
+  }
+
+  protected avatarFilter(cfg?: AvatarConfig): string {
+    if (!cfg || !cfg.filter || cfg.filter === 'none') return 'none';
+    const f = FILTER_OPTIONS.find((item) => item.id === cfg.filter);
+    return f?.css || 'none';
+  }
+
+  protected avatarRingClass(cfg?: AvatarConfig): string {
+    if (!cfg || !cfg.ringColor || cfg.ringColor === 'none') return 'ring-4 ring-cyan-500/20';
+    const map: Record<AvatarConfig['ringColor'], string> = {
+      cyan: 'ring-4 ring-cyan-500',
+      emerald: 'ring-4 ring-emerald-500',
+      indigo: 'ring-4 ring-indigo-500',
+      none: 'ring-4 ring-transparent',
+    };
+    return map[cfg.ringColor] || 'ring-4 ring-cyan-500/20';
   }
 }

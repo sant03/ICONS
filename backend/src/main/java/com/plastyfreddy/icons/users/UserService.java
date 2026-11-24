@@ -80,6 +80,7 @@ public class UserService {
         if (request.phone() != null) user.setPhone(request.phone());
         if (request.landline() != null) user.setLandline(request.landline());
         if (request.positionName() != null) user.setPositionName(request.positionName());
+        if (request.avatarUrl() != null) user.setAvatarUrl(request.avatarUrl());
         if (request.roleId() != null) {
             roleRepository.findByIdAndTenantId(request.roleId(), tenantId)
                 .orElseThrow(() -> BusinessException.notFound("Rol", request.roleId()));

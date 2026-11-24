@@ -10,6 +10,7 @@ import {
   LucideCheckCircle2,
   LucideClock,
   LucideEdit,
+  LucideImage,
   LucidePower,
   LucideRotateCcw,
   LucideSearch,
@@ -18,10 +19,11 @@ import {
   LucideUser,
   LucideX,
 } from '@lucide/angular';
-import { StaffGroup, StaffMember, UserProfile, UserActivity } from '../../core/models/types';
+import { StaffGroup, StaffMember, UserProfile, UserActivity, AvatarConfig } from '../../core/models/types';
 import { AppStore } from '../../core/state/app-store';
 import { AuthService } from '../../core/auth/auth.service';
 import { UsersApi, UserResponse } from '../../core/api';
+import { ProfilePhotoModalComponent, FILTER_OPTIONS } from '../../shared/ui/profile-photo-modal/profile-photo-modal';
 
 type GroupFilter = 'Todos' | StaffGroup;
 type ActionPopup = 'restrict' | 'unrestrict' | 'suspend' | 'unsuspend' | 'deactivate' | null;
@@ -40,10 +42,12 @@ type ActionPopup = 'restrict' | 'unrestrict' | 'suspend' | 'unsuspend' | 'deacti
     FormsModule,
     CustomDatePickerComponent,
     ScrollRevealDirective,
+    ProfilePhotoModalComponent,
     LucideAlertCircle,
     LucideAlertTriangle,
-    LucideEdit,
     LucideCamera,
+    LucideEdit,
+    LucideImage,
     LucidePower,
     LucideShieldAlert,
     LucideClock,
@@ -106,6 +110,7 @@ export class UsersView implements OnInit {
   protected readonly selectedId = signal('');
   protected readonly isEditing = signal(false);
   protected readonly isSaved = signal(false);
+  protected readonly isPhotoModalOpen = signal(false);
 
   ngOnInit(): void {
     this.loadUsers();
@@ -241,6 +246,53 @@ export class UsersView implements OnInit {
     this.isMobileDrawerOpen.set(false);
   }
 
+  protected openPhotoModal(): void {
+    this.isPhotoModalOpen.set(true);
+  }
+
+  protected closePhotoModal(): void {
+    this.isPhotoModalOpen.set(false);
+  }
+
+  protected handlePhotoSaved(event: { avatarUrl: string; config: AvatarConfig }): void {
+    const s = this.selected();
+    if (!s) return;
+    this.staff.update((list) =>
+      list.map((m) =>
+        m.idNumber === s.idNumber
+          ? { ...m, avatarUrl: event.avatarUrl, avatarConfig: event.config }
+          : m
+      )
+    );
+    this.draft.update((d) => ({
+      ...d,
+      avatarUrl: event.avatarUrl,
+      avatarConfig: event.config,
+    }));
+  }
+
+  protected avatarTransform(cfg?: AvatarConfig): string {
+    if (!cfg) return 'none';
+    return `translate(${cfg.offsetX}%, ${cfg.offsetY}%) scale(${cfg.zoom}) rotate(${cfg.rotation}deg)`;
+  }
+
+  protected avatarFilter(cfg?: AvatarConfig): string {
+    if (!cfg || !cfg.filter || cfg.filter === 'none') return 'none';
+    const f = FILTER_OPTIONS.find((item) => item.id === cfg.filter);
+    return f?.css || 'none';
+  }
+
+  protected avatarRingClass(cfg?: AvatarConfig): string {
+    if (!cfg || !cfg.ringColor || cfg.ringColor === 'none') return 'ring-4 ring-cyan-500/20';
+    const map: Record<AvatarConfig['ringColor'], string> = {
+      cyan: 'ring-4 ring-cyan-500',
+      emerald: 'ring-4 ring-emerald-500',
+      indigo: 'ring-4 ring-indigo-500',
+      none: 'ring-4 ring-transparent',
+    };
+    return map[cfg.ringColor] || 'ring-4 ring-cyan-500/20';
+  }
+
   protected startEdit(): void {
     this.isEditing.set(true);
     this.isSaved.set(false);
@@ -266,6 +318,7 @@ export class UsersView implements OnInit {
       phone: draft.phone,
       email: draft.email,
       positionName: draft.positionName,
+      avatarUrl: draft.avatarUrl,
     }).subscribe({
       next: (res) => {
         const mapped = UsersView.mapUser(res);

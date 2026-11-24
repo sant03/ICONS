@@ -52,8 +52,9 @@ public class DispatchController {
     @PreAuthorize("hasAuthority('DISPATCH_EDIT')")
     public DispatchResponse updateStatus(
             @PathVariable Long id,
-            @RequestParam String status) {
-        return dispatchService.updateStatus(id, status);
+            @RequestParam String status,
+            @RequestParam(required = false) String rejectionReason) {
+        return dispatchService.updateStatus(id, status, rejectionReason);
     }
 
     @DeleteMapping("/{id}")

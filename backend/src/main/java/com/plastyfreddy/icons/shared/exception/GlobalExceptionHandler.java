@@ -8,6 +8,8 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import software.amazon.awssdk.core.exception.SdkException;
 
 import java.net.URI;
 import java.util.Map;
@@ -49,6 +51,18 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleBadCredentials(BadCredentialsException ex) {
         return ProblemDetail.forStatusAndDetail(
             HttpStatus.UNAUTHORIZED, "Credenciales inválidas");
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ProblemDetail handleMaxUploadSize(MaxUploadSizeExceededException ex) {
+        return ProblemDetail.forStatusAndDetail(
+            HttpStatus.BAD_REQUEST, "El archivo excede el tamaño máximo permitido (5 MB)");
+    }
+
+    @ExceptionHandler(SdkException.class)
+    public ProblemDetail handleStorageError(SdkException ex) {
+        return ProblemDetail.forStatusAndDetail(
+            HttpStatus.BAD_GATEWAY, "Error al comunicarse con el servicio de almacenamiento");
     }
 
     @ExceptionHandler(Exception.class)

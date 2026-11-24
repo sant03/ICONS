@@ -150,6 +150,18 @@
             <version>${shedlock.version}</version>
         </dependency>
 
+        <!-- Storage (S3-compatible: MinIO dev, Cloudflare R2 prod) -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+            <version>2.29.51</version>
+        </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>url-connection-client</artifactId>
+            <version>2.29.51</version>
+        </dependency>
+
         <!-- PDF -->
         <dependency>
             <groupId>com.github.librepdf</groupId>

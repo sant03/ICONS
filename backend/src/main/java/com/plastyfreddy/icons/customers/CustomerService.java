@@ -68,6 +68,7 @@ public class CustomerService {
         if (request.phone() != null) customer.setPhone(request.phone());
         if (request.email() != null) customer.setEmail(request.email());
         if (request.address() != null) customer.setAddress(request.address());
+        if (request.avatarUrl() != null) customer.setAvatarUrl(request.avatarUrl());
 
         return toResponse(customer);
     }

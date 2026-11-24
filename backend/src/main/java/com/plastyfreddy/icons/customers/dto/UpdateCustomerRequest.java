@@ -18,5 +18,8 @@ public record UpdateCustomerRequest(
     String email,
 
     @Size(max = 300)
-    String address
+    String address,
+
+    @Size(max = 500)
+    String avatarUrl
 ) {}

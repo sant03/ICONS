@@ -56,6 +56,7 @@ public class SupplierService {
         if (request.phone() != null) supplier.setPhone(request.phone());
         if (request.email() != null) supplier.setEmail(request.email());
         if (request.address() != null) supplier.setAddress(request.address());
+        if (request.avatarUrl() != null) supplier.setAvatarUrl(request.avatarUrl());
 
         return toResponse(supplier);
     }

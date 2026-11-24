@@ -104,6 +104,7 @@ export interface ProductCatalogItem {
   /** Derived by the store on every write: 0 -> OUT_OF_STOCK, <= minPurchase -> LOW_STOCK. */
   status: 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK';
   category: string;
+  imageUrl?: string | null;
 }
 
 export interface AuditLog {
@@ -112,6 +113,15 @@ export interface AuditLog {
   description: string;
   category: 'Creation' | 'Edit' | 'System' | 'Report' | 'Auth';
   action: string;
+}
+
+export interface AvatarConfig {
+  zoom: number;
+  offsetX: number;
+  offsetY: number;
+  rotation: number;
+  ringColor: 'cyan' | 'emerald' | 'indigo' | 'none';
+  filter?: 'none' | 'grayscale' | 'warm' | 'cool' | 'contrast';
 }
 
 export interface UserProfile {
@@ -127,6 +137,7 @@ export interface UserProfile {
   role: string;
   positionName: string;
   avatarUrl: string;
+  avatarConfig?: AvatarConfig;
   status: 'ACTIVE' | 'LOCKED' | 'RESTRICTED' | 'SUSPENDED' | 'DEACTIVATED';
   suspendedUntil?: string | null;
 }

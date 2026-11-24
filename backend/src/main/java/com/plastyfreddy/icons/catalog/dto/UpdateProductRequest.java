@@ -27,5 +27,8 @@ public record UpdateProductRequest(
     @Size(max = 10)
     String unit,
 
-    Boolean blocked
+    Boolean blocked,
+
+    @Size(max = 500)
+    String imageUrl
 ) {}

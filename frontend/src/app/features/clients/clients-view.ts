@@ -19,6 +19,7 @@ import {
 import { Client } from '../../core/models/types';
 import { AppStore } from '../../core/state/app-store';
 import { CustomersApi, CustomerResponse } from '../../core/api';
+import { ImageUploadComponent } from '../../shared/ui/image-upload/image-upload';
 
 @Component({
   selector: 'app-clients-view',
@@ -38,6 +39,7 @@ import { CustomersApi, CustomerResponse } from '../../core/api';
     LucideUser,
     LucideUsers,
     LucideX,
+    ImageUploadComponent,
   ],
   templateUrl: './clients-view.html',
 })
@@ -183,6 +185,7 @@ export class ClientsView implements OnInit {
         phone: draft.phone,
         email: draft.email,
         address: draft.address,
+        avatarUrl: draft.avatarUrl,
       }).subscribe({
         next: (res) => {
           const mapped = ClientsView.mapCustomer(res);

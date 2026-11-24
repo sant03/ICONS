@@ -62,6 +62,7 @@ public class ProductService {
             .purchasePrice(request.purchasePrice())
             .salePrice(request.salePrice())
             .unit(request.unit() != null ? request.unit() : "Und")
+            .imageUrl(request.imageUrl())
             .build();
 
         product = productRepository.save(product);
@@ -90,6 +91,7 @@ public class ProductService {
         if (request.salePrice() != null) product.setSalePrice(request.salePrice());
         if (request.unit() != null) product.setUnit(request.unit());
         if (request.blocked() != null) product.setBlocked(request.blocked());
+        if (request.imageUrl() != null) product.setImageUrl(request.imageUrl());
 
         return toResponse(product);
     }

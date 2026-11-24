@@ -107,7 +107,7 @@ public class DispatchService {
     }
 
     @Transactional
-    public DispatchResponse updateStatus(Long id, String status) {
+    public DispatchResponse updateStatus(Long id, String status, String rejectionReason) {
         Long tenantId = TenantContext.require();
         Dispatch dispatch = dispatchRepository.findByIdAndTenantIdWithDetails(id, tenantId)
             .orElseThrow(() -> BusinessException.notFound("Despacho", id));
@@ -115,17 +115,24 @@ public class DispatchService {
         DispatchStatus newStatus = DispatchStatus.valueOf(status);
         dispatch.setStatus(newStatus);
 
+        String actor = CurrentUser.getUsername();
+        if (dispatch.getDriver() != null &&
+            (newStatus == DispatchStatus.EN_CAMINO || newStatus == DispatchStatus.ENTREGADO || newStatus == DispatchStatus.RECHAZADO)) {
+            actor = dispatch.getDriver().getName();
+        }
+
         String eventText = switch (newStatus) {
             case EN_CAMINO -> "Domiciliario inició ruta de entrega";
             case ENTREGADO -> "Entrega confirmada";
-            case RECHAZADO -> "Entrega rechazada";
+            case RECHAZADO -> rejectionReason != null ? "Rechazado: " + rejectionReason : "Entrega rechazada";
             default -> "Estado actualizado a " + newStatus;
         };
 
-        String actor = CurrentUser.getUsername();
-        if (dispatch.getDriver() != null &&
-            (newStatus == DispatchStatus.EN_CAMINO || newStatus == DispatchStatus.ENTREGADO)) {
-            actor = dispatch.getDriver().getName();
+        if (newStatus == DispatchStatus.RECHAZADO) {
+            dispatch.setRejectedByDriver(actor);
+            dispatch.setRejectionReason(rejectionReason);
+            dispatch.setDriver(null);
+            dispatch.setAssignedAt(null);
         }
 
         DispatchHistory entry = DispatchHistory.builder()

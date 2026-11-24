@@ -18,6 +18,7 @@ import {
 import { Supplier } from '../../core/models/types';
 import { AppStore } from '../../core/state/app-store';
 import { SuppliersApi, SupplierResponse } from '../../core/api';
+import { ImageUploadComponent } from '../../shared/ui/image-upload/image-upload';
 
 @Component({
   selector: 'app-suppliers-view',
@@ -36,6 +37,7 @@ import { SuppliersApi, SupplierResponse } from '../../core/api';
     LucideSquarePen,
     LucideTrash2,
     LucideX,
+    ImageUploadComponent,
   ],
   templateUrl: './suppliers-view.html',
 })
@@ -180,6 +182,7 @@ export class SuppliersView implements OnInit {
         phone: draft.phone,
         email: draft.email,
         address: draft.address,
+        avatarUrl: draft.avatarUrl,
       }).subscribe({
         next: (res) => {
           const mapped = SuppliersView.mapSupplier(res);
