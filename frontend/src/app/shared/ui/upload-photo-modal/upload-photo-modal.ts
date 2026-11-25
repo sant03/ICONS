@@ -304,11 +304,13 @@ export class UploadPhotoModalComponent implements OnChanges {
           this.uploadError.set('Error al subir la imagen');
         },
       });
-    } else {
+    } else if (this.imageUrl) {
       this.saved.emit({
         avatarUrl: this.selectedUrl(),
         config: this.config(),
       });
+      this.close();
+    } else {
       this.close();
     }
   }
