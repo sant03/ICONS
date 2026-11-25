@@ -166,6 +166,14 @@ export class UploadPhotoModalComponent implements OnChanges {
     this.uploadError.set(null);
   }
 
+  protected openFilePicker(): void {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (event: Event) => this.handleFileChange(event);
+    input.click();
+  }
+
   protected handleFileChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];

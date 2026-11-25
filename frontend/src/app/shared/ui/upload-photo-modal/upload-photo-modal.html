@@ -61,18 +61,14 @@
                 </p>
               </div>
             </div>
-            <label
+            <button
+              type="button"
+              (click)="openFilePicker()"
               class="px-3.5 py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 border border-cyan-500/30 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
             >
-              <input
-                type="file"
-                accept="image/*"
-                (change)="handleFileChange($event)"
-                class="absolute w-0 h-0 opacity-0 overflow-hidden"
-              />
               <svg lucideUpload class="w-3.5 h-3.5"></svg>
               <span>Subir desde dispositivo</span>
-            </label>
+            </button>
           </div>
 
           <!-- Separador sutil en móvil -->
