@@ -10,19 +10,23 @@ import {
   LucideCheckCircle2,
   LucideClock,
   LucideEdit,
+  LucideHistory,
   LucideImage,
+  LucideLayoutGrid,
   LucidePower,
   LucideRotateCcw,
   LucideSearch,
   LucideShieldAlert,
+  LucideSparkles,
   LucideTrash2,
+  LucideUser,
   LucideX,
 } from '@lucide/angular';
 import { StaffGroup, StaffMember, UserProfile, UserActivity, AvatarConfig } from '../../core/models/types';
 import { AppStore } from '../../core/state/app-store';
 import { AuthService } from '../../core/auth/auth.service';
 import { UsersApi, UserResponse } from '../../core/api';
-import { ProfilePhotoModalComponent, FILTER_OPTIONS } from '../../shared/ui/profile-photo-modal/profile-photo-modal';
+import { UploadPhotoModalComponent, FILTER_OPTIONS } from '../../shared/ui/upload-photo-modal/upload-photo-modal';
 
 type GroupFilter = 'Todos' | StaffGroup;
 type ActionPopup = 'restrict' | 'unrestrict' | 'suspend' | 'unsuspend' | 'deactivate' | null;
@@ -41,20 +45,24 @@ type ActionPopup = 'restrict' | 'unrestrict' | 'suspend' | 'unsuspend' | 'deacti
     FormsModule,
     CustomDatePickerComponent,
     ScrollRevealDirective,
-    ProfilePhotoModalComponent,
+    UploadPhotoModalComponent,
     LucideAlertCircle,
     LucideAlertTriangle,
     LucideCamera,
     LucideEdit,
+    LucideHistory,
     LucideImage,
+    LucideLayoutGrid,
     LucidePower,
     LucideShieldAlert,
+    LucideSparkles,
     LucideClock,
     LucideTrash2,
     LucideCheckCircle,
     LucideCheckCircle2,
     LucideRotateCcw,
     LucideSearch,
+    LucideUser,
     LucideX,
   ],
   templateUrl: './users-view.html',

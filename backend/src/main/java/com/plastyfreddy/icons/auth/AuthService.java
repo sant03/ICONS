@@ -358,6 +358,7 @@ public class AuthService {
         if (request.phone() != null) user.setPhone(request.phone());
         if (request.landline() != null) user.setLandline(request.landline());
         if (request.positionName() != null) user.setPositionName(request.positionName());
+        if (request.avatarUrl() != null) user.setAvatarUrl(request.avatarUrl());
 
         Tenant tenant = tenantRepository.findById(tenantId)
             .orElseThrow(() -> new BusinessException("Empresa no encontrada"));

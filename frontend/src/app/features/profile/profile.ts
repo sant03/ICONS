@@ -2,21 +2,25 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CustomDatePickerComponent } from '../../shared/ui/custom-datepicker/custom-datepicker';
 import {
+  LucideBell,
   LucideBriefcase,
   LucideCalendar,
   LucideCamera,
   LucideCheckCircle2,
   LucideCreditCard,
   LucideEdit,
+  LucideHistory,
   LucideImage,
+  LucideLayoutGrid,
   LucideMail,
   LucidePhone,
   LucideShieldCheck,
+  LucideSparkles,
   LucideUser,
 } from '@lucide/angular';
 import { AuthApi, ProfileResponse, UpdateProfileRequest } from '../../core/api/auth.api';
 import { AvatarConfig } from '../../core/models/types';
-import { ProfilePhotoModalComponent, FILTER_OPTIONS } from '../../shared/ui/profile-photo-modal/profile-photo-modal';
+import { UploadPhotoModalComponent, FILTER_OPTIONS } from '../../shared/ui/upload-photo-modal/upload-photo-modal';
 import { firstValueFrom } from 'rxjs';
 
 @Component({
@@ -24,17 +28,21 @@ import { firstValueFrom } from 'rxjs';
   imports: [
     FormsModule,
     CustomDatePickerComponent,
-    ProfilePhotoModalComponent,
+    UploadPhotoModalComponent,
+    LucideBell,
     LucideBriefcase,
     LucideCalendar,
     LucideCamera,
     LucideCheckCircle2,
     LucideCreditCard,
     LucideEdit,
+    LucideHistory,
     LucideImage,
+    LucideLayoutGrid,
     LucideMail,
     LucidePhone,
     LucideShieldCheck,
+    LucideSparkles,
     LucideUser,
   ],
   templateUrl: './profile.html',
@@ -144,6 +152,7 @@ export class Profile implements OnInit {
         avatarUrl: event.avatarUrl,
         avatarConfig: event.config,
       });
+      this.authApi.updateProfile({ avatarUrl: event.avatarUrl }).subscribe();
     }
   }
 

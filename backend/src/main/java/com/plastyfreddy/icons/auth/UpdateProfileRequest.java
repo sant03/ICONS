@@ -12,5 +12,6 @@ public record UpdateProfileRequest(
     LocalDate dateOfBirth,
     String phone,
     String landline,
-    String positionName
+    String positionName,
+    @Size(max = 500) String avatarUrl
 ) {}

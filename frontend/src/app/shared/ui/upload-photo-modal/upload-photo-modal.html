@@ -1,6 +1,6 @@
 @if (isOpen) {
   <div
-    class="fixed inset-0 bg-black/65 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+    class="fixed inset-0 bg-black/65 backdrop-blur-sm z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4"
     [class.animate-fade-in]="!animatingOut()"
     [class.animate-fade-out]="animatingOut()"
     (click)="$event.target === $event.currentTarget && close()"
@@ -23,10 +23,10 @@
           </div>
           <div class="min-w-0">
             <h2 class="text-sm sm:text-base font-extrabold text-[var(--text-primary)] truncate">
-              Personalizar Foto de Perfil
+              {{ title }}
             </h2>
             <p class="text-[10px] sm:text-[11px] text-[var(--text-muted)] line-clamp-1 sm:line-clamp-none">
-              Selecciona, ajusta el encuadre y previsualiza cómo se verá tu foto en toda la app.
+              {{ subtitle }}
             </p>
           </div>
         </div>
@@ -40,13 +40,13 @@
         </button>
       </div>
 
-      <!-- Content (desactiva scroll del contenedor mientras se encuadra/arrastra) -->
+      <!-- Content -->
       <div
-        [class]="'flex-1 p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 ' + (isDragging() ? 'overflow-hidden touch-none select-none' : 'overflow-y-auto overscroll-contain')"
+        [class]="'flex-1 p-4 sm:p-6 grid grid-cols-1 ' + (previewTemplate ? 'lg:grid-cols-12' : '') + ' gap-5 sm:gap-6 ' + (isDragging() ? 'overflow-hidden touch-none select-none' : 'overflow-y-auto overscroll-contain')"
       >
         <!-- Left Column: Selector & Adjustment Controls -->
-        <div class="lg:col-span-7 flex flex-col justify-between gap-4">
-          <!-- Upload bar (sin formato de tarjeta en móvil) -->
+        <div [class]="(previewTemplate ? 'lg:col-span-7' : '') + ' flex flex-col justify-between gap-4'">
+          <!-- Upload bar -->
           <div class="p-0 sm:p-3.5 sm:rounded-2xl sm:bg-[var(--bg-tertiary)]/50 sm:border sm:border-[var(--border-color)] flex items-center justify-between gap-3">
             <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
               <div class="p-2 rounded-xl bg-cyan-500/10 text-cyan-500 shrink-0">
@@ -81,7 +81,7 @@
           <!-- Separador sutil en móvil -->
           <div class="h-px bg-[var(--border-color)]/60 sm:hidden"></div>
 
-          <!-- Interactive Crop / Pan Area & Sliders (sin formato de tarjeta en móvil) -->
+          <!-- Interactive Crop / Pan Area & Sliders -->
           <div class="p-0 sm:p-4 sm:rounded-2xl sm:bg-[var(--bg-tertiary)]/50 sm:border sm:border-[var(--border-color)] space-y-4">
             <div class="flex items-center justify-between">
               <span class="text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
@@ -98,7 +98,7 @@
             </div>
 
             <div class="flex flex-col sm:flex-row items-center gap-5">
-              <!-- Interactive Draggable Frame (touch-none previene scroll nativo durante el arrastre) -->
+              <!-- Interactive Draggable Frame -->
               <div class="flex flex-col items-center gap-2 shrink-0">
                 <div
                   (mousedown)="onMouseDown($event)"
@@ -214,7 +214,7 @@
           <!-- Separador sutil en móvil -->
           <div class="h-px bg-[var(--border-color)]/60 sm:hidden"></div>
 
-          <!-- Section 2: Quick Image Filters (sin formato de tarjeta en móvil) -->
+          <!-- Section 2: Quick Image Filters -->
           <div class="p-0 sm:p-4 sm:rounded-2xl sm:bg-[var(--bg-tertiary)]/50 sm:border sm:border-[var(--border-color)] space-y-3">
             <div class="flex items-center justify-between">
               <span class="text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)] flex items-center gap-1.5">
@@ -257,155 +257,51 @@
           </div>
         </div>
 
-        <!-- Separador sutil en móvil antes de vistas previas -->
-        <div class="h-px bg-[var(--border-color)]/60 sm:hidden"></div>
+        <!-- Right Column: Projected Preview Content -->
+        @if (previewTemplate) {
+          <!-- Separador sutil en móvil antes de vistas previas -->
+          <div class="h-px bg-[var(--border-color)]/60 sm:hidden"></div>
 
-        <!-- Right Column: Live Multi-Surface App Previews (se conservan como tarjeticas) -->
-        <div class="lg:col-span-5 space-y-4">
-          <div class="flex items-center gap-1.5">
-            <svg lucideSparkles class="w-3.5 h-3.5 text-cyan-500"></svg>
-            <span class="text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
-              Vista Previa en la App
-            </span>
+          <div class="lg:col-span-5">
+            <ng-container
+              [ngTemplateOutlet]="previewTemplate"
+              [ngTemplateOutletContext]="{ $implicit: previewContext() }"
+            ></ng-container>
           </div>
-
-          <!-- Preview 1: Perfil de Usuario -->
-          <div class="p-4 rounded-2xl bg-[var(--bg-tertiary)]/50 border border-[var(--border-color)] space-y-2.5">
-            <p class="text-[10px] font-bold uppercase text-[var(--text-muted)] flex items-center gap-1.5">
-              <svg lucideUser class="w-3 h-3 text-cyan-500"></svg> En tu Perfil de Usuario
-            </p>
-            <div class="flex items-center gap-3.5 p-3 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)]">
-              <div [class]="'w-14 h-14 rounded-2xl overflow-hidden bg-[var(--bg-tertiary)] shrink-0 ' + ringClassMap[config().ringColor]">
-                <img
-                  [src]="selectedUrl()"
-                  [alt]="userFullName()"
-                  class="w-full h-full object-cover select-none"
-                  [style.transform]="imgStyle().transform"
-                  [style.filter]="imgStyle().filter"
-                  [style.transition]="imgStyle().transition"
-                  draggable="false"
-                />
-              </div>
-              <div class="min-w-0">
-                <span class="inline-block px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[9px] font-mono font-bold">
-                  ACTIVE SESSION
-                </span>
-                <p class="text-xs font-bold text-[var(--text-primary)] truncate mt-0.5">
-                  {{ userFullName() }}
-                </p>
-                <p class="text-[10px] text-[var(--text-muted)] truncate">
-                  @{{ userUsername() }} &bull; {{ userPosition() }}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Preview 2: Barra Superior (Header) -->
-          <div class="p-4 rounded-2xl bg-[var(--bg-tertiary)]/50 border border-[var(--border-color)] space-y-2.5">
-            <p class="text-[10px] font-bold uppercase text-[var(--text-muted)] flex items-center gap-1.5">
-              <svg lucideLayoutGrid class="w-3 h-3 text-cyan-500"></svg> En la Barra Superior (Header)
-            </p>
-            <div class="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)]">
-              <span class="text-[11px] font-semibold text-[var(--text-muted)]">
-                Sistema de Control
-              </span>
-              <div class="flex items-center gap-2">
-                <div [class]="'w-8 h-8 rounded-full overflow-hidden bg-[var(--bg-tertiary)] shrink-0 ' + ringClassMap[config().ringColor]">
-                  <img
-                    [src]="selectedUrl()"
-                    [alt]="userFullName()"
-                    class="w-full h-full object-cover select-none"
-                    [style.transform]="imgStyle().transform"
-                    [style.filter]="imgStyle().filter"
-                    [style.transition]="imgStyle().transition"
-                    draggable="false"
-                  />
-                </div>
-                <div class="text-left">
-                  <p class="text-[11px] font-bold text-[var(--text-primary)] leading-tight">
-                    {{ userUsername() }}
-                  </p>
-                  <p class="text-[9px] text-[var(--text-muted)] font-mono">{{ userRole() }}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Preview 3: Notificaciones -->
-          <div class="p-4 rounded-2xl bg-[var(--bg-tertiary)]/50 border border-[var(--border-color)] space-y-2.5">
-            <p class="text-[10px] font-bold uppercase text-[var(--text-muted)] flex items-center gap-1.5">
-              <svg lucideBell class="w-3 h-3 text-cyan-500"></svg> En Notificaciones y Alertas
-            </p>
-            <div class="p-3 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] flex items-start gap-3">
-              <div class="relative shrink-0">
-                <div [class]="'w-9 h-9 rounded-full overflow-hidden bg-[var(--bg-tertiary)] shrink-0 ' + ringClassMap[config().ringColor]">
-                  <img
-                    [src]="selectedUrl()"
-                    [alt]="userFullName()"
-                    class="w-full h-full object-cover select-none"
-                    [style.transform]="imgStyle().transform"
-                    [style.filter]="imgStyle().filter"
-                    [style.transition]="imgStyle().transition"
-                    draggable="false"
-                  />
-                </div>
-                <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-cyan-500 border-2 border-[var(--bg-card)]"></span>
-              </div>
-              <div class="text-[11px] leading-snug">
-                <p class="text-[var(--text-primary)]">
-                  <span class="font-bold">{{ userUsername() }}</span> autorizó la Orden de Compra
-                  <span class="font-mono text-cyan-500 font-semibold">#PO-003</span>
-                </p>
-                <p class="text-[10px] text-[var(--text-muted)] mt-0.5">Hace 2 minutos</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Preview 4: Auditoría / Comentarios -->
-          <div class="p-4 rounded-2xl bg-[var(--bg-tertiary)]/50 border border-[var(--border-color)] space-y-2.5">
-            <p class="text-[10px] font-bold uppercase text-[var(--text-muted)] flex items-center gap-1.5">
-              <svg lucideHistory class="w-3 h-3 text-cyan-500"></svg> En Registros de Auditoría
-            </p>
-            <div class="px-3 py-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center justify-between text-[11px]">
-              <div class="flex items-center gap-2">
-                <div [class]="'w-6 h-6 rounded-full overflow-hidden bg-[var(--bg-tertiary)] shrink-0 ' + ringClassMap[config().ringColor]">
-                  <img
-                    [src]="selectedUrl()"
-                    [alt]="userFullName()"
-                    class="w-full h-full object-cover select-none"
-                    [style.transform]="imgStyle().transform"
-                    [style.filter]="imgStyle().filter"
-                    [style.transition]="imgStyle().transition"
-                    draggable="false"
-                  />
-                </div>
-                <span class="font-medium text-[var(--text-primary)]">
-                  Editó inventario de productos
-                </span>
-              </div>
-              <span class="text-[10px] font-mono text-[var(--text-muted)]">10:15 AM</span>
-            </div>
-          </div>
-        </div>
+        }
       </div>
 
       <!-- Footer -->
-      <div class="px-4 sm:px-6 py-3.5 sm:py-4 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]/90 backdrop-blur-md flex items-center justify-end gap-3 shrink-0 pb-[max(0.875rem,env(safe-area-inset-bottom))]">
-        <button
-          type="button"
-          (click)="close()"
-          class="px-4 py-2 rounded-xl border border-[var(--border-color)] text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] cursor-pointer transition-colors"
-        >
-          Cancelar
-        </button>
-        <button
-          type="button"
-          (click)="save()"
-          class="px-5 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white text-xs font-bold shadow-lg shadow-cyan-500/20 flex items-center gap-1.5 cursor-pointer transition-all"
-        >
-          <svg lucideCheck class="w-4 h-4"></svg>
-          <span>Guardar Foto de Perfil</span>
-        </button>
+      <div class="px-4 sm:px-6 py-3.5 sm:py-4 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]/90 backdrop-blur-md flex items-center justify-between shrink-0 pb-[max(0.875rem,env(safe-area-inset-bottom))]">
+        @if (uploadError()) {
+          <p class="text-[11px] font-mono text-rose-500">{{ uploadError() }}</p>
+        } @else {
+          <span></span>
+        }
+        <div class="flex items-center gap-3">
+          <button
+            type="button"
+            (click)="close()"
+            [disabled]="uploading()"
+            class="px-4 py-2 rounded-xl border border-[var(--border-color)] text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] cursor-pointer transition-colors disabled:opacity-50"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            (click)="save()"
+            [disabled]="uploading()"
+            class="px-5 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white text-xs font-bold shadow-lg shadow-cyan-500/20 flex items-center gap-1.5 cursor-pointer transition-all disabled:opacity-50"
+          >
+            @if (uploading()) {
+              <svg lucideLoader class="w-4 h-4 animate-spin"></svg>
+              <span>Subiendo...</span>
+            } @else {
+              <svg lucideCheck class="w-4 h-4"></svg>
+              <span>{{ saveLabel }}</span>
+            }
+          </button>
+        </div>
       </div>
     </div>
   </div>

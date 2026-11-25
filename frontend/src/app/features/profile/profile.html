@@ -333,12 +333,147 @@
 
     </div>
 
-    <!-- Modal de personalización de foto de perfil -->
-    <app-profile-photo-modal
+    <!-- Modal de personalización de foto -->
+    <app-upload-photo-modal
       [isOpen]="isPhotoModalOpen()"
-      [user]="p"
+      [imageUrl]="p.avatarUrl ?? ''"
+      [imageConfig]="p.avatarConfig"
+      folder="avatars"
+      title="Personalizar Foto de Perfil"
+      subtitle="Selecciona, ajusta el encuadre y previsualiza cómo se verá tu foto en toda la app."
+      saveLabel="Guardar Foto de Perfil"
+      [previewTemplate]="profilePreview"
       (closed)="closePhotoModal()"
       (saved)="handlePhotoSaved($event)"
     />
+
+    <ng-template #profilePreview let-ctx>
+      <div class="space-y-4">
+        <div class="flex items-center gap-1.5">
+          <svg lucideSparkles class="w-3.5 h-3.5 text-cyan-500"></svg>
+          <span class="text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+            Vista Previa en la App
+          </span>
+        </div>
+
+        <!-- Preview 1: Perfil de Usuario -->
+        <div class="p-4 rounded-2xl bg-[var(--bg-tertiary)]/50 border border-[var(--border-color)] space-y-2.5">
+          <p class="text-[10px] font-bold uppercase text-[var(--text-muted)] flex items-center gap-1.5">
+            <svg lucideUser class="w-3 h-3 text-cyan-500"></svg> En tu Perfil de Usuario
+          </p>
+          <div class="flex items-center gap-3.5 p-3 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)]">
+            <div [class]="'w-14 h-14 rounded-2xl overflow-hidden bg-[var(--bg-tertiary)] shrink-0 ' + ctx.ringClassMap[ctx.config.ringColor]">
+              <img
+                [src]="ctx.selectedUrl"
+                [alt]="p.fullName"
+                class="w-full h-full object-cover select-none"
+                [style.transform]="ctx.imgStyle.transform"
+                [style.filter]="ctx.imgStyle.filter"
+                [style.transition]="ctx.imgStyle.transition"
+                draggable="false"
+              />
+            </div>
+            <div class="min-w-0">
+              <span class="inline-block px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[9px] font-mono font-bold">
+                ACTIVE SESSION
+              </span>
+              <p class="text-xs font-bold text-[var(--text-primary)] truncate mt-0.5">
+                {{ p.fullName }}
+              </p>
+              <p class="text-[10px] text-[var(--text-muted)] truncate">
+                @{{ p.username }} &bull; {{ p.positionName || p.roleName || 'Administrador General' }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preview 2: Barra Superior (Header) -->
+        <div class="p-4 rounded-2xl bg-[var(--bg-tertiary)]/50 border border-[var(--border-color)] space-y-2.5">
+          <p class="text-[10px] font-bold uppercase text-[var(--text-muted)] flex items-center gap-1.5">
+            <svg lucideLayoutGrid class="w-3 h-3 text-cyan-500"></svg> En la Barra Superior (Header)
+          </p>
+          <div class="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)]">
+            <span class="text-[11px] font-semibold text-[var(--text-muted)]">
+              Sistema de Control
+            </span>
+            <div class="flex items-center gap-2">
+              <div [class]="'w-8 h-8 rounded-full overflow-hidden bg-[var(--bg-tertiary)] shrink-0 ' + ctx.ringClassMap[ctx.config.ringColor]">
+                <img
+                  [src]="ctx.selectedUrl"
+                  [alt]="p.fullName"
+                  class="w-full h-full object-cover select-none"
+                  [style.transform]="ctx.imgStyle.transform"
+                  [style.filter]="ctx.imgStyle.filter"
+                  [style.transition]="ctx.imgStyle.transition"
+                  draggable="false"
+                />
+              </div>
+              <div class="text-left">
+                <p class="text-[11px] font-bold text-[var(--text-primary)] leading-tight">
+                  {{ p.username }}
+                </p>
+                <p class="text-[9px] text-[var(--text-muted)] font-mono">{{ p.roleName || 'Gerenciales' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preview 3: Notificaciones -->
+        <div class="p-4 rounded-2xl bg-[var(--bg-tertiary)]/50 border border-[var(--border-color)] space-y-2.5">
+          <p class="text-[10px] font-bold uppercase text-[var(--text-muted)] flex items-center gap-1.5">
+            <svg lucideBell class="w-3 h-3 text-cyan-500"></svg> En Notificaciones y Alertas
+          </p>
+          <div class="p-3 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] flex items-start gap-3">
+            <div class="relative shrink-0">
+              <div [class]="'w-9 h-9 rounded-full overflow-hidden bg-[var(--bg-tertiary)] shrink-0 ' + ctx.ringClassMap[ctx.config.ringColor]">
+                <img
+                  [src]="ctx.selectedUrl"
+                  [alt]="p.fullName"
+                  class="w-full h-full object-cover select-none"
+                  [style.transform]="ctx.imgStyle.transform"
+                  [style.filter]="ctx.imgStyle.filter"
+                  [style.transition]="ctx.imgStyle.transition"
+                  draggable="false"
+                />
+              </div>
+              <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-cyan-500 border-2 border-[var(--bg-card)]"></span>
+            </div>
+            <div class="text-[11px] leading-snug">
+              <p class="text-[var(--text-primary)]">
+                <span class="font-bold">{{ p.username }}</span> autorizó la Orden de Compra
+                <span class="font-mono text-cyan-500 font-semibold">#PO-003</span>
+              </p>
+              <p class="text-[10px] text-[var(--text-muted)] mt-0.5">Hace 2 minutos</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preview 4: Auditoría / Comentarios -->
+        <div class="p-4 rounded-2xl bg-[var(--bg-tertiary)]/50 border border-[var(--border-color)] space-y-2.5">
+          <p class="text-[10px] font-bold uppercase text-[var(--text-muted)] flex items-center gap-1.5">
+            <svg lucideHistory class="w-3 h-3 text-cyan-500"></svg> En Registros de Auditoría
+          </p>
+          <div class="px-3 py-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center justify-between text-[11px]">
+            <div class="flex items-center gap-2">
+              <div [class]="'w-6 h-6 rounded-full overflow-hidden bg-[var(--bg-tertiary)] shrink-0 ' + ctx.ringClassMap[ctx.config.ringColor]">
+                <img
+                  [src]="ctx.selectedUrl"
+                  [alt]="p.fullName"
+                  class="w-full h-full object-cover select-none"
+                  [style.transform]="ctx.imgStyle.transform"
+                  [style.filter]="ctx.imgStyle.filter"
+                  [style.transition]="ctx.imgStyle.transition"
+                  draggable="false"
+                />
+              </div>
+              <span class="font-medium text-[var(--text-primary)]">
+                Editó inventario de productos
+              </span>
+            </div>
+            <span class="text-[10px] font-mono text-[var(--text-muted)]">10:15 AM</span>
+          </div>
+        </div>
+      </div>
+    </ng-template>
   }
 </div>

@@ -1,13 +1,13 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CustomSelectComponent } from '../../shared/ui/custom-select/custom-select';
-import { ImageUploadComponent } from '../../shared/ui/image-upload/image-upload';
 import {
   LucideAlertCircle,
   LucideAlertTriangle,
   LucideArrowDownToLine,
   LucideBarcode,
   LucideBoxes,
+  LucideCamera,
   LucideCheckCircle,
   LucideDollarSign,
   LucideEdit,
@@ -18,11 +18,13 @@ import {
   LucideRotateCcw,
   LucideSearch,
   LucideShoppingCart,
+  LucideSparkles,
   LucideTag,
   LucideTrash2,
   LucideX,
 } from '@lucide/angular';
-import { ProductCatalogItem, ProductUnit } from '../../core/models/types';
+import { AvatarConfig, ProductCatalogItem, ProductUnit } from '../../core/models/types';
+import { UploadPhotoModalComponent } from '../../shared/ui/upload-photo-modal/upload-photo-modal';
 import { AppStore } from '../../core/state/app-store';
 import { ProductsApi, ProductResponse, CategoriesApi, CategoryResponse } from '../../core/api';
 
@@ -31,12 +33,13 @@ import { ProductsApi, ProductResponse, CategoriesApi, CategoryResponse } from '.
   imports: [
     FormsModule,
     CustomSelectComponent,
-    ImageUploadComponent,
+    UploadPhotoModalComponent,
     LucideAlertCircle,
     LucideAlertTriangle,
     LucideArrowDownToLine,
     LucideBarcode,
     LucideBoxes,
+    LucideCamera,
     LucideCheckCircle,
     LucideDollarSign,
     LucideEdit,
@@ -47,6 +50,7 @@ import { ProductsApi, ProductResponse, CategoriesApi, CategoryResponse } from '.
     LucideRotateCcw,
     LucideSearch,
     LucideShoppingCart,
+    LucideSparkles,
     LucideTag,
     LucideTrash2,
     LucideX,
@@ -93,6 +97,7 @@ export class ProductsView implements OnInit {
   protected readonly minPurchase = signal(10);
   protected readonly unit = signal<ProductUnit>('Und');
   protected readonly productImageUrl = signal<string | null>(null);
+  protected readonly isPhotoModalOpen = signal(false);
 
   protected readonly units: ProductUnit[] = ['Und', 'Pqt', 'Kg', 'Lb'];
 
@@ -367,5 +372,9 @@ export class ProductsView implements OnInit {
   protected closeToast(): void {
     if (this.toastTimer) clearTimeout(this.toastTimer);
     this.toastOpen.set(false);
+  }
+
+  protected handlePhotoSaved(event: { avatarUrl: string; config: AvatarConfig }): void {
+    this.productImageUrl.set(event.avatarUrl);
   }
 }

@@ -6,31 +6,29 @@ import {
   OnChanges,
   Output,
   SimpleChanges,
+  TemplateRef,
   ViewChild,
   computed,
+  inject,
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
-  LucideBell,
   LucideCheck,
   LucideFileImage,
-  LucideHistory,
   LucideImage,
-  LucideLayoutGrid,
+  LucideLoader,
   LucideMove,
   LucideRotateCcw,
   LucideRotateCw,
   LucideSlidersHorizontal,
-  LucideSparkles,
   LucideUpload,
-  LucideUser,
   LucideX,
   LucideZoomIn,
 } from '@lucide/angular';
-import { AvatarConfig, UserProfile } from '../../../core/models/types';
-import { ProfileResponse } from '../../../core/api/auth.api';
+import { AvatarConfig } from '../../../core/models/types';
+import { StorageApi } from '../../../core/api/storage.api';
 
 export const DEFAULT_AVATAR_CONFIG: AvatarConfig = {
   zoom: 1,
@@ -63,61 +61,75 @@ export const RING_COLOR_OPTIONS: {
   { id: 'none', cls: 'bg-slate-400' },
 ];
 
+export interface UploadPhotoPreviewContext {
+  selectedUrl: string;
+  config: AvatarConfig;
+  imgStyle: { transform: string; filter: string; transition: string };
+  ringClassMap: Record<AvatarConfig['ringColor'], string>;
+}
+
 const DEFAULT_AVATAR_URL =
   'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop&auto=format';
 
 @Component({
-  selector: 'app-profile-photo-modal',
+  selector: 'app-upload-photo-modal',
   standalone: true,
   imports: [
     CommonModule,
     FormsModule,
-    LucideBell,
     LucideCheck,
     LucideFileImage,
-    LucideHistory,
     LucideImage,
-    LucideLayoutGrid,
+    LucideLoader,
     LucideMove,
     LucideRotateCcw,
     LucideRotateCw,
     LucideSlidersHorizontal,
-    LucideSparkles,
     LucideUpload,
-    LucideUser,
     LucideX,
     LucideZoomIn,
   ],
-  templateUrl: './profile-photo-modal.html',
+  templateUrl: './upload-photo-modal.html',
 })
-export class ProfilePhotoModalComponent implements OnChanges {
+export class UploadPhotoModalComponent implements OnChanges {
   @Input() isOpen = false;
-  @Input() user: UserProfile | ProfileResponse | any = null;
+  @Input() imageUrl = '';
+  @Input() imageConfig: AvatarConfig | undefined;
+  @Input() title = 'Personalizar Foto';
+  @Input() subtitle = 'Selecciona, ajusta el encuadre y previsualiza cómo se verá tu foto.';
+  @Input() saveLabel = 'Guardar Foto';
+  @Input() folder = 'avatars';
+  @Input() previewTemplate?: TemplateRef<{ $implicit: UploadPhotoPreviewContext }>;
 
   @Output() closed = new EventEmitter<void>();
   @Output() saved = new EventEmitter<{ avatarUrl: string; config: AvatarConfig }>();
 
   @ViewChild('fileInput') fileInputRef?: ElementRef<HTMLInputElement>;
 
-  protected readonly selectedUrl = signal<string>(DEFAULT_AVATAR_URL);
-  protected readonly config = signal<AvatarConfig>({ ...DEFAULT_AVATAR_CONFIG });
-  protected readonly fileName = signal<string>('Foto de perfil actual');
+  private readonly storageApi = inject(StorageApi);
+
+  readonly selectedUrl = signal<string>(DEFAULT_AVATAR_URL);
+  readonly config = signal<AvatarConfig>({ ...DEFAULT_AVATAR_CONFIG });
+  protected readonly fileName = signal<string>('Foto actual');
   protected readonly isDragging = signal(false);
   protected readonly animatingOut = signal(false);
+  protected readonly uploading = signal(false);
+  protected readonly uploadError = signal<string | null>(null);
+  private pendingFile: File | null = null;
 
   protected readonly filterOptions = FILTER_OPTIONS;
   protected readonly ringColorOptions = RING_COLOR_OPTIONS;
 
   private dragStart: { x: number; y: number; origX: number; origY: number } | null = null;
 
-  protected readonly ringClassMap: Record<AvatarConfig['ringColor'], string> = {
+  readonly ringClassMap: Record<AvatarConfig['ringColor'], string> = {
     cyan: 'ring-2 ring-cyan-500',
     emerald: 'ring-2 ring-emerald-500',
     indigo: 'ring-2 ring-indigo-500',
     none: 'ring-0',
   };
 
-  protected readonly imgStyle = computed(() => {
+  readonly imgStyle = computed(() => {
     const cfg = this.config();
     const filterObj = FILTER_OPTIONS.find((f) => f.id === (cfg.filter || 'none'));
     const filterCss = filterObj?.css || 'none';
@@ -129,42 +141,42 @@ export class ProfilePhotoModalComponent implements OnChanges {
     };
   });
 
-  protected readonly userFullName = computed(() => this.user?.fullName || 'Santiago Andrés Potes Monzón');
-  protected readonly userUsername = computed(() => this.user?.username || 'sant03');
-  protected readonly userPosition = computed(
-    () => this.user?.positionName || this.user?.role || 'Administrador General',
-  );
-  protected readonly userRole = computed(() => this.user?.roleName || this.user?.role || 'Gerenciales');
+  protected readonly previewContext = computed<UploadPhotoPreviewContext>(() => ({
+    selectedUrl: this.selectedUrl(),
+    config: this.config(),
+    imgStyle: this.imgStyle(),
+    ringClassMap: this.ringClassMap,
+  }));
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['isOpen'] && this.isOpen) {
       this.animatingOut.set(false);
-      this.initializeFromUser();
-    } else if (changes['user'] && this.isOpen) {
-      this.initializeFromUser();
+      this.initializeFromInputs();
+    } else if ((changes['imageUrl'] || changes['imageConfig']) && this.isOpen) {
+      this.initializeFromInputs();
     }
   }
 
-  private initializeFromUser(): void {
-    if (this.user?.avatarUrl) {
-      this.selectedUrl.set(this.user.avatarUrl);
-    } else {
-      this.selectedUrl.set(DEFAULT_AVATAR_URL);
-    }
+  private initializeFromInputs(): void {
+    this.selectedUrl.set(this.imageUrl || DEFAULT_AVATAR_URL);
 
-    if (this.user?.avatarConfig) {
-      this.config.set({ ...DEFAULT_AVATAR_CONFIG, ...this.user.avatarConfig });
+    if (this.imageConfig) {
+      this.config.set({ ...DEFAULT_AVATAR_CONFIG, ...this.imageConfig });
     } else {
       this.config.set({ ...DEFAULT_AVATAR_CONFIG });
     }
-    this.fileName.set('Foto de perfil actual');
+    this.fileName.set('Foto actual');
+    this.pendingFile = null;
+    this.uploadError.set(null);
   }
 
   protected handleFileChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
+    this.pendingFile = file;
     this.fileName.set(file.name);
+    this.uploadError.set(null);
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === 'string') {
@@ -273,10 +285,31 @@ export class ProfilePhotoModalComponent implements OnChanges {
   }
 
   protected save(): void {
-    this.saved.emit({
-      avatarUrl: this.selectedUrl(),
-      config: this.config(),
-    });
-    this.close();
+    if (this.pendingFile) {
+      this.uploading.set(true);
+      this.uploadError.set(null);
+      this.storageApi.upload(this.pendingFile, this.folder).subscribe({
+        next: (event) => {
+          if (event.response) {
+            this.uploading.set(false);
+            this.saved.emit({
+              avatarUrl: event.response.url,
+              config: this.config(),
+            });
+            this.close();
+          }
+        },
+        error: () => {
+          this.uploading.set(false);
+          this.uploadError.set('Error al subir la imagen');
+        },
+      });
+    } else {
+      this.saved.emit({
+        avatarUrl: this.selectedUrl(),
+        config: this.config(),
+      });
+      this.close();
+    }
   }
 }

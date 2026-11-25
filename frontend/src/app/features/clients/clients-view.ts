@@ -2,6 +2,7 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   LucideAlertTriangle,
+  LucideCamera,
   LucideCheckCircle2,
   LucideMail,
   LucideMapPin,
@@ -10,22 +11,25 @@ import {
   LucidePlus,
   LucideRotateCcw,
   LucideSearch,
+  LucideSparkles,
   LucideSquarePen,
   LucideTrash2,
   LucideUser,
   LucideUsers,
   LucideX,
 } from '@lucide/angular';
-import { Client } from '../../core/models/types';
+import { AvatarConfig, Client } from '../../core/models/types';
 import { AppStore } from '../../core/state/app-store';
 import { CustomersApi, CustomerResponse } from '../../core/api';
-import { ImageUploadComponent } from '../../shared/ui/image-upload/image-upload';
+import { UploadPhotoModalComponent } from '../../shared/ui/upload-photo-modal/upload-photo-modal';
 
 @Component({
   selector: 'app-clients-view',
   imports: [
     FormsModule,
+    UploadPhotoModalComponent,
     LucideAlertTriangle,
+    LucideCamera,
     LucideCheckCircle2,
     LucideMail,
     LucideMapPin,
@@ -34,12 +38,12 @@ import { ImageUploadComponent } from '../../shared/ui/image-upload/image-upload'
     LucidePlus,
     LucideRotateCcw,
     LucideSearch,
+    LucideSparkles,
     LucideSquarePen,
     LucideTrash2,
     LucideUser,
     LucideUsers,
     LucideX,
-    ImageUploadComponent,
   ],
   templateUrl: './clients-view.html',
 })
@@ -120,6 +124,7 @@ export class ClientsView implements OnInit {
   protected readonly modalAnimatingOut = signal(false);
   protected readonly editingId = signal('');
   protected readonly draft = signal<Client>(ClientsView.emptyDraft());
+  protected readonly isPhotoModalOpen = signal(false);
 
   protected readonly modalTitle = computed(() =>
     this.editingId() ? 'Editar cliente' : 'Añadir nuevo cliente',
@@ -248,6 +253,10 @@ export class ClientsView implements OnInit {
 
   protected notify(message: string): void {
     window.alert(message);
+  }
+
+  protected handlePhotoSaved(event: { avatarUrl: string; config: AvatarConfig }): void {
+    this.updateDraft({ avatarUrl: event.avatarUrl });
   }
 
   private static emptyDraft(): Client {

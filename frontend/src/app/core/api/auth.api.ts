@@ -72,6 +72,7 @@ export interface UpdateProfileRequest {
   phone?: string;
   landline?: string;
   positionName?: string;
+  avatarUrl?: string;
 }
 
 @Injectable({ providedIn: 'root' })

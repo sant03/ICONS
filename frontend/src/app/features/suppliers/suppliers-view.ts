@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import {
   LucideAlertTriangle,
   LucideBuilding,
+  LucideCamera,
   LucideCheckCircle2,
   LucideMail,
   LucideMapPin,
@@ -11,21 +12,24 @@ import {
   LucidePlus,
   LucideRotateCcw,
   LucideSearch,
+  LucideSparkles,
   LucideSquarePen,
   LucideTrash2,
   LucideX,
 } from '@lucide/angular';
-import { Supplier } from '../../core/models/types';
+import { AvatarConfig, Supplier } from '../../core/models/types';
 import { AppStore } from '../../core/state/app-store';
 import { SuppliersApi, SupplierResponse } from '../../core/api';
-import { ImageUploadComponent } from '../../shared/ui/image-upload/image-upload';
+import { UploadPhotoModalComponent } from '../../shared/ui/upload-photo-modal/upload-photo-modal';
 
 @Component({
   selector: 'app-suppliers-view',
   imports: [
     FormsModule,
+    UploadPhotoModalComponent,
     LucideAlertTriangle,
     LucideBuilding,
+    LucideCamera,
     LucideCheckCircle2,
     LucideMail,
     LucideMapPin,
@@ -34,10 +38,10 @@ import { ImageUploadComponent } from '../../shared/ui/image-upload/image-upload'
     LucidePlus,
     LucideRotateCcw,
     LucideSearch,
+    LucideSparkles,
     LucideSquarePen,
     LucideTrash2,
     LucideX,
-    ImageUploadComponent,
   ],
   templateUrl: './suppliers-view.html',
 })
@@ -118,6 +122,7 @@ export class SuppliersView implements OnInit {
   protected readonly modalAnimatingOut = signal(false);
   protected readonly editingId = signal('');
   protected readonly draft = signal<Supplier>(SuppliersView.emptyDraft());
+  protected readonly isPhotoModalOpen = signal(false);
 
   protected readonly modalTitle = computed(() =>
     this.editingId() ? 'Editar proveedor' : 'Añadir nuevo proveedor',
@@ -244,6 +249,10 @@ export class SuppliersView implements OnInit {
 
   protected notify(message: string): void {
     window.alert(message);
+  }
+
+  protected handlePhotoSaved(event: { avatarUrl: string; config: AvatarConfig }): void {
+    this.updateDraft({ avatarUrl: event.avatarUrl });
   }
 
   private static emptyDraft(): Supplier {
