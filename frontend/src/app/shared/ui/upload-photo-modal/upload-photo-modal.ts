@@ -1,13 +1,11 @@
 import {
   Component,
-  ElementRef,
   EventEmitter,
   Input,
   OnChanges,
   Output,
   SimpleChanges,
   TemplateRef,
-  ViewChild,
   computed,
   inject,
   signal,
@@ -104,8 +102,6 @@ export class UploadPhotoModalComponent implements OnChanges {
   @Output() closed = new EventEmitter<void>();
   @Output() saved = new EventEmitter<{ avatarUrl: string; config: AvatarConfig }>();
 
-  @ViewChild('fileInput') fileInputRef?: ElementRef<HTMLInputElement>;
-
   private readonly storageApi = inject(StorageApi);
 
   readonly selectedUrl = signal<string>(DEFAULT_AVATAR_URL);
@@ -168,10 +164,6 @@ export class UploadPhotoModalComponent implements OnChanges {
     this.fileName.set('Foto actual');
     this.pendingFile = null;
     this.uploadError.set(null);
-  }
-
-  protected triggerFileInput(): void {
-    this.fileInputRef?.nativeElement?.click();
   }
 
   protected handleFileChange(event: Event): void {
