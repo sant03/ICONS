@@ -275,6 +275,12 @@ export class UsersView implements OnInit {
       avatarUrl: event.avatarUrl,
       avatarConfig: event.config,
     }));
+    this.api.update(Number(s.idNumber), { avatarUrl: event.avatarUrl }).subscribe({
+      next: (res) => {
+        const mapped = UsersView.mapUser(res);
+        this.staff.update((list) => list.map((m) => (m.idNumber === s.idNumber ? mapped : m)));
+      },
+    });
   }
 
   protected avatarTransform(cfg?: AvatarConfig): string {

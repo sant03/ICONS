@@ -253,6 +253,15 @@ export class SuppliersView implements OnInit {
 
   protected handlePhotoSaved(event: { avatarUrl: string; config: AvatarConfig }): void {
     this.updateDraft({ avatarUrl: event.avatarUrl });
+    const editingId = this.editingId();
+    if (editingId) {
+      this.api.update(Number(editingId), { avatarUrl: event.avatarUrl }).subscribe({
+        next: (res) => {
+          const mapped = SuppliersView.mapSupplier(res);
+          this.suppliers.update((list) => list.map((s) => (s.id === editingId ? mapped : s)));
+        },
+      });
+    }
   }
 
   private static emptyDraft(): Supplier {

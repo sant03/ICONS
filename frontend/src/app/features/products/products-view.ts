@@ -376,5 +376,14 @@ export class ProductsView implements OnInit {
 
   protected handlePhotoSaved(event: { avatarUrl: string; config: AvatarConfig }): void {
     this.productImageUrl.set(event.avatarUrl);
+    const editingId = this.editingProductId();
+    if (editingId) {
+      this.productsApi.update(Number(editingId), { imageUrl: event.avatarUrl }).subscribe({
+        next: (res) => {
+          const mapped = this.mapProduct(res);
+          this.products.update((list) => list.map((p) => (p.id === editingId ? mapped : p)));
+        },
+      });
+    }
   }
 }

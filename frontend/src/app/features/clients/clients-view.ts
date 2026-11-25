@@ -257,6 +257,15 @@ export class ClientsView implements OnInit {
 
   protected handlePhotoSaved(event: { avatarUrl: string; config: AvatarConfig }): void {
     this.updateDraft({ avatarUrl: event.avatarUrl });
+    const editingId = this.editingId();
+    if (editingId) {
+      this.api.update(Number(editingId), { avatarUrl: event.avatarUrl }).subscribe({
+        next: (res) => {
+          const mapped = ClientsView.mapCustomer(res);
+          this.clients.update((list) => list.map((c) => (c.id === editingId ? mapped : c)));
+        },
+      });
+    }
   }
 
   private static emptyDraft(): Client {
