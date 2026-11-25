@@ -170,6 +170,10 @@ export class UploadPhotoModalComponent implements OnChanges {
     this.uploadError.set(null);
   }
 
+  protected triggerFileInput(): void {
+    this.fileInputRef?.nativeElement?.click();
+  }
+
   protected handleFileChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
