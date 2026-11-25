@@ -40,6 +40,8 @@ export class Header {
   protected readonly userMenuAnimatingOut = signal(false);
   protected readonly mobileSearchOpen = signal(false);
 
+  protected readonly avatarUrl = computed(() => this.auth.currentUser()?.avatarUrl ?? null);
+
   protected readonly initials = computed(() => {
     const name = this.auth.currentUser()?.fullName ?? '';
     const parts = name.trim().split(/\s+/);
