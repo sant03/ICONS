@@ -8,6 +8,8 @@ import {
   DeliveryDriver,
   DispatchRecord,
   DispatchStatus,
+  NotificationItem,
+  NotificationType,
   OrderItem,
   ProductCatalogItem,
   PurchaseOrder,
@@ -19,14 +21,12 @@ import {
   Transaction,
   UserProfile,
   ViewMode,
-  NotificationItem,
 } from '../models/types';
 import {
   historicalSalesRecords,
   initialClients,
   initialDeliveryDrivers,
   initialDispatches,
-  initialNotifications,
   initialScheduledOrderRules,
   initialOrders,
   initialProducts,
@@ -39,6 +39,7 @@ import {
   todaySalesRecords,
   userAuditLogs,
 } from '../models/mock-data';
+import { NotificationsApi, NotificationResponse } from '../api/notifications.api';
 
 const ALL_VIEW_MODES: ViewMode[] = [
   'welcome',
@@ -72,6 +73,7 @@ const ALL_VIEW_MODES: ViewMode[] = [
 @Injectable({ providedIn: 'root' })
 export class AppStore {
   private readonly router = inject(Router);
+  private readonly notificationsApi = inject(NotificationsApi);
 
   readonly theme = signal<ThemeMode>('dark');
   readonly transactions = signal<Transaction[]>(structuredClone(initialTransactions));
@@ -92,8 +94,9 @@ export class AppStore {
   /** Documents of the Orden de Compra module (list + detail views). */
   readonly purchaseOrders = signal<PurchaseOrder[]>(structuredClone(initialPurchaseOrders));
   /** Notificaciones del sistema para el sidebar lateral derecho */
-  readonly notifications = signal<NotificationItem[]>(structuredClone(initialNotifications));
+  readonly notifications = signal<NotificationItem[]>([]);
   readonly notificationsOpen = signal(false);
+  private notificationsLoading = false;
   readonly deliveryDrivers = signal<DeliveryDriver[]>(structuredClone(initialDeliveryDrivers));
   readonly dispatches = signal<DispatchRecord[]>(structuredClone(initialDispatches));
   readonly isNewSaleModalOpen = signal(false);
@@ -181,22 +184,65 @@ export class AppStore {
     this.notificationsOpen.set(false);
   }
 
+  loadNotifications(): void {
+    if (this.notificationsLoading) return;
+    this.notificationsLoading = true;
+    this.notificationsApi.list({ size: 50 }).subscribe({
+      next: (page) => {
+        this.notifications.set(page.content.map((n) => this.mapNotification(n)));
+        this.notificationsLoading = false;
+      },
+      error: () => {
+        this.notificationsLoading = false;
+      },
+    });
+  }
+
   markNotificationAsRead(id: string): void {
     this.notifications.update((list) =>
       list.map((item) => (item.id === id ? { ...item, read: true } : item)),
     );
+    this.notificationsApi.markAsRead(Number(id)).subscribe();
   }
 
   markAllNotificationsAsRead(): void {
     this.notifications.update((list) => list.map((item) => ({ ...item, read: true })));
+    this.notificationsApi.markAllAsRead().subscribe();
   }
 
   clearNotification(id: string): void {
     this.notifications.update((list) => list.filter((item) => item.id !== id));
+    this.notificationsApi.delete(Number(id)).subscribe();
   }
 
   clearAllNotifications(): void {
     this.notifications.set([]);
+    this.notificationsApi.clearAll().subscribe();
+  }
+
+  private mapNotification(res: NotificationResponse): NotificationItem {
+    return {
+      id: String(res.id),
+      title: res.title,
+      description: res.description,
+      time: this.formatRelativeTime(res.createdAt),
+      type: (res.type as NotificationType) || 'system',
+      read: res.read,
+      link: res.link ?? undefined,
+    };
+  }
+
+  private formatRelativeTime(dateStr: string): string {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMin = Math.floor((now.getTime() - date.getTime()) / 60000);
+    if (diffMin < 1) return 'Ahora';
+    if (diffMin < 60) return `Hace ${diffMin} min`;
+    const diffHour = Math.floor(diffMin / 60);
+    if (diffHour < 24) return `Hace ${diffHour}h`;
+    const diffDay = Math.floor(diffHour / 24);
+    if (diffDay < 7) return `Hace ${diffDay}d`;
+    return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
   }
 
   /** Replaces the `onNavigate` callback of the original components. */

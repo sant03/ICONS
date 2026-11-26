@@ -222,7 +222,17 @@ export interface PurchaseOrder {
   approvedBy?: string;
 }
 
-export type NotificationType = 'order' | 'stock' | 'user' | 'payment' | 'system';
+export type NotificationType =
+  | 'welcome'
+  | 'reminder'
+  | 'attendance'
+  | 'message'
+  | 'order'
+  | 'stock'
+  | 'user'
+  | 'payment'
+  | 'system'
+  | 'alert';
 
 export interface NotificationItem {
   id: string;
@@ -231,7 +241,7 @@ export interface NotificationItem {
   time: string;
   type: NotificationType;
   read: boolean;
-  link?: ViewMode;
+  link?: string;
 }
 
 export type DispatchStatus = 'POR_ASIGNAR' | 'ASIGNADO' | 'EN_CAMINO' | 'ENTREGADO' | 'RECHAZADO';

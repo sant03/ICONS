@@ -51,7 +51,7 @@ icons:
       access-token-expiration: 15m
       refresh-token-expiration: 7d
     cors:
-      allowed-origins: ${CORS_ORIGINS:http://localhost:4200,http://192.168.*:4200}
+      allowed-origins: ${CORS_ORIGINS:http://localhost:4200,http://localhost:4201,http://192.168.*:4200}
     auth:
       max-failed-attempts: 5
       lockout-duration: 15m
@@ -60,6 +60,11 @@ icons:
 
   tenant:
     default-slug: plastyfreddy
+
+  web-push:
+    public-key: ${VAPID_PUBLIC_KEY:}
+    private-key: ${VAPID_PRIVATE_KEY:}
+    subject: mailto:noreply@plastyfreddy.com
 
 management:
   endpoints:

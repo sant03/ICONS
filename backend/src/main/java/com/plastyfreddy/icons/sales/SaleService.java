@@ -4,10 +4,13 @@ import com.plastyfreddy.icons.catalog.StockService;
 import com.plastyfreddy.icons.catalog.domain.MovementType;
 import com.plastyfreddy.icons.catalog.domain.Product;
 import com.plastyfreddy.icons.catalog.domain.ProductRepository;
+import com.plastyfreddy.icons.notifications.NotificationService;
+import com.plastyfreddy.icons.notifications.domain.NotificationType;
 import com.plastyfreddy.icons.sales.domain.*;
 import com.plastyfreddy.icons.sales.dto.*;
 import com.plastyfreddy.icons.sequence.SequenceService;
 import com.plastyfreddy.icons.shared.exception.BusinessException;
+import com.plastyfreddy.icons.shared.security.CurrentUser;
 import com.plastyfreddy.icons.shared.tenant.TenantContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,6 +28,7 @@ public class SaleService {
     private final ProductRepository productRepository;
     private final StockService stockService;
     private final SequenceService sequenceService;
+    private final NotificationService notificationService;
 
     @Transactional(readOnly = true)
     public Page<SaleResponse> list(String search, Long customerId, String paymentStatus, Pageable pageable) {
@@ -102,6 +106,13 @@ public class SaleService {
         sale.setPaymentStatus(resolvePaymentStatus(amountPaid, subtotal));
 
         sale = saleRepository.save(sale);
+
+        notificationService.send(tenantId, CurrentUser.getUserId(),
+            NotificationType.ORDER,
+            "Nueva venta " + code,
+            "Venta por $" + sale.getTotal().toPlainString() + " a " + sale.getCustomerName(),
+            "/sales");
+
         return toResponse(sale);
     }
 

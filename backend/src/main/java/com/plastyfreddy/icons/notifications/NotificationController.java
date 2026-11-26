@@ -1,7 +1,13 @@
 package com.plastyfreddy.icons.notifications;
 
 import com.plastyfreddy.icons.notifications.dto.NotificationResponse;
+import com.plastyfreddy.icons.notifications.dto.PushSubscriptionRequest;
+import com.plastyfreddy.icons.notifications.dto.PushUnsubscribeRequest;
+import com.plastyfreddy.icons.shared.security.CurrentUser;
+import com.plastyfreddy.icons.shared.tenant.TenantContext;
 import com.plastyfreddy.icons.shared.web.PageResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -16,6 +22,7 @@ import java.util.Map;
 public class NotificationController {
 
     private final NotificationService notificationService;
+    private final WebPushProperties webPushProperties;
 
     @GetMapping
     @PreAuthorize("hasAuthority('NOTIFICATION_VIEW')")
@@ -57,5 +64,29 @@ public class NotificationController {
     @PreAuthorize("hasAuthority('NOTIFICATION_VIEW')")
     public void clearAll() {
         notificationService.clearAll();
+    }
+
+    // ── Push Notification Endpoints (any authenticated user) ──
+
+    @PostMapping("/push/subscribe")
+    @ResponseStatus(HttpStatus.CREATED)
+    public void subscribe(@Valid @RequestBody PushSubscriptionRequest request,
+                          HttpServletRequest httpRequest) {
+        Long tenantId = TenantContext.require();
+        Long userId = CurrentUser.getUserId();
+        String userAgent = httpRequest.getHeader("User-Agent");
+        notificationService.subscribe(tenantId, userId, request, userAgent);
+    }
+
+    @PostMapping("/push/unsubscribe")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void unsubscribe(@Valid @RequestBody PushUnsubscribeRequest request) {
+        Long tenantId = TenantContext.require();
+        notificationService.unsubscribe(tenantId, request.endpoint());
+    }
+
+    @GetMapping("/push/vapid-key")
+    public Map<String, String> vapidKey() {
+        return Map.of("publicKey", webPushProperties.getPublicKey());
     }
 }

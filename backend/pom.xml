@@ -70,6 +70,19 @@
             <version>1.78.1</version>
         </dependency>
 
+        <!-- Web Push (VAPID) -->
+        <dependency>
+            <groupId>nl.martijndwars</groupId>
+            <artifactId>web-push</artifactId>
+            <version>5.1.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.bouncycastle</groupId>
+                    <artifactId>bcprov-jdk18on</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
         <!-- JWT (creación de tokens) -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>

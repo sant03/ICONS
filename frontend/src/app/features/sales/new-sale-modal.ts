@@ -14,6 +14,7 @@ import { AppStore } from '../../core/state/app-store';
 import { SalesApi, CreateSaleRequest } from '../../core/api/sales.api';
 import { ProductsApi, ProductResponse } from '../../core/api/products.api';
 import { CustomersApi, CustomerResponse } from '../../core/api/customers.api';
+import { ToastNotificationService } from '../../core/services/toast-notification.service';
 
 @Component({
   selector: 'app-new-sale-modal',
@@ -35,6 +36,7 @@ export class NewSaleModal implements OnInit {
   private readonly salesApi = inject(SalesApi);
   private readonly productsApi = inject(ProductsApi);
   private readonly customersApi = inject(CustomersApi);
+  private readonly toastNotification = inject(ToastNotificationService);
 
   protected readonly isVisible = signal(false);
   protected readonly isAnimatingOut = signal(false);
@@ -157,8 +159,13 @@ export class NewSaleModal implements OnInit {
     };
 
     this.salesApi.create(request).subscribe({
-      next: () => {
-        this.showToast('Venta registrada exitosamente', 'success');
+      next: (sale) => {
+        this.toastNotification.show({
+          title: 'Nueva venta ' + sale.code,
+          body: 'Venta por $' + total.toLocaleString() + ' a ' + this.clientName().trim(),
+          type: 'order',
+          url: '/sales',
+        });
         this.store.saleCreatedTick.set(Date.now());
         setTimeout(() => this.requestClose(), 400);
       },

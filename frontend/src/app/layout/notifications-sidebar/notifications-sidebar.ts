@@ -1,4 +1,5 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import {
   LucideAlertTriangle,
   LucideBell,
@@ -11,7 +12,7 @@ import {
   LucideUserX,
   LucideX,
 } from '@lucide/angular';
-import { NotificationItem, NotificationType, ViewMode } from '../../core/models/types';
+import { NotificationItem, NotificationType } from '../../core/models/types';
 import { AppStore } from '../../core/state/app-store';
 import { SwipeDismissDirective } from '../../shared/directives/swipe-dismiss.directive';
 
@@ -37,21 +38,26 @@ type FilterType = 'all' | 'unread';
 })
 export class NotificationsSidebar {
   protected readonly store = inject(AppStore);
+  private readonly router = inject(Router);
   protected readonly activeFilter = signal<FilterType>('all');
   protected readonly isLoading = signal(false);
 
   constructor() {
     effect(() => {
       if (this.store.notificationsOpen()) {
-        this.isLoading.set(true);
-        setTimeout(() => this.isLoading.set(false), 350);
+        this.fetchNotifications();
       }
     });
   }
 
   protected reload(): void {
+    this.fetchNotifications();
+  }
+
+  private fetchNotifications(): void {
     this.isLoading.set(true);
-    setTimeout(() => this.isLoading.set(false), 500);
+    this.store.loadNotifications();
+    setTimeout(() => this.isLoading.set(false), 400);
   }
 
   protected readonly filteredNotifications = computed(() => {
@@ -70,7 +76,7 @@ export class NotificationsSidebar {
     this.store.markNotificationAsRead(item.id);
     if (item.link) {
       this.store.closeNotifications();
-      this.store.navigate(item.link);
+      void this.router.navigate([item.link]);
     }
   }
 
@@ -82,36 +88,26 @@ export class NotificationsSidebar {
   protected getBadgeColor(type: NotificationType): { bg: string; text: string; border: string } {
     switch (type) {
       case 'order':
-        return {
-          bg: 'bg-cyan-500/10',
-          text: 'text-cyan-500',
-          border: 'border-cyan-500/20',
-        };
+        return { bg: 'bg-cyan-500/10', text: 'text-cyan-500', border: 'border-cyan-500/20' };
       case 'stock':
-        return {
-          bg: 'bg-amber-500/10',
-          text: 'text-amber-500',
-          border: 'border-amber-500/20',
-        };
+        return { bg: 'bg-amber-500/10', text: 'text-amber-500', border: 'border-amber-500/20' };
       case 'user':
-        return {
-          bg: 'bg-rose-500/10',
-          text: 'text-rose-500',
-          border: 'border-rose-500/20',
-        };
+        return { bg: 'bg-rose-500/10', text: 'text-rose-500', border: 'border-rose-500/20' };
       case 'payment':
-        return {
-          bg: 'bg-emerald-500/10',
-          text: 'text-emerald-500',
-          border: 'border-emerald-500/20',
-        };
+        return { bg: 'bg-emerald-500/10', text: 'text-emerald-500', border: 'border-emerald-500/20' };
+      case 'welcome':
+        return { bg: 'bg-violet-500/10', text: 'text-violet-500', border: 'border-violet-500/20' };
+      case 'reminder':
+        return { bg: 'bg-orange-500/10', text: 'text-orange-500', border: 'border-orange-500/20' };
+      case 'alert':
+        return { bg: 'bg-red-500/10', text: 'text-red-500', border: 'border-red-500/20' };
+      case 'message':
+        return { bg: 'bg-blue-500/10', text: 'text-blue-500', border: 'border-blue-500/20' };
+      case 'attendance':
+        return { bg: 'bg-teal-500/10', text: 'text-teal-500', border: 'border-teal-500/20' };
       case 'system':
       default:
-        return {
-          bg: 'bg-sky-500/10',
-          text: 'text-sky-500',
-          border: 'border-sky-500/20',
-        };
+        return { bg: 'bg-sky-500/10', text: 'text-sky-500', border: 'border-sky-500/20' };
     }
   }
 }

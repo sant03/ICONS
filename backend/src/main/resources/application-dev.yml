@@ -16,6 +16,10 @@ spring:
     clean-disabled: false
 
 icons:
+  web-push:
+    public-key: BOjrpeFMMmeP16zXutP1ijeFJN3rw5yxlkxK0EZpA3Go2q2F0SIt1wxM8AqfIA1nGTnLtLMTzCP5hV_uaz81w7A
+    private-key: BQSO4BLIIW2GMSAccdET9ylEwOB-74q8qZszK6IFHxM
+
   storage:
     endpoint: http://localhost:9000
     region: us-east-1

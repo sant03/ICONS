@@ -1,6 +1,8 @@
 package com.plastyfreddy.icons.auth;
 
 import com.plastyfreddy.icons.auth.domain.*;
+import com.plastyfreddy.icons.notifications.NotificationService;
+import com.plastyfreddy.icons.notifications.domain.NotificationType;
 import com.plastyfreddy.icons.shared.exception.BusinessException;
 import com.plastyfreddy.icons.shared.security.JwtService;
 import com.plastyfreddy.icons.shared.tenant.TenantContext;
@@ -34,6 +36,7 @@ public class AuthService {
     private final TenantRepository tenantRepository;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
+    private final NotificationService notificationService;
 
     @Value("${icons.security.auth.max-failed-attempts:5}")
     private int maxFailedAttempts;
@@ -264,6 +267,12 @@ public class AuthService {
         user = userRepository.save(user);
 
         TenantContext.set(tenant.getId());
+
+        notificationService.send(tenant.getId(), user.getId(),
+            NotificationType.WELCOME,
+            "¡Bienvenido a ICONS!",
+            "Personaliza tu perfil subiendo una foto. Ve a tu perfil para comenzar.",
+            "/profile");
 
         var permissions = loadPermissions(user);
         String accessToken = jwtService.generateAccessToken(
