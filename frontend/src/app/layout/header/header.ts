@@ -40,6 +40,26 @@ export class Header {
   protected readonly userMenuAnimatingOut = signal(false);
   protected readonly mobileSearchOpen = signal(false);
 
+  protected readonly currentModuleName = computed(() => {
+    const view = this.store.currentView();
+    const map: Record<string, string> = {
+      dashboard: 'Inicio',
+      users: 'Usuarios',
+      profile: 'Perfil',
+      sales: 'Ventas',
+      orders: 'Pedidos',
+      products: 'Productos',
+      'purchase-orders': 'Orden de Compra',
+      'purchase-order-detail': 'Orden de Compra',
+      'purchase-order': 'Orden de Compra',
+      clients: 'Clientes',
+      suppliers: 'Proveedores',
+      dispatches: 'Despachos',
+      settings: 'Ajustes',
+    };
+    return map[view] ?? 'ICONS';
+  });
+
   protected readonly avatarUrl = computed(() => this.auth.currentUser()?.avatarUrl ?? null);
 
   protected readonly initials = computed(() => {

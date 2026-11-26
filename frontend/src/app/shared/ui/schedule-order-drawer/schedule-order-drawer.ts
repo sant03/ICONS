@@ -16,6 +16,7 @@ import {
 } from '@lucide/angular';
 import { RecurrenceFrequency, ScheduledOrderRule, TriggerMode } from '../../../core/models/types';
 import { AppStore } from '../../../core/state/app-store';
+import { SwipeDismissDirective } from '../../directives/swipe-dismiss.directive';
 
 const WEEK_DAYS = [
   { id: 'L', label: 'L' },
@@ -31,6 +32,7 @@ const WEEK_DAYS = [
   selector: 'app-schedule-order-drawer',
   imports: [
     FormsModule,
+    SwipeDismissDirective,
     LucideBell,
     LucideCalendar,
     LucideCheckCircle2,

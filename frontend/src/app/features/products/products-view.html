@@ -1,4 +1,4 @@
-<div class="h-full overflow-y-auto overflow-x-hidden lg:overflow-hidden lg:flex lg:flex-col lg:min-h-0 p-4 lg:p-8 space-y-4 animate-fade-in">
+<div class="h-full overflow-y-auto overflow-x-hidden lg:overflow-hidden lg:flex lg:flex-col lg:min-h-0 p-4 lg:px-8 lg:pt-8 lg:pb-0 space-y-4">
   <!-- Header -->
   <div class="shrink-0 flex flex-col lg:flex-row lg:items-center justify-between gap-4 animate-fade-down">
     <div>
@@ -83,9 +83,9 @@
   </div>
 
   <!-- Product grid + detail -->
-  <div class="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+  <div class="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8 lg:items-stretch items-start lg:!mb-0">
     <!-- Product grid -->
-    <div [class]="(hasDetailVisible() ? 'lg:col-span-2' : 'lg:col-span-3') + ' lg:h-full lg:min-h-0 lg:overflow-y-auto pr-2 space-y-8 pb-16 transition-all duration-300'">
+    <div [class]="(hasDetailVisible() ? '' : 'lg:col-span-2') + ' lg:h-full lg:min-h-0 lg:overflow-y-auto pr-2 space-y-8 pb-16 transition-all duration-300'">
 
       <!-- Loading State -->
       @if (isLoading()) {
@@ -229,21 +229,25 @@
       }
     </div>
 
-    <!-- Mobile drawer backdrop (solo si hay detalle visible y está abierto el drawer) -->
-    @if (hasDetailVisible() && isMobileDrawerOpen()) {
-      <div
-        class="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs lg:hidden transition-opacity duration-300 animate-fade-in"
-        (click)="closeMobileDrawer()"
-        aria-hidden="true"
-      ></div>
-    }
-
-    <!-- Product detail sidebar / mobile drawer (solo visible si hasDetailVisible()) -->
+    <!-- Detail: Mobile drawer backdrop + product detail panel (solo visible si hasDetailVisible()) -->
     @if (hasDetailVisible()) {
+      <!-- Backdrop overlay for mobile bottom drawer -->
+      @if (isMobileDrawerOpen()) {
+        <div
+          class="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs lg:hidden animate-fade-in"
+          (click)="closeMobileDrawer()"
+          aria-hidden="true"
+        ></div>
+      }
+
+      <!-- Product detail sidebar / mobile drawer (on desktop: sidebar col-span-1. On mobile: bottom drawer up to header toolbar top-16) -->
       <aside
+        appSwipeDismiss
+        direction="down"
+        (dismiss)="closeMobileDrawer()"
         [class]="
           'fixed inset-x-0 bottom-0 top-16 z-50 flex flex-col overflow-hidden bg-[var(--bg-primary)] rounded-t-3xl shadow-2xl border-t border-[var(--border-color)] ' +
-          'lg:static lg:inset-auto lg:z-auto lg:col-span-1 lg:h-full lg:min-h-0 lg:translate-y-0 lg:pointer-events-auto lg:bg-transparent lg:rounded-none lg:border-t-0 lg:shadow-none lg:overflow-y-auto lg:block ' +
+          'lg:static lg:inset-auto lg:z-auto lg:col-span-1 lg:h-full lg:min-h-0 lg:translate-y-0 lg:pointer-events-auto lg:bg-transparent lg:rounded-none lg:border-t-0 lg:shadow-none lg:overflow-hidden lg:block ' +
           (isMobileDrawerReady() ? 'transition-transform duration-300 ease-out ' : '') +
           (isMobileDrawerOpen()
             ? 'translate-y-0 pointer-events-auto'
@@ -272,36 +276,39 @@
         </div>
 
         <!-- Detail content -->
-        <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-0 lg:overflow-visible">
+        <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-0 lg:overflow-hidden lg:h-full">
           @if (selectedProduct(); as product) {
             <div
-              class="lg:p-5 lg:rounded-3xl lg:bg-[var(--bg-card)] lg:border lg:border-[var(--border-color)] lg:shadow-sm space-y-4 animate-fade-up stagger-1"
+              class="lg:rounded-t-2xl lg:rounded-b-none lg:bg-[var(--bg-card)] lg:border lg:border-b-0 lg:border-[var(--border-color)] lg:shadow-[0_20px_50px_rgba(0,0,0,0.25)] lg:h-full lg:flex lg:flex-col animate-fade-up stagger-1 space-y-4 lg:space-y-0"
             >
-              <!-- Desktop header with edit + delete -->
-              <div class="hidden lg:flex items-center justify-between border-b border-[var(--border-color)] pb-3">
-                <h2 class="text-sm font-bold text-[var(--text-primary)]">Detalles del Producto</h2>
+              <!-- Sticky header: title + edit/delete -->
+              <div class="hidden lg:flex items-center justify-between gap-3 shrink-0 px-5 pt-5 pb-4 border-b border-[var(--border-color)]/40 bg-[var(--bg-card)] rounded-t-2xl z-10">
+                <h2 class="text-[15px] font-bold tracking-tight text-[var(--text-primary)]">Detalles del Producto</h2>
                 <div class="flex items-center gap-2">
                   <button
                     type="button"
                     (click)="openEditProduct(product)"
-                    class="px-3 py-1.5 rounded-lg border border-[var(--border-color)] text-[10px] font-semibold text-[var(--text-secondary)] hover:text-cyan-500 hover:border-cyan-500/50 transition-all flex items-center gap-1.5 cursor-pointer"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-tertiary)] text-xs font-medium text-[var(--text-secondary)] hover:border-cyan-500/40 hover:text-cyan-500 transition-colors cursor-pointer"
                     aria-label="Editar producto"
                   >
-                    <svg lucideEdit class="w-3 h-3"></svg>
-                    <span>Editar</span>
+                    <svg lucideEdit class="w-3.5 h-3.5"></svg>
+                    Editar
                   </button>
                   <button
                     type="button"
                     (click)="openDeletePopup()"
-                    class="px-3 py-1.5 rounded-lg border border-[var(--border-color)] text-[10px] font-semibold text-[var(--text-secondary)] hover:text-rose-500 hover:border-rose-500/50 transition-all flex items-center gap-1.5 cursor-pointer"
+                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-[var(--border-color)] bg-[var(--bg-tertiary)] text-[var(--text-muted)] hover:border-rose-500/40 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
                     aria-label="Eliminar producto"
                   >
-                    <svg lucideTrash2 class="w-3 h-3"></svg>
+                    <svg lucideTrash2 class="w-3.5 h-3.5"></svg>
                   </button>
                 </div>
               </div>
 
-              <!-- Mobile edit + delete buttons -->
+              <!-- Scrollable body (hidden scrollbar) -->
+              <div class="lg:flex-1 lg:min-h-0 lg:overflow-y-auto lg:px-5 lg:pb-5 lg:space-y-4 space-y-4 no-scrollbar">
+
+              <!-- Mobile edit + delete -->
               <div class="lg:hidden flex items-center justify-end gap-2 pb-1">
                 <button
                   type="button"
@@ -321,88 +328,116 @@
                 </button>
               </div>
 
-              @if (product.imageUrl) {
-                <div class="h-40 rounded-2xl overflow-hidden border border-[var(--border-color)] animate-scale-in stagger-2">
-                  <img [src]="product.imageUrl" alt="Imagen del producto" class="w-full h-full object-cover" />
-                </div>
-              } @else {
-                <div
-                  class="h-40 rounded-2xl bg-[var(--bg-tertiary)] border border-dashed border-[var(--border-color)] flex flex-col items-center justify-center gap-2 animate-scale-in stagger-2"
-                >
-                  <svg lucideImage class="w-6 h-6 text-[var(--text-muted)]"></svg>
-                  <span class="text-[10px] font-mono text-[var(--text-muted)]">Sin imagen asignada</span>
-                </div>
-              }
+              <!-- Product image 1:1 with overlays -->
+              <div class="group relative aspect-square w-full overflow-hidden rounded-xl border border-cyan-500/15 bg-gradient-to-b from-[var(--bg-tertiary)] to-[var(--bg-primary)] shadow-inner animate-scale-in stagger-2">
+                @if (product.imageUrl) {
+                  <img [src]="product.imageUrl" [alt]="product.name" class="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.03]" />
+                } @else {
+                  <div class="h-full w-full flex flex-col items-center justify-center gap-2">
+                    <svg lucideImage class="w-10 h-10 text-[var(--text-muted)]"></svg>
+                    <span class="text-[10px] font-mono text-[var(--text-muted)]">Sin imagen asignada</span>
+                  </div>
+                }
 
-              <div class="flex flex-wrap items-center gap-2 animate-fade-up stagger-2">
-                <span
-                  [class]="
-                    'px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold ' +
-                    (product.status === 'OUT_OF_STOCK'
-                      ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20'
-                      : product.status === 'LOW_STOCK'
-                        ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
-                        : 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20')
-                  "
-                >
-                  {{ stockLabel(product) }}
-                </span>
-                <span
-                  class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-cyan-500/10 text-cyan-500 border border-cyan-500/20"
-                >
-                  {{ product.category }}
+                <!-- Vignette gradient -->
+                <div class="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/60 via-black/15 to-transparent"></div>
+
+                <!-- Badges over image -->
+                <div class="absolute top-3 left-3 flex flex-wrap items-center gap-1.5">
+                  <span
+                    [class]="
+                      'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase backdrop-blur-md ' +
+                      (product.status === 'OUT_OF_STOCK'
+                        ? 'border-rose-400/30 bg-rose-950/85 text-rose-400'
+                        : product.status === 'LOW_STOCK'
+                          ? 'border-amber-400/30 bg-amber-950/85 text-amber-400'
+                          : 'border-emerald-400/30 bg-emerald-950/85 text-emerald-400')
+                    "
+                  >
+                    <span
+                      [class]="
+                        'h-1.5 w-1.5 rounded-full ' +
+                        (product.status === 'OUT_OF_STOCK' ? 'bg-rose-400' : product.status === 'LOW_STOCK' ? 'bg-amber-400' : 'bg-emerald-400')
+                      "
+                    ></span>
+                    {{ stockLabel(product) }}
+                  </span>
+                  <span class="inline-flex items-center gap-1 rounded-full border border-cyan-400/25 bg-cyan-950/85 px-2.5 py-1 text-[11px] font-medium text-cyan-300 backdrop-blur-md">
+                    {{ product.category }}
+                  </span>
+                </div>
+
+                <!-- SKU code bottom-right -->
+                <span class="absolute right-3 bottom-3 rounded-md border border-white/10 bg-black/70 px-2 py-0.5 font-mono text-[11px] font-semibold text-cyan-300 backdrop-blur-md">
+                  {{ product.code }}
                 </span>
               </div>
 
-              <!-- Lista de detalles con iconos antes de los labels -->
-              <dl class="space-y-3 animate-fade-up stagger-3">
-                <div class="flex items-center justify-between gap-4 py-1 border-b border-[var(--border-color)]/40">
-                  <dt class="text-xs text-[var(--text-muted)] flex items-center gap-2">
-                    <svg lucideTag class="w-3.5 h-3.5 text-cyan-500 shrink-0"></svg>
-                    <span>Referencia</span>
-                  </dt>
-                  <dd class="text-xs font-semibold text-[var(--text-primary)] text-right truncate max-w-[170px]">{{ product.name }}</dd>
+              <!-- Product name hero -->
+              <div class="space-y-3 animate-fade-up stagger-2">
+                <div>
+                  <div class="mb-1 flex items-center gap-1.5 text-[11px] font-medium tracking-wide text-[var(--text-muted)] uppercase">
+                    <svg lucideTag class="w-3 h-3 text-cyan-400"></svg>
+                    <span>Referencia del producto</span>
+                  </div>
+                  <h3 class="text-[22px] leading-snug font-extrabold tracking-tight text-[var(--text-primary)]">{{ product.name }}</h3>
                 </div>
-                <div class="flex items-center justify-between gap-4 py-1 border-b border-[var(--border-color)]/40">
-                  <dt class="text-xs text-[var(--text-muted)] flex items-center gap-2">
-                    <svg lucideBarcode class="w-3.5 h-3.5 text-cyan-500 shrink-0"></svg>
-                    <span>Código</span>
-                  </dt>
-                  <dd class="text-xs font-mono font-semibold text-[var(--text-primary)]">{{ product.code }}</dd>
+
+                <!-- Sale price highlight card -->
+                <div class="relative overflow-hidden rounded-xl border border-emerald-400/25 bg-gradient-to-br from-emerald-500/[0.11] via-[var(--bg-tertiary)] to-[var(--bg-primary)] px-4 py-3.5">
+                  <div class="flex items-end justify-between gap-3">
+                    <div>
+                      <span class="mb-1 inline-flex items-center gap-1 text-[11px] font-semibold tracking-wider text-emerald-400/85 uppercase">
+                        <svg lucideDollarSign class="w-3.5 h-3.5 text-emerald-400"></svg>
+                        Precio de Venta
+                      </span>
+                      <p class="font-mono text-[28px] leading-none font-extrabold tracking-tight text-emerald-400">${{ product.unitPrice | number }}</p>
+                    </div>
+                    @if (product.purchasePrice > 0 && product.unitPrice > product.purchasePrice) {
+                      <div class="text-right">
+                        <span class="inline-block rounded-md border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 font-mono text-[11px] font-semibold text-emerald-300">
+                          +{{ ((product.unitPrice - product.purchasePrice) / product.purchasePrice * 100) | number:'1.0-0' }}% margen
+                        </span>
+                        <p class="mt-1 text-[11px] text-[var(--text-muted)]">
+                          Utilidad ${{ (product.unitPrice - product.purchasePrice) | number }}
+                        </p>
+                      </div>
+                    }
+                  </div>
                 </div>
-                <div class="flex items-center justify-between gap-4 py-1 border-b border-[var(--border-color)]/40">
-                  <dt class="text-xs text-[var(--text-muted)] flex items-center gap-2">
-                    <svg lucideBoxes class="w-3.5 h-3.5 text-cyan-500 shrink-0"></svg>
-                    <span>Cantidad en Stock</span>
-                  </dt>
-                  <dd class="text-xs font-mono font-semibold text-[var(--text-primary)]">
-                    {{ product.stock }} {{ product.unit }}
-                  </dd>
+              </div>
+
+              <!-- Inventory details -->
+              <div class="divide-y divide-[var(--border-color)]/60 border-t border-[var(--border-color)] pt-1 animate-fade-up stagger-3">
+                <div class="flex items-center justify-between py-2.5 text-xs">
+                  <span class="flex items-center gap-2.5 text-[var(--text-muted)]">
+                    <svg lucideBarcode class="w-3.5 h-3.5 text-cyan-400/90"></svg>
+                    Código
+                  </span>
+                  <span class="font-mono text-[13px] font-semibold text-[var(--text-primary)]">{{ product.code }}</span>
                 </div>
-                <div class="flex items-center justify-between gap-4 py-1 border-b border-[var(--border-color)]/40">
-                  <dt class="text-xs text-[var(--text-muted)] flex items-center gap-2">
-                    <svg lucideDollarSign class="w-3.5 h-3.5 text-emerald-500 shrink-0"></svg>
-                    <span>Precio Venta</span>
-                  </dt>
-                  <dd class="text-xs font-mono font-bold text-emerald-500">${{ product.unitPrice }}</dd>
+                <div class="flex items-center justify-between py-2.5 text-xs">
+                  <span class="flex items-center gap-2.5 text-[var(--text-muted)]">
+                    <svg lucideBoxes class="w-3.5 h-3.5 text-cyan-400/90"></svg>
+                    Cantidad en Stock
+                  </span>
+                  <span class="font-mono text-[13px] font-semibold text-[var(--text-primary)]">{{ product.stock }} {{ product.unit }}</span>
                 </div>
-                <div class="flex items-center justify-between gap-4 py-1 border-b border-[var(--border-color)]/40">
-                  <dt class="text-xs text-[var(--text-muted)] flex items-center gap-2">
-                    <svg lucideShoppingCart class="w-3.5 h-3.5 text-cyan-500 shrink-0"></svg>
-                    <span>Precio Compra</span>
-                  </dt>
-                  <dd class="text-xs font-mono font-semibold text-[var(--text-primary)]">${{ product.purchasePrice }}</dd>
+                <div class="flex items-center justify-between py-2.5 text-xs">
+                  <span class="flex items-center gap-2.5 text-[var(--text-muted)]">
+                    <svg lucideShoppingCart class="w-3.5 h-3.5 text-cyan-400/90"></svg>
+                    Precio Compra
+                  </span>
+                  <span class="font-mono text-[13px] font-semibold text-[var(--text-secondary)]">${{ product.purchasePrice | number }}</span>
                 </div>
-                <div class="flex items-center justify-between gap-4 py-1">
-                  <dt class="text-xs text-[var(--text-muted)] flex items-center gap-2">
-                    <svg lucideArrowDownToLine class="w-3.5 h-3.5 text-cyan-500 shrink-0"></svg>
-                    <span>Mínimo Compra</span>
-                  </dt>
-                  <dd class="text-xs font-mono font-semibold text-[var(--text-primary)]">
-                    {{ product.minPurchase }} {{ product.unit }}
-                  </dd>
+                <div class="flex items-center justify-between pt-2.5 pb-0.5 text-xs">
+                  <span class="flex items-center gap-2.5 text-[var(--text-muted)]">
+                    <svg lucideArrowDownToLine class="w-3.5 h-3.5 text-cyan-400/90"></svg>
+                    Mínimo Compra
+                  </span>
+                  <span class="font-mono text-[13px] font-semibold text-[var(--text-primary)]">{{ product.minPurchase }} {{ product.unit }}</span>
                 </div>
-              </dl>
+              </div>
 
               @if (product.status === 'LOW_STOCK') {
                 <div
@@ -412,6 +447,7 @@
                   <span class="text-[11px] text-amber-500">Este producto está por agotarse</span>
                 </div>
               }
+              </div><!-- /scrollable body -->
             </div>
           }
         </div>
@@ -432,7 +468,7 @@
   <!-- Modal: Nueva Categoría -->
   @if (isCategoryModalOpen()) {
     <div
-      class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      class="fixed inset-0 !m-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
       [class.animate-fade-in]="!categoryModalAnimatingOut()"
       [class.animate-fade-out]="categoryModalAnimatingOut()"
       (click)="onCategoryModalBackdrop($event)"
@@ -484,31 +520,41 @@
   <!-- Modal: Añadir / Editar Producto -->
   @if (isProductModalOpen()) {
     <div
-      class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto"
+      class="fixed inset-0 !m-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4"
       [class.animate-fade-in]="!productModalAnimatingOut()"
       [class.animate-fade-out]="productModalAnimatingOut()"
       (click)="onProductModalBackdrop($event)"
     >
       <div
-        class="bg-[var(--bg-card)] rounded-3xl border border-[var(--border-color)] shadow-2xl w-full max-w-md p-6 space-y-5 my-8"
-        [class.animate-modal-in]="!productModalAnimatingOut()"
-        [class.animate-modal-out]="productModalAnimatingOut()"
+        appSwipeDismiss
+        direction="down"
+        (dismiss)="closeProductModal()"
+        class="bg-[var(--bg-card)] rounded-t-3xl sm:rounded-3xl border-0 sm:border sm:border-[var(--border-color)] shadow-2xl w-full max-h-[92dvh] sm:max-h-[92vh] sm:max-w-md flex flex-col overflow-hidden"
+        [class.animate-drawer-in]="!productModalAnimatingOut()"
+        [class.animate-drawer-out]="productModalAnimatingOut()"
       >
-        <div class="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
-          <h3 class="text-lg font-bold text-[var(--text-primary)]">
+        <!-- Mobile Drawer Pull Indicator -->
+        <div class="sm:hidden pt-2.5 pb-1 flex justify-center bg-[var(--bg-secondary)]/80 shrink-0">
+          <div class="w-10 h-1 rounded-full bg-[var(--border-color)]"></div>
+        </div>
+
+        <!-- Header -->
+        <div class="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-[var(--border-color)] flex items-center justify-between bg-[var(--bg-secondary)]/80 shrink-0">
+          <h3 class="text-base sm:text-lg font-bold text-[var(--text-primary)]">
             {{ isEditing() ? 'Editar Producto' : 'Añadir Nuevo Producto' }}
           </h3>
           <button
             type="button"
             (click)="closeProductModal()"
             aria-label="Cerrar"
-            class="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+            class="p-2 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer"
           >
             <svg lucideX class="w-4 h-4"></svg>
           </button>
         </div>
 
-        <form (ngSubmit)="saveProduct()" class="space-y-4">
+        <form (ngSubmit)="saveProduct()" class="flex-1 flex flex-col min-h-0">
+        <div class="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-4">
           <div class="space-y-1">
             <label class="text-xs font-semibold text-[var(--text-primary)]" for="product-reference">
               Referencia
@@ -641,7 +687,7 @@
               <button
                 type="button"
                 (click)="isPhotoModalOpen.set(true)"
-                class="w-full h-28 rounded-xl border-2 border-dashed border-[var(--border-color)] bg-[var(--bg-tertiary)] flex items-center justify-center cursor-pointer hover:border-cyan-500/50 transition-all overflow-hidden"
+                class="aspect-square w-28 rounded-xl border-2 border-dashed border-[var(--border-color)] bg-[var(--bg-tertiary)] flex items-center justify-center cursor-pointer hover:border-cyan-500/50 transition-all overflow-hidden"
               >
                 @if (productImageUrl()) {
                   <img [src]="productImageUrl()" alt="Imagen del producto" class="w-full h-full object-cover" />
@@ -670,7 +716,10 @@
             </div>
           </div>
 
-          <div class="pt-3 flex gap-3">
+        </div><!-- /scrollable content -->
+
+        <!-- Sticky footer -->
+        <div class="px-4 sm:px-6 py-3.5 sm:py-4 border-t border-[var(--border-color)] bg-[var(--bg-secondary)]/90 backdrop-blur-md flex gap-3 shrink-0 pb-[max(0.875rem,env(safe-area-inset-bottom))]">
             <button
               type="button"
               (click)="closeProductModal()"
@@ -685,7 +734,7 @@
             >
               Guardar
             </button>
-          </div>
+        </div>
         </form>
       </div>
     </div>
@@ -694,7 +743,7 @@
   <!-- Delete confirmation popup -->
   @if (deletePopupOpen()) {
     <div
-      class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      class="fixed inset-0 !m-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
       [class.animate-fade-in]="!deletePopupAnimatingOut()"
       [class.animate-fade-out]="deletePopupAnimatingOut()"
       (click)="onDeleteBackdrop($event)"
@@ -783,27 +832,10 @@
 
       <div class="p-4 rounded-2xl bg-[var(--bg-tertiary)]/50 border border-[var(--border-color)] space-y-2.5">
         <p class="text-[10px] font-bold uppercase text-[var(--text-muted)] flex items-center gap-1.5">
-          <svg lucideImage class="w-3 h-3 text-cyan-500"></svg> Detalle del Producto
-        </p>
-        <div class="rounded-xl overflow-hidden border border-[var(--border-color)] h-32">
-          <img
-            [src]="ctx.selectedUrl"
-            alt="Vista previa"
-            class="w-full h-full object-cover select-none"
-            [style.transform]="ctx.imgStyle.transform"
-            [style.filter]="ctx.imgStyle.filter"
-            [style.transition]="ctx.imgStyle.transition"
-            draggable="false"
-          />
-        </div>
-      </div>
-
-      <div class="p-4 rounded-2xl bg-[var(--bg-tertiary)]/50 border border-[var(--border-color)] space-y-2.5">
-        <p class="text-[10px] font-bold uppercase text-[var(--text-muted)] flex items-center gap-1.5">
           <svg lucidePackage class="w-3 h-3 text-cyan-500"></svg> Tarjeta de Catálogo
         </p>
         <div class="p-3 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] space-y-2">
-          <div class="h-20 rounded-lg overflow-hidden bg-[var(--bg-tertiary)]">
+          <div class="aspect-square rounded-lg overflow-hidden bg-[var(--bg-tertiary)]">
             <img
               [src]="ctx.selectedUrl"
               alt="Vista previa"

@@ -544,6 +544,9 @@
 
   <!-- ALL PRODUCTS BOTTOM DRAWER (MOBILE) -->
   <div
+    appSwipeDismiss
+    direction="down"
+    (dismiss)="closeAllProductsDrawer()"
     [class]="
       'fixed inset-x-0 bottom-0 top-16 z-50 flex flex-col overflow-hidden bg-[var(--bg-primary)] rounded-t-3xl shadow-2xl border-t border-[var(--border-color)] md:hidden ' +
       (isAllProductsDrawerReady() ? 'transition-transform duration-300 ease-out ' : '') +

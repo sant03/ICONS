@@ -113,6 +113,7 @@ export class DispatchesView implements OnInit {
 
   protected readonly searchTerm = signal('');
   protected readonly statusFilter = signal<StatusFilter>('ALL');
+  protected readonly driverSearchTerm = signal('');
 
   protected readonly assignModalDispatch = signal<DispatchResponse | null>(null);
   protected readonly assignModalAnimatingOut = signal(false);
@@ -183,6 +184,26 @@ export class DispatchesView implements OnInit {
   protected readonly currentDriver = computed(() =>
     this.drivers().find((d) => d.id === this.selectedDriverId()) ?? this.drivers()[0],
   );
+
+  protected readonly filteredDrivers = computed(() => {
+    const q = this.driverSearchTerm().toLowerCase().trim();
+    if (!q) return this.drivers();
+    return this.drivers().filter((d) =>
+      d.name.toLowerCase().includes(q) ||
+      d.vehicle.toLowerCase().includes(q) ||
+      d.zone.toLowerCase().includes(q) ||
+      (d.plate ?? '').toLowerCase().includes(q)
+    );
+  });
+
+  protected clearDriverSearch(): void {
+    this.driverSearchTerm.set('');
+  }
+
+  protected clearFilters(): void {
+    this.searchTerm.set('');
+    this.statusFilter.set('ALL');
+  }
 
   protected readonly totalCount = computed(() => this.dispatches().length);
 

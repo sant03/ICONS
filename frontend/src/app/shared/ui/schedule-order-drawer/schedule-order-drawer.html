@@ -2,6 +2,9 @@
   @let c = ctx();
   <!-- Floating Right Sidebar Panel — no overlay -->
   <aside
+    appSwipeDismiss
+    direction="right"
+    (dismiss)="close()"
     class="fixed top-0 right-0 z-50 w-full max-w-md h-full bg-[var(--bg-card)] border-l border-[var(--border-color)] shadow-2xl flex flex-col animate-fade-down"
     style="animation-duration: 200ms"
   >

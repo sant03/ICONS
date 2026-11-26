@@ -13,6 +13,7 @@ import {
 } from '@lucide/angular';
 import { NotificationItem, NotificationType, ViewMode } from '../../core/models/types';
 import { AppStore } from '../../core/state/app-store';
+import { SwipeDismissDirective } from '../../shared/directives/swipe-dismiss.directive';
 
 type FilterType = 'all' | 'unread';
 
@@ -30,6 +31,7 @@ type FilterType = 'all' | 'unread';
     LucideRefreshCw,
     LucideTrash2,
     LucideExternalLink,
+    SwipeDismissDirective,
   ],
   templateUrl: './notifications-sidebar.html',
 })

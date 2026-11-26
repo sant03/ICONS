@@ -20,6 +20,7 @@ import {
 } from '@lucide/angular';
 import { ViewMode } from '../../core/models/types';
 import { AppStore } from '../../core/state/app-store';
+import { SwipeDismissDirective } from '../../shared/directives/swipe-dismiss.directive';
 
 interface MenuItem {
   id: ViewMode;
@@ -39,6 +40,7 @@ interface MenuItem {
     LucideLogOut,
     LucideX,
     LucideLayoutGrid,
+    SwipeDismissDirective,
   ],
   templateUrl: './sidebar.html',
 })

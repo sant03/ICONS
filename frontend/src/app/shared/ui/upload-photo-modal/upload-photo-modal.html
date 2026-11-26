@@ -6,6 +6,9 @@
     (click)="$event.target === $event.currentTarget && close()"
   >
     <div
+      appSwipeDismiss
+      direction="down"
+      (dismiss)="close()"
       class="bg-[var(--bg-card)] rounded-none sm:rounded-3xl border-0 sm:border sm:border-[var(--border-color)] shadow-2xl w-full h-[100dvh] sm:h-auto sm:max-h-[92vh] sm:max-w-4xl flex flex-col overflow-hidden"
       [class.animate-drawer-in]="!animatingOut()"
       [class.animate-drawer-out]="animatingOut()"

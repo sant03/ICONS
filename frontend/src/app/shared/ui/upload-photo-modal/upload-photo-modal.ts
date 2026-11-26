@@ -27,6 +27,7 @@ import {
 } from '@lucide/angular';
 import { AvatarConfig } from '../../../core/models/types';
 import { StorageApi } from '../../../core/api/storage.api';
+import { SwipeDismissDirective } from '../../directives/swipe-dismiss.directive';
 
 export const DEFAULT_AVATAR_CONFIG: AvatarConfig = {
   zoom: 1,
@@ -75,6 +76,7 @@ const DEFAULT_AVATAR_URL =
   imports: [
     CommonModule,
     FormsModule,
+    SwipeDismissDirective,
     LucideCheck,
     LucideFileImage,
     LucideImage,

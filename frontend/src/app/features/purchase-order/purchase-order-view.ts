@@ -29,6 +29,7 @@ import {
 import { CustomSelectComponent } from '../../shared/ui/custom-select/custom-select';
 import { CustomDatePickerComponent } from '../../shared/ui/custom-datepicker/custom-datepicker';
 import { ScheduleOrderDrawer } from '../../shared/ui/schedule-order-drawer/schedule-order-drawer';
+import { SwipeDismissDirective } from '../../shared/directives/swipe-dismiss.directive';
 import { AppStore } from '../../core/state/app-store';
 import { PurchaseOrdersApi, CreatePurchaseOrderRequest } from '../../core/api/purchase-orders.api';
 import { SuppliersApi, SupplierResponse } from '../../core/api/suppliers.api';
@@ -59,6 +60,7 @@ interface CatalogProduct {
     CustomSelectComponent,
     CustomDatePickerComponent,
     ScheduleOrderDrawer,
+    SwipeDismissDirective,
     LucideAlertCircle,
     LucideArrowLeft,
     LucideCheckCircle,

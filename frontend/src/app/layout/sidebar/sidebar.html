@@ -1,4 +1,7 @@
 <aside
+  appSwipeDismiss
+  direction="left"
+  (dismiss)="store.closeSidebar()"
   [class]="
     'fixed inset-y-0 left-0 z-50 w-72 lg:relative lg:z-20 border-r border-[var(--border-color)] bg-[var(--bg-secondary)] flex-col justify-between shrink-0 h-full shadow-2xl lg:shadow-none lg:transition-all lg:duration-350 lg:ease-[cubic-bezier(0.34,1.56,0.64,1)] ' +
     (!isVisibleOnMobile() ? 'hidden lg:flex ' : 'flex ') +
@@ -21,10 +24,7 @@
         </div>
         <div class="flex items-center gap-1.5 min-w-0">
           <span class="font-bold tracking-tight text-sm text-[var(--text-primary)] truncate">
-            Sistema de Control
-          </span>
-          <span class="text-[9px] font-semibold px-1.5 py-0.2 rounded-full bg-cyan-500/10 text-cyan-500 border border-cyan-500/20 shrink-0">
-            PRO
+            ICONS
           </span>
         </div>
       </div>

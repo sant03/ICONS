@@ -27,36 +27,18 @@ services:
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
 
-  minio:
-    image: minio/minio:latest
-    container_name: icons-minio
-    command: server /data --console-address ":9001"
+  s3mock:
+    image: adobe/s3mock:latest
+    container_name: icons-s3mock
     ports:
-      - "9000:9000"   # S3 API
-      - "9001:9001"   # Web Console
+      - "9000:9090"   # S3 API
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+      - com.adobe.testing.s3mock.store.initial-buckets=icons
+      - com.adobe.testing.s3mock.store.retain-files-on-exit=true
+      - com.adobe.testing.s3mock.store.root=/s3mockroot
     volumes:
-      - icons-minio-data:/data
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  minio-init:
-    image: minio/mc:latest
-    depends_on:
-      minio:
-        condition: service_healthy
-    entrypoint: >
-      /bin/sh -c "
-      mc alias set local http://minio:9000 minioadmin minioadmin &&
-      mc mb --ignore-existing local/icons &&
-      mc anonymous set download local/icons
-      "
+      - icons-s3-data:/s3mockroot
 
 volumes:
   icons-mysql-data:
-  icons-minio-data:
+  icons-s3-data:

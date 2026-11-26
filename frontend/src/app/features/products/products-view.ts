@@ -1,4 +1,5 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CustomSelectComponent } from '../../shared/ui/custom-select/custom-select';
 import {
@@ -25,14 +26,17 @@ import {
 } from '@lucide/angular';
 import { AvatarConfig, ProductCatalogItem, ProductUnit } from '../../core/models/types';
 import { UploadPhotoModalComponent } from '../../shared/ui/upload-photo-modal/upload-photo-modal';
+import { SwipeDismissDirective } from '../../shared/directives/swipe-dismiss.directive';
 import { AppStore } from '../../core/state/app-store';
 import { ProductsApi, ProductResponse, CategoriesApi, CategoryResponse } from '../../core/api';
 
 @Component({
   selector: 'app-products-view',
   imports: [
+    DecimalPipe,
     FormsModule,
     CustomSelectComponent,
+    SwipeDismissDirective,
     UploadPhotoModalComponent,
     LucideAlertCircle,
     LucideAlertTriangle,
