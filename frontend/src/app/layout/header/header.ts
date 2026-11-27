@@ -14,6 +14,7 @@ import {
 } from '@lucide/angular';
 import { AppStore } from '../../core/state/app-store';
 import { AuthService } from '../../core/auth/auth.service';
+import { StorageUrlPipe } from '../../shared/pipes/resolve-storage-url.pipe';
 
 @Component({
   selector: 'app-header',
@@ -28,6 +29,7 @@ import { AuthService } from '../../core/auth/auth.service';
     LucideChevronDown,
     LucideLogOut,
     LucideX,
+    StorageUrlPipe,
   ],
   templateUrl: './header.html',
 })

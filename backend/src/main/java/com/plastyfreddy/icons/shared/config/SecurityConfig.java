@@ -2,7 +2,6 @@ package com.plastyfreddy.icons.shared.config;
 
 import com.plastyfreddy.icons.shared.security.UserStatusFilter;
 import com.plastyfreddy.icons.shared.tenant.TenantFilter;
-import com.plastyfreddy.icons.shared.config.StorageProperties;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,19 +36,16 @@ public class SecurityConfig {
     private final CorsConfigurationSource corsConfigurationSource;
     private final TenantFilter tenantFilter;
     private final UserStatusFilter userStatusFilter;
-    private final StorageProperties storageProperties;
 
     @Value("${icons.security.jwt.secret}")
     private String jwtSecret;
 
     public SecurityConfig(CorsConfigurationSource corsConfigurationSource,
                           TenantFilter tenantFilter,
-                          UserStatusFilter userStatusFilter,
-                          StorageProperties storageProperties) {
+                          UserStatusFilter userStatusFilter) {
         this.corsConfigurationSource = corsConfigurationSource;
         this.tenantFilter = tenantFilter;
         this.userStatusFilter = userStatusFilter;
-        this.storageProperties = storageProperties;
     }
 
     @Bean
@@ -60,7 +56,7 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .headers(headers -> headers
                 .contentSecurityPolicy(csp -> csp.policyDirectives(
-                    "default-src 'self'; img-src 'self' " + storageProperties.getPublicUrl()))
+                    "default-src 'self'; img-src 'self' data: blob:; connect-src 'self'"))
                 .referrerPolicy(ref -> ref.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
                 .frameOptions(frame -> frame.deny())
             )
@@ -70,6 +66,7 @@ public class SecurityConfig {
                     "/auth/refresh", "/auth/logout",
                     "/auth/password-reset/**"
                 ).permitAll()
+                .requestMatchers("/storage/files/**").permitAll()
                 .requestMatchers("/docs/**").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()

@@ -254,7 +254,7 @@
             >
               @if (selected()?.avatarUrl) {
                 <img
-                  [src]="selected()?.avatarUrl"
+                  [src]="selected()?.avatarUrl | storageUrl"
                   [alt]="selected()?.name"
                   class="w-full h-full object-cover"
                 />
@@ -445,7 +445,7 @@
               class="w-20 h-20 rounded-full border-2 border-dashed border-[var(--border-color)] bg-[var(--bg-tertiary)] flex items-center justify-center cursor-pointer hover:border-cyan-500/50 transition-all overflow-hidden shrink-0"
             >
               @if (draft().avatarUrl) {
-                <img [src]="draft().avatarUrl" [alt]="draft().name" class="w-full h-full object-cover" />
+                <img [src]="draft().avatarUrl | storageUrl" [alt]="draft().name" class="w-full h-full object-cover" />
               } @else {
                 <svg lucideCamera class="w-5 h-5 text-[var(--text-muted)] group-hover:text-cyan-500 transition-colors"></svg>
               }
@@ -551,7 +551,7 @@
 
 <app-upload-photo-modal
   [isOpen]="isPhotoModalOpen()"
-  [imageUrl]="draft().avatarUrl ?? ''"
+  [imageUrl]="(draft().avatarUrl | storageUrl) ?? ''"
   folder="customers"
   title="Personalizar Avatar"
   subtitle="Selecciona y ajusta el avatar del cliente."

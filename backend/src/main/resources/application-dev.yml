@@ -26,7 +26,7 @@ icons:
     bucket: icons
     access-key: minioadmin
     secret-key: minioadmin
-    public-url: http://localhost:9000/icons
+    public-url: /api/v1/storage/files
 
 logging:
   level:

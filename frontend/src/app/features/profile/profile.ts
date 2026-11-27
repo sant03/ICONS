@@ -21,6 +21,7 @@ import {
 import { AuthApi, ProfileResponse, UpdateProfileRequest } from '../../core/api/auth.api';
 import { AvatarConfig } from '../../core/models/types';
 import { UploadPhotoModalComponent, FILTER_OPTIONS } from '../../shared/ui/upload-photo-modal/upload-photo-modal';
+import { StorageUrlPipe } from '../../shared/pipes/resolve-storage-url.pipe';
 import { firstValueFrom } from 'rxjs';
 
 @Component({
@@ -29,6 +30,7 @@ import { firstValueFrom } from 'rxjs';
     FormsModule,
     CustomDatePickerComponent,
     UploadPhotoModalComponent,
+    StorageUrlPipe,
     LucideBell,
     LucideBriefcase,
     LucideCalendar,

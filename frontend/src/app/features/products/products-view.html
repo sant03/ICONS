@@ -331,7 +331,7 @@
               <!-- Product image 1:1 with overlays -->
               <div class="group relative aspect-square w-full overflow-hidden rounded-xl border border-cyan-500/15 bg-gradient-to-b from-[var(--bg-tertiary)] to-[var(--bg-primary)] shadow-inner animate-scale-in stagger-2">
                 @if (product.imageUrl) {
-                  <img [src]="product.imageUrl" [alt]="product.name" class="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.03]" />
+                  <img [src]="product.imageUrl | storageUrl" [alt]="product.name" class="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.03]" />
                 } @else {
                   <div class="h-full w-full flex flex-col items-center justify-center gap-2">
                     <svg lucideImage class="w-10 h-10 text-[var(--text-muted)]"></svg>
@@ -811,7 +811,7 @@
 
   <app-upload-photo-modal
     [isOpen]="isPhotoModalOpen()"
-    [imageUrl]="productImageUrl() ?? ''"
+    [imageUrl]="(productImageUrl() | storageUrl) ?? ''"
     folder="products"
     title="Personalizar Imagen"
     subtitle="Selecciona y ajusta la imagen de tu producto."

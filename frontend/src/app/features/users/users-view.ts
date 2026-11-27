@@ -27,6 +27,7 @@ import { AppStore } from '../../core/state/app-store';
 import { AuthService } from '../../core/auth/auth.service';
 import { UsersApi, UserResponse } from '../../core/api';
 import { UploadPhotoModalComponent, FILTER_OPTIONS } from '../../shared/ui/upload-photo-modal/upload-photo-modal';
+import { StorageUrlPipe } from '../../shared/pipes/resolve-storage-url.pipe';
 import { SwipeDismissDirective } from '../../shared/directives/swipe-dismiss.directive';
 
 type GroupFilter = 'Todos' | StaffGroup;
@@ -48,6 +49,7 @@ type ActionPopup = 'restrict' | 'unrestrict' | 'suspend' | 'unsuspend' | 'deacti
     ScrollRevealDirective,
     SwipeDismissDirective,
     UploadPhotoModalComponent,
+    StorageUrlPipe,
     LucideAlertCircle,
     LucideAlertTriangle,
     LucideCamera,

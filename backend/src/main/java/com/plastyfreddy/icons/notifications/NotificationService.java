@@ -17,6 +17,7 @@ import nl.martijndwars.webpush.PushService;
 import org.apache.http.HttpResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -97,11 +98,17 @@ public class NotificationService {
             .build();
         notificationRepository.save(notification);
 
+        sendPushAsync(tenantId, userId, title, description, link, type.name().toLowerCase());
+    }
+
+    @Async
+    public void sendPushAsync(Long tenantId, Long userId,
+                              String title, String description, String link, String type) {
         List<PushSubscription> subscriptions = pushSubscriptionRepository
             .findByTenantIdAndUserId(tenantId, userId);
 
         for (PushSubscription sub : subscriptions) {
-            sendPush(sub, title, description, link, type.name().toLowerCase());
+            sendPush(sub, title, description, link, type);
         }
     }
 

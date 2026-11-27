@@ -108,7 +108,7 @@
         class="flex items-center gap-2.5 pl-2 pr-2 py-1 rounded-xl hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer border border-transparent hover:border-[var(--border-color)]"
       >
         @if (avatarUrl()) {
-          <img [src]="avatarUrl()" alt="Avatar" class="w-8 h-8 rounded-full object-cover shadow-sm ring-2 ring-cyan-500/20" />
+          <img [src]="avatarUrl() | storageUrl" alt="Avatar" class="w-8 h-8 rounded-full object-cover shadow-sm ring-2 ring-cyan-500/20" />
         } @else {
           <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shadow-sm ring-2 ring-cyan-500/20">
             {{ initials() }}

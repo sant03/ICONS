@@ -52,7 +52,7 @@
             >
               @if (p.avatarUrl) {
                 <img
-                  [src]="p.avatarUrl"
+                  [src]="p.avatarUrl | storageUrl"
                   [alt]="p.fullName"
                   class="w-full h-full object-cover select-none group-hover:scale-105 transition-transform duration-300"
                   [style.transform]="avatarTransform(p.avatarConfig)"
@@ -336,7 +336,7 @@
     <!-- Modal de personalización de foto -->
     <app-upload-photo-modal
       [isOpen]="isPhotoModalOpen()"
-      [imageUrl]="p.avatarUrl ?? ''"
+      [imageUrl]="(p.avatarUrl | storageUrl) ?? ''"
       [imageConfig]="p.avatarConfig"
       folder="avatars"
       title="Personalizar Foto de Perfil"

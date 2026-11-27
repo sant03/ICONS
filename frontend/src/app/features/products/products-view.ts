@@ -27,6 +27,7 @@ import {
 import { AvatarConfig, ProductCatalogItem, ProductUnit } from '../../core/models/types';
 import { UploadPhotoModalComponent } from '../../shared/ui/upload-photo-modal/upload-photo-modal';
 import { SwipeDismissDirective } from '../../shared/directives/swipe-dismiss.directive';
+import { StorageUrlPipe } from '../../shared/pipes/resolve-storage-url.pipe';
 import { AppStore } from '../../core/state/app-store';
 import { ProductsApi, ProductResponse, CategoriesApi, CategoryResponse } from '../../core/api';
 
@@ -38,6 +39,7 @@ import { ProductsApi, ProductResponse, CategoriesApi, CategoryResponse } from '.
     CustomSelectComponent,
     SwipeDismissDirective,
     UploadPhotoModalComponent,
+    StorageUrlPipe,
     LucideAlertCircle,
     LucideAlertTriangle,
     LucideArrowDownToLine,

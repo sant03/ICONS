@@ -21,6 +21,7 @@ import { AvatarConfig, Supplier } from '../../core/models/types';
 import { AppStore } from '../../core/state/app-store';
 import { SuppliersApi, SupplierResponse } from '../../core/api';
 import { UploadPhotoModalComponent } from '../../shared/ui/upload-photo-modal/upload-photo-modal';
+import { StorageUrlPipe } from '../../shared/pipes/resolve-storage-url.pipe';
 import { SwipeDismissDirective } from '../../shared/directives/swipe-dismiss.directive';
 
 @Component({
@@ -29,6 +30,7 @@ import { SwipeDismissDirective } from '../../shared/directives/swipe-dismiss.dir
     FormsModule,
     SwipeDismissDirective,
     UploadPhotoModalComponent,
+    StorageUrlPipe,
     LucideAlertTriangle,
     LucideBuilding,
     LucideCamera,

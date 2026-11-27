@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
@@ -53,7 +54,7 @@ public class StorageService {
             throw new BusinessException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al leer el archivo");
         }
 
-        String url = storageProperties.getPublicUrl() + "/" + key;
+        String url = "/api/v1/storage/files/" + key;
 
         return new UploadResponse(
             url,
