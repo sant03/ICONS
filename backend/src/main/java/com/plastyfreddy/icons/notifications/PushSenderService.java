@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nl.martijndwars.webpush.PushService;
 import org.apache.http.HttpResponse;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,9 +21,8 @@ public class PushSenderService {
     private final PushService pushService;
     private final ObjectMapper objectMapper;
 
-    @Async
-    public void sendPushAsync(Long tenantId, Long userId,
-                              String title, String description, String link, String type) {
+    public void sendPush(Long tenantId, Long userId,
+                         String title, String description, String link, String type) {
         List<PushSubscription> subscriptions = pushSubscriptionRepository
             .findByTenantIdAndUserId(tenantId, userId);
 

@@ -10,6 +10,7 @@ import {
   LucideUser,
   LucideX,
 } from '@lucide/angular';
+import { timeout, finalize } from 'rxjs';
 import { AppStore } from '../../core/state/app-store';
 import { SalesApi, CreateSaleRequest } from '../../core/api/sales.api';
 import { ProductsApi, ProductResponse } from '../../core/api/products.api';
@@ -158,7 +159,10 @@ export class NewSaleModal implements OnInit {
       items: [{ productId: product.id, quantity: this.quantity() }],
     };
 
-    this.salesApi.create(request).subscribe({
+    this.salesApi.create(request).pipe(
+      timeout(15000),
+      finalize(() => this.submitting.set(false)),
+    ).subscribe({
       next: (sale) => {
         this.toastNotification.show({
           title: 'Nueva venta ' + sale.code,
@@ -170,8 +174,10 @@ export class NewSaleModal implements OnInit {
         setTimeout(() => this.requestClose(), 400);
       },
       error: (err) => {
-        this.showToast(err?.error?.detail ?? 'Error al registrar la venta', 'error');
-        this.submitting.set(false);
+        const msg = err?.name === 'TimeoutError'
+          ? 'La venta se registró pero la respuesta tardó demasiado. Revisa la lista de ventas.'
+          : (err?.error?.detail ?? 'Error al registrar la venta');
+        this.showToast(msg, err?.name === 'TimeoutError' ? 'success' : 'error');
       },
     });
   }

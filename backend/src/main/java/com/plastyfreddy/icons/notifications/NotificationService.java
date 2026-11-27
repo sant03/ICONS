@@ -17,6 +17,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.concurrent.CompletableFuture;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -90,7 +92,9 @@ public class NotificationService {
             .build();
         notificationRepository.save(notification);
 
-        pushSender.sendPushAsync(tenantId, userId, title, description, link, type.name().toLowerCase());
+        String typeName = type.name().toLowerCase();
+        CompletableFuture.runAsync(() ->
+            pushSender.sendPush(tenantId, userId, title, description, link, typeName));
     }
 
     @Transactional
