@@ -233,31 +233,6 @@
         <div
           class="lg:p-6 lg:rounded-3xl lg:bg-[var(--bg-card)] lg:border lg:border-[var(--border-color)] lg:shadow-sm relative animate-fade-up stagger-1"
         >
-          @if (canEdit() || canDelete()) {
-            <div class="absolute top-5 right-5 flex items-center gap-1">
-              @if (canEdit()) {
-                <button
-                  type="button"
-                  (click)="openEdit()"
-                  aria-label="Editar cliente"
-                  class="p-2 rounded-xl text-[var(--text-muted)] hover:text-cyan-500 hover:bg-cyan-500/10 transition-colors cursor-pointer"
-                >
-                  <svg lucideSquarePen class="w-4 h-4"></svg>
-                </button>
-              }
-              @if (canDelete()) {
-                <button
-                  type="button"
-                  (click)="openDeletePopup()"
-                  aria-label="Eliminar cliente"
-                  class="p-2 rounded-xl text-[var(--text-muted)] hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
-                >
-                  <svg lucideTrash2 class="w-4 h-4"></svg>
-                </button>
-              }
-            </div>
-          }
-
           <div class="flex flex-col items-center text-center pt-2 animate-scale-in stagger-2">
             <div
               class="w-32 h-32 rounded-full overflow-hidden bg-[var(--bg-tertiary)] border border-[var(--border-color)] flex items-center justify-center text-[var(--text-muted)]"
@@ -325,6 +300,31 @@
               <svg lucideMessageCircle class="w-4 h-4"></svg>
             </a>
           </div>
+
+          @if (canEdit() || canDelete()) {
+            <div class="mt-6 flex items-center gap-3 animate-fade-up stagger-4">
+              @if (canEdit()) {
+                <button
+                  type="button"
+                  (click)="openEdit()"
+                  class="flex-1 py-2.5 rounded-xl border border-cyan-500/30 bg-cyan-500/10 text-cyan-500 text-xs font-semibold flex items-center justify-center gap-2 hover:bg-cyan-500/20 transition-colors cursor-pointer"
+                >
+                  <svg lucideSquarePen class="w-4 h-4"></svg>
+                  <span>Editar</span>
+                </button>
+              }
+              @if (canDelete()) {
+                <button
+                  type="button"
+                  (click)="openDeletePopup()"
+                  class="flex-1 py-2.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-500 text-xs font-semibold flex items-center justify-center gap-2 hover:bg-rose-500/20 transition-colors cursor-pointer"
+                >
+                  <svg lucideTrash2 class="w-4 h-4"></svg>
+                  <span>Eliminar</span>
+                </button>
+              }
+            </div>
+          }
         </div>
       </div>
     </div>
