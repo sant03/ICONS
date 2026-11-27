@@ -34,7 +34,7 @@ export class ToastNotificationService {
     if (lastShown && now - lastShown < DEDUP_WINDOW_MS) return;
     this.recentTitles.set(data.title, now);
 
-    const id = crypto.randomUUID();
+    const id = Math.random().toString(36).substring(2) + Date.now();
     const toast: ToastItem = {
       id,
       title: data.title,
