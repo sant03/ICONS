@@ -291,32 +291,34 @@
             </p>
           </div>
 
-          @if (isEditing()) {
-            <div class="flex items-center gap-2">
+          @if (hasEditPermission()) {
+            @if (isEditing()) {
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  (click)="cancelEdit()"
+                  class="px-4 py-2 rounded-xl border border-[var(--border-color)] text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  class="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white text-xs font-semibold shadow-lg shadow-cyan-500/20 flex items-center gap-2 transition-all cursor-pointer"
+                >
+                  <svg lucideCheckCircle2 class="w-4 h-4"></svg>
+                  <span>Guardar cambios</span>
+                </button>
+              </div>
+            } @else {
               <button
                 type="button"
-                (click)="cancelEdit()"
-                class="px-4 py-2 rounded-xl border border-[var(--border-color)] text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
+                (click)="startEdit()"
                 class="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white text-xs font-semibold shadow-lg shadow-cyan-500/20 flex items-center gap-2 transition-all cursor-pointer"
               >
-                <svg lucideCheckCircle2 class="w-4 h-4"></svg>
-                <span>Guardar cambios</span>
+                <svg lucideEdit class="w-4 h-4"></svg>
+                <span>Editar Información de usuario</span>
               </button>
-            </div>
-          } @else {
-            <button
-              type="button"
-              (click)="startEdit()"
-              class="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white text-xs font-semibold shadow-lg shadow-cyan-500/20 flex items-center gap-2 transition-all cursor-pointer"
-            >
-              <svg lucideEdit class="w-4 h-4"></svg>
-              <span>Editar Información de usuario</span>
-            </button>
+            }
           }
         </div>
 
@@ -325,9 +327,9 @@
           <div class="flex flex-col items-center gap-3 shrink-0 mx-auto xl:mx-0 @[620px]:mx-0">
             <div class="relative w-32 h-32 shrink-0">
               <div
-                (click)="openPhotoModal()"
-                [class]="'group relative w-full h-full rounded-3xl overflow-hidden cursor-pointer shadow-md transition-all ' + avatarRingClass(selected()?.avatarConfig)"
-                title="Haz clic para personalizar la foto del usuario"
+                [class]="'group relative w-full h-full rounded-3xl overflow-hidden shadow-md transition-all ' + avatarRingClass(selected()?.avatarConfig) + (canEditPhoto() ? ' cursor-pointer' : '')"
+                [title]="canEditPhoto() ? 'Haz clic para personalizar la foto del usuario' : ''"
+                (click)="canEditPhoto() && openPhotoModal()"
               >
                 @if (selected()?.avatarUrl) {
                   <img
@@ -345,30 +347,36 @@
                     {{ getInitials(selected()?.fullName || selected()?.username) }}
                   </div>
                 }
-                <div class="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 text-white backdrop-blur-[2px]">
-                  <svg lucideCamera class="w-6 h-6"></svg>
-                  <span class="text-[10px] font-bold">Personalizar</span>
-                </div>
+                @if (canEditPhoto()) {
+                  <div class="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 text-white backdrop-blur-[2px]">
+                    <svg lucideCamera class="w-6 h-6"></svg>
+                    <span class="text-[10px] font-bold">Personalizar</span>
+                  </div>
+                }
               </div>
+              @if (canEditPhoto()) {
+                <button
+                  type="button"
+                  (click)="openPhotoModal()"
+                  title="Personalizar foto"
+                  class="absolute bottom-1 right-1 p-2 rounded-full bg-[var(--text-primary)] text-[var(--bg-primary)] shadow-md hover:scale-105 transition-transform cursor-pointer"
+                >
+                  <svg lucideCamera class="w-3.5 h-3.5"></svg>
+                </button>
+              }
+            </div>
+
+            @if (canEditPhoto()) {
+              <!-- Botón debajo de la foto del usuario -->
               <button
                 type="button"
                 (click)="openPhotoModal()"
-                title="Personalizar foto"
-                class="absolute bottom-1 right-1 p-2 rounded-full bg-[var(--text-primary)] text-[var(--bg-primary)] shadow-md hover:scale-105 transition-transform cursor-pointer"
+                class="px-3.5 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 border border-cyan-500/30 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
               >
-                <svg lucideCamera class="w-3.5 h-3.5"></svg>
+                <svg lucideImage class="w-3.5 h-3.5"></svg>
+                <span>Cambiar Foto</span>
               </button>
-            </div>
-
-            <!-- Botón debajo de la foto del usuario -->
-            <button
-              type="button"
-              (click)="openPhotoModal()"
-              class="px-3.5 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 border border-cyan-500/30 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
-            >
-              <svg lucideImage class="w-3.5 h-3.5"></svg>
-              <span>Cambiar Foto</span>
-            </button>
+            }
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1 w-full">
@@ -508,8 +516,8 @@
           </div>
         }
 
-        <!-- Advanced account configuration (admin only) -->
-        @if (hasBlockPermission() || hasDeletePermission()) {
+        <!-- Advanced account configuration -->
+        @if (hasBlockPermission() || hasDeletePermission() || canSelfSuspend()) {
         <div class="p-4 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border-color)] space-y-3">
           <p class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
             Configuración avanzada de usuario
@@ -528,7 +536,7 @@
                 <span>{{ selected()?.status === 'RESTRICTED' ? 'Quitar restricción' : 'Restringir acceso' }}</span>
               </button>
 
-              <!-- Suspend / Unsuspend -->
+              <!-- Suspend / Unsuspend (admin/gerencial can suspend any user) -->
               @if (selected()?.status === 'SUSPENDED') {
                 <button
                   type="button"
@@ -553,6 +561,26 @@
               }
             }
 
+            @if (canSelfSuspend() && !hasBlockPermission()) {
+              <!-- Self-suspend (Auxiliar/Delivery suspending own account) -->
+              @if (selected()?.status === 'SUSPENDED') {
+                <span class="text-[10px] font-mono text-rose-400 self-center flex items-center gap-1.5">
+                  <svg lucideClock class="w-3.5 h-3.5"></svg>
+                  Cuenta suspendida — {{ formatSuspensionRemaining() }}
+                </span>
+              } @else {
+                <button
+                  type="button"
+                  (click)="openPopup('self-suspend')"
+                  [disabled]="actionLoading() || selected()?.status === 'LOCKED'"
+                  class="px-3.5 py-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] text-xs font-semibold text-cyan-500 hover:bg-cyan-500/10 hover:border-cyan-500/30 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <svg lucideClock class="w-3.5 h-3.5"></svg>
+                  <span>Suspender mi cuenta</span>
+                </button>
+              }
+            }
+
             @if (hasDeletePermission()) {
               <!-- Deactivate -->
               <button
@@ -571,6 +599,7 @@
       </form>
 
       <!-- Activity feed: sin card en móvil, card completa en desktop -->
+      @if (canViewActivity()) {
       <div appScrollReveal class="lg:p-6 lg:rounded-3xl lg:bg-[var(--bg-card)] lg:border lg:border-[var(--border-color)] lg:shadow-sm space-y-4 pt-6 lg:pt-6 border-t border-[var(--border-color)]/60 lg:border-t-[var(--border-color)]">
         <div class="flex items-center justify-between gap-4">
           <div>
@@ -578,14 +607,16 @@
             <p class="text-xs text-[var(--text-muted)]">Historial de operaciones del usuario</p>
           </div>
 
-          <button
-            type="button"
-            (click)="clearHistory()"
-            class="px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-500 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-          >
-            <svg lucideTrash2 class="w-3.5 h-3.5"></svg>
-            <span>Limpiar historial</span>
-          </button>
+          @if (hasBlockPermission()) {
+            <button
+              type="button"
+              (click)="clearHistory()"
+              class="px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-500 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <svg lucideTrash2 class="w-3.5 h-3.5"></svg>
+              <span>Limpiar historial</span>
+            </button>
+          }
         </div>
 
         @if (selected()?.activities?.length) {
@@ -634,6 +665,7 @@
           </div>
         }
       </div>
+      }
       </div>
     </div>
     }
@@ -737,6 +769,41 @@
           </p>
         }
 
+        <!-- Self-suspend -->
+        @if (activePopup() === 'self-suspend') {
+          <div class="flex items-center gap-3 border-b border-[var(--border-color)] pb-4">
+            <div class="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center">
+              <svg lucideClock class="w-5 h-5 text-cyan-500"></svg>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-[var(--text-primary)]">Suspender mi cuenta</h3>
+              <p class="text-[10px] text-[var(--text-muted)]">{{ selected()?.fullName }}</p>
+            </div>
+          </div>
+          <p class="text-xs text-[var(--text-secondary)] leading-relaxed">
+            Tu cuenta quedará <span class="font-semibold text-cyan-500">completamente bloqueada</span>. No podrás iniciar sesión ni acceder al sistema hasta que se cumpla el tiempo de suspensión.
+          </p>
+          <div class="space-y-2">
+            <p class="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Duración de la suspensión</p>
+            <div class="flex flex-wrap gap-2">
+              @for (opt of suspendDurations; track opt.value) {
+                <button
+                  type="button"
+                  (click)="selectedDuration.set(opt.value)"
+                  [class]="
+                    'px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer ' +
+                    (selectedDuration() === opt.value
+                      ? 'bg-cyan-500 text-white border-cyan-500 shadow-md shadow-cyan-500/20'
+                      : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border-[var(--border-color)] hover:border-cyan-500/40 hover:text-[var(--text-primary)]')
+                  "
+                >
+                  {{ opt.label }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+
         <!-- Deactivate -->
         @if (activePopup() === 'deactivate') {
           <div class="flex items-center gap-3 border-b border-[var(--border-color)] pb-4">
@@ -765,7 +832,7 @@
           <button
             type="button"
             (click)="confirmAction()"
-            [disabled]="activePopup() === 'suspend' && !selectedDuration()"
+            [disabled]="(activePopup() === 'suspend' || activePopup() === 'self-suspend') && !selectedDuration()"
             [class]="
               'flex-1 py-2.5 rounded-xl text-white text-xs font-semibold shadow-md flex items-center justify-center gap-1.5 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 ' +
               (activePopup() === 'deactivate'

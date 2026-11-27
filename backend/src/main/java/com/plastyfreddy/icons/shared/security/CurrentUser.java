@@ -1,6 +1,7 @@
 package com.plastyfreddy.icons.shared.security;
 
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 
@@ -34,5 +35,13 @@ public final class CurrentUser {
         return jwt()
             .map(jwt -> jwt.<Long>getClaim("tenantId"))
             .orElseThrow(() -> new IllegalStateException("No hay tenant en el token"));
+    }
+
+    public static boolean hasAuthority(String authority) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return false;
+        return auth.getAuthorities().stream()
+            .map(GrantedAuthority::getAuthority)
+            .anyMatch(a -> a.equals(authority));
     }
 }

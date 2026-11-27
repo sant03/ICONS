@@ -99,11 +99,13 @@ public class UserController {
     }
 
     @PostMapping("/{id}/suspend")
-    @PreAuthorize("hasAuthority('USERS_BLOCK')")
     @Operation(summary = "Suspender un usuario por tiempo determinado")
     public ResponseEntity<UserResponse> suspend(
             @PathVariable Long id,
             @Valid @RequestBody SuspendRequest request) {
+        if (!id.equals(CurrentUser.getUserId()) && !CurrentUser.hasAuthority("USERS_BLOCK")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         return ResponseEntity.ok(userService.suspend(id, request.duration()));
     }
 

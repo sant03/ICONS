@@ -143,7 +143,7 @@ export interface UserProfile {
 }
 
 /** Role buckets used by the Users module filter pills. */
-export type StaffGroup = 'Administrativos' | 'Gerenciales' | 'Auxiliares';
+export type StaffGroup = 'Administrativos' | 'Gerenciales' | 'Auxiliares' | 'Delivery';
 
 /** One entry of the "Actividad Reciente" feed of a staff member. */
 export interface UserActivity {

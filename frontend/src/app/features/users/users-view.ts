@@ -25,13 +25,14 @@ import {
 import { StaffGroup, StaffMember, UserProfile, UserActivity, AvatarConfig } from '../../core/models/types';
 import { AppStore } from '../../core/state/app-store';
 import { AuthService } from '../../core/auth/auth.service';
+import { AuthApi } from '../../core/api/auth.api';
 import { UsersApi, UserResponse } from '../../core/api';
 import { UploadPhotoModalComponent, FILTER_OPTIONS } from '../../shared/ui/upload-photo-modal/upload-photo-modal';
 import { StorageUrlPipe } from '../../shared/pipes/resolve-storage-url.pipe';
 import { SwipeDismissDirective } from '../../shared/directives/swipe-dismiss.directive';
 
 type GroupFilter = 'Todos' | StaffGroup;
-type ActionPopup = 'restrict' | 'unrestrict' | 'suspend' | 'unsuspend' | 'deactivate' | null;
+type ActionPopup = 'restrict' | 'unrestrict' | 'suspend' | 'unsuspend' | 'deactivate' | 'self-suspend' | null;
 
 /**
  * Users module (staff directory): role filters, personal list, detail form,
@@ -74,6 +75,7 @@ type ActionPopup = 'restrict' | 'unrestrict' | 'suspend' | 'unsuspend' | 'deacti
 export class UsersView implements OnInit {
   protected readonly store = inject(AppStore);
   private readonly api = inject(UsersApi);
+  private readonly authApi = inject(AuthApi);
   private readonly auth = inject(AuthService);
 
   protected readonly staff = signal<StaffMember[]>([]);
@@ -87,12 +89,46 @@ export class UsersView implements OnInit {
   protected readonly toastType = signal<'success' | 'error'>('success');
   private toastTimer: ReturnType<typeof setTimeout> | null = null;
 
+  protected readonly hasEditPermission = computed(() =>
+    this.auth.currentUser()?.permissions?.includes('USERS_EDIT') ?? false
+  );
   protected readonly hasBlockPermission = computed(() =>
     this.auth.currentUser()?.permissions?.includes('USERS_BLOCK') ?? false
   );
   protected readonly hasDeletePermission = computed(() =>
     this.auth.currentUser()?.permissions?.includes('USERS_DELETE') ?? false
   );
+
+  protected readonly isOwnProfile = computed(() => {
+    const sel = this.selected();
+    const me = this.auth.currentUser();
+    return sel != null && me != null && Number(sel.idNumber) === me.id;
+  });
+
+  protected readonly canEditPhoto = computed(() =>
+    this.hasEditPermission() || this.isOwnProfile()
+  );
+
+  protected readonly canSelfSuspend = computed(() =>
+    this.isOwnProfile() && !this.hasBlockPermission()
+  );
+
+  private readonly currentUserRole = computed(() => {
+    const me = this.auth.currentUser();
+    if (!me) return '';
+    const member = this.staff().find((m) => Number(m.idNumber) === me.id);
+    return member?.role ?? '';
+  });
+
+  protected readonly canViewActivity = computed(() => {
+    if (this.hasBlockPermission()) return true;
+    const sel = this.selected();
+    if (sel == null) return false;
+    const myRole = this.currentUserRole();
+    if (sel.role === myRole) return true;
+    return myRole === 'Auxiliar' && sel.role === 'Delivery';
+  });
+
   protected readonly actionLoading = signal(false);
 
   protected readonly activePopup = signal<ActionPopup>(null);
@@ -114,6 +150,7 @@ export class UsersView implements OnInit {
     'Administrativos',
     'Gerenciales',
     'Auxiliares',
+    'Delivery',
   ];
   protected readonly activeFilter = signal<GroupFilter>('Todos');
 
@@ -151,7 +188,8 @@ export class UsersView implements OnInit {
   private static mapUser(u: UserResponse): StaffMember {
     const roleGroup: StaffGroup =
       u.roleName === 'Gerencial' ? 'Gerenciales' :
-      u.roleName === 'Administrativo' ? 'Administrativos' : 'Auxiliares';
+      u.roleName === 'Administrativo' ? 'Administrativos' :
+      u.roleName === 'Delivery' ? 'Delivery' : 'Auxiliares';
     return {
       username: u.username,
       fullName: u.fullName,
@@ -279,12 +317,20 @@ export class UsersView implements OnInit {
       avatarUrl: event.avatarUrl,
       avatarConfig: event.config,
     }));
-    this.api.update(Number(s.idNumber), { avatarUrl: event.avatarUrl }).subscribe({
-      next: (res) => {
-        const mapped = UsersView.mapUser(res);
-        this.staff.update((list) => list.map((m) => (m.idNumber === s.idNumber ? mapped : m)));
-      },
-    });
+
+    if (this.isOwnProfile() && !this.hasEditPermission()) {
+      this.authApi.updateProfile({ avatarUrl: event.avatarUrl }).subscribe({
+        next: () => this.showToast('Foto de perfil actualizada', 'success'),
+        error: (err) => this.showToast(err?.error?.detail ?? 'Error al actualizar foto', 'error'),
+      });
+    } else {
+      this.api.update(Number(s.idNumber), { avatarUrl: event.avatarUrl }).subscribe({
+        next: (res) => {
+          const mapped = UsersView.mapUser(res);
+          this.staff.update((list) => list.map((m) => (m.idNumber === s.idNumber ? mapped : m)));
+        },
+      });
+    }
   }
 
   protected avatarTransform(cfg?: AvatarConfig): string {
@@ -375,7 +421,7 @@ export class UsersView implements OnInit {
   }
 
   protected openPopup(type: ActionPopup): void {
-    if (type === 'suspend') this.selectedDuration.set(null);
+    if (type === 'suspend' || type === 'self-suspend') this.selectedDuration.set(null);
     this.popupAnimatingOut.set(false);
     this.activePopup.set(type);
   }
@@ -401,6 +447,7 @@ export class UsersView implements OnInit {
       case 'suspend': return this.executeSuspend();
       case 'unsuspend': return this.executeUnsuspend();
       case 'deactivate': return this.executeDeactivate();
+      case 'self-suspend': return this.executeSelfSuspend();
     }
   }
 
@@ -465,6 +512,24 @@ export class UsersView implements OnInit {
       error: (err) => {
         this.actionLoading.set(false);
         this.notify(err?.error?.detail ?? 'Error al reactivar usuario');
+      },
+    });
+  }
+
+  private executeSelfSuspend(): void {
+    const me = this.auth.currentUser();
+    const duration = this.selectedDuration();
+    if (!me || !duration) return;
+    this.actionLoading.set(true);
+    this.api.suspend(me.id, duration).subscribe({
+      next: (res) => {
+        this.updateMember(String(me.id), res);
+        this.actionLoading.set(false);
+        this.showToast('Tu cuenta ha sido suspendida', 'success');
+      },
+      error: (err) => {
+        this.actionLoading.set(false);
+        this.showToast(err?.error?.detail ?? 'Error al suspender cuenta', 'error');
       },
     });
   }
