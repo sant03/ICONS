@@ -160,7 +160,7 @@ export class NewSaleModal implements OnInit {
     };
 
     this.salesApi.create(request).pipe(
-      timeout(15000),
+      timeout(10000),
       finalize(() => this.submitting.set(false)),
     ).subscribe({
       next: (sale) => {
@@ -174,10 +174,18 @@ export class NewSaleModal implements OnInit {
         setTimeout(() => this.requestClose(), 400);
       },
       error: (err) => {
-        const msg = err?.name === 'TimeoutError'
-          ? 'La venta se registró pero la respuesta tardó demasiado. Revisa la lista de ventas.'
-          : (err?.error?.detail ?? 'Error al registrar la venta');
-        this.showToast(msg, err?.name === 'TimeoutError' ? 'success' : 'error');
+        if (err?.name === 'TimeoutError') {
+          this.toastNotification.show({
+            title: 'Venta registrada',
+            body: 'Venta por $' + total.toLocaleString() + ' a ' + this.clientName().trim(),
+            type: 'order',
+            url: '/sales',
+          });
+          this.store.saleCreatedTick.set(Date.now());
+          setTimeout(() => this.requestClose(), 400);
+        } else {
+          this.showToast(err?.error?.detail ?? 'Error al registrar la venta', 'error');
+        }
       },
     });
   }
