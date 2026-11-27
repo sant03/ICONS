@@ -1,5 +1,7 @@
 package com.plastyfreddy.icons.dispatches;
 
+import com.plastyfreddy.icons.auth.domain.User;
+import com.plastyfreddy.icons.auth.domain.UserRepository;
 import com.plastyfreddy.icons.dispatches.domain.*;
 import com.plastyfreddy.icons.dispatches.dto.*;
 import com.plastyfreddy.icons.sequence.SequenceService;
@@ -20,6 +22,7 @@ public class DispatchService {
 
     private final DispatchRepository dispatchRepository;
     private final DeliveryDriverRepository driverRepository;
+    private final UserRepository userRepository;
     private final SequenceService sequenceService;
 
     @Transactional(readOnly = true)
@@ -49,6 +52,9 @@ public class DispatchService {
     @Transactional
     public DispatchResponse create(CreateDispatchRequest request) {
         Long tenantId = TenantContext.require();
+        if (request.orderId() != null && dispatchRepository.existsByTenantIdAndOrderId(tenantId, request.orderId())) {
+            throw new BusinessException("Ya existe un despacho para este pedido");
+        }
         String code = sequenceService.nextCode("DISPATCH");
 
         Dispatch dispatch = Dispatch.builder()
@@ -90,8 +96,7 @@ public class DispatchService {
         Dispatch dispatch = dispatchRepository.findByIdAndTenantIdWithDetails(id, tenantId)
             .orElseThrow(() -> BusinessException.notFound("Despacho", id));
 
-        DeliveryDriver driver = driverRepository.findByIdAndTenantId(request.driverId(), tenantId)
-            .orElseThrow(() -> BusinessException.notFound("Conductor", request.driverId()));
+        DeliveryDriver driver = resolveDriver(tenantId, request);
 
         dispatch.setDriver(driver);
         dispatch.setStatus(DispatchStatus.ASIGNADO);
@@ -104,6 +109,36 @@ public class DispatchService {
         dispatch.addHistory(entry);
 
         return toResponse(dispatch);
+    }
+
+    private DeliveryDriver resolveDriver(Long tenantId, AssignDriverRequest request) {
+        if (request.driverId() != null) {
+            return driverRepository.findByIdAndTenantId(request.driverId(), tenantId)
+                .orElseThrow(() -> BusinessException.notFound("Conductor", request.driverId()));
+        }
+        if (request.userId() != null) {
+            User user = userRepository.findById(request.userId())
+                .orElseThrow(() -> BusinessException.notFound("Usuario", request.userId()));
+            if (!tenantId.equals(user.getTenantId())) {
+                throw BusinessException.notFound("Usuario", request.userId());
+            }
+            String name = user.getFullName() != null && !user.getFullName().isBlank() ? user.getFullName() : user.getUsername();
+            return driverRepository.findByTenantIdAndNameIgnoreCase(tenantId, name)
+                .orElseGet(() -> driverRepository.save(DeliveryDriver.builder()
+                    .name(name)
+                    .phone(user.getPhone())
+                    .avatarInitials(buildInitials(name))
+                    .status(DriverStatus.DISPONIBLE)
+                    .build()));
+        }
+        throw new BusinessException("Debe seleccionar un domiciliario");
+    }
+
+    private String buildInitials(String name) {
+        if (name == null || name.isBlank()) return "??";
+        String[] parts = name.trim().split("\\s+");
+        if (parts.length == 1) return parts[0].substring(0, Math.min(2, parts[0].length())).toUpperCase();
+        return (parts[0].charAt(0) + "" + parts[parts.length - 1].charAt(0)).toUpperCase();
     }
 
     @Transactional

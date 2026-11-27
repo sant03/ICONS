@@ -23,4 +23,6 @@ public interface DispatchRepository extends JpaRepository<Dispatch, Long> {
     Page<Dispatch> searchByTenantId(Long tenantId, String search, Pageable pageable);
 
     long countByTenantIdAndStatus(Long tenantId, DispatchStatus status);
+
+    boolean existsByTenantIdAndOrderId(Long tenantId, Long orderId);
 }

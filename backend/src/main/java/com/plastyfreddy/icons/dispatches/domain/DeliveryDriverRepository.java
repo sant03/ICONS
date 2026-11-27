@@ -13,4 +13,6 @@ public interface DeliveryDriverRepository extends JpaRepository<DeliveryDriver, 
     Page<DeliveryDriver> findByTenantIdOrderByNameAsc(Long tenantId, Pageable pageable);
 
     Page<DeliveryDriver> findByTenantIdAndStatus(Long tenantId, DriverStatus status, Pageable pageable);
+
+    Optional<DeliveryDriver> findByTenantIdAndNameIgnoreCase(Long tenantId, String name);
 }

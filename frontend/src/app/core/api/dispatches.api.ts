@@ -50,7 +50,8 @@ export interface CreateDispatchRequest {
 }
 
 export interface AssignDriverRequest {
-  driverId: number;
+  driverId?: number;
+  userId?: number;
 }
 
 @Injectable({ providedIn: 'root' })

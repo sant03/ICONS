@@ -6,7 +6,9 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -38,6 +40,10 @@ public class CustomerOrder extends TenantAwareEntity {
     @Builder.Default
     private String status = "PENDING";
 
+    @Column(name = "payment_status", nullable = false, length = 20)
+    @Builder.Default
+    private String paymentStatus = "Pagado";
+
     @Column(name = "total_units", nullable = false)
     @Builder.Default
     private int totalUnits = 0;
@@ -49,6 +55,9 @@ public class CustomerOrder extends TenantAwareEntity {
     @Column(name = "items_summary", length = 500)
     private String itemsSummary;
 
+    @Column(length = 500)
+    private String comments;
+
     @ManyToMany
     @JoinTable(
         name = "customer_order_sales",
@@ -57,4 +66,13 @@ public class CustomerOrder extends TenantAwareEntity {
     )
     @Builder.Default
     private Set<Sale> sales = new HashSet<>();
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<CustomerOrderItem> items = new ArrayList<>();
+
+    public void addItem(CustomerOrderItem item) {
+        items.add(item);
+        item.setOrder(this);
+    }
 }

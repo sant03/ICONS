@@ -12,9 +12,12 @@ public record CustomerOrderResponse(
     String customerName,
     LocalDate date,
     String status,
+    String paymentStatus,
     int totalUnits,
     BigDecimal totalAmount,
     String itemsSummary,
+    String comments,
+    List<CustomerOrderItemResponse> items,
     List<Long> saleIds,
     Instant createdAt
 ) {}

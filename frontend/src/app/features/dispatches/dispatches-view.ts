@@ -26,6 +26,7 @@ import { AppStore } from '../../core/state/app-store';
 import { CustomSelectComponent } from '../../shared/ui/custom-select/custom-select';
 import { DispatchesApi, DispatchResponse } from '../../core/api/dispatches.api';
 import { DriversApi, DeliveryDriverResponse } from '../../core/api/drivers.api';
+import { OrdersApi, CustomerOrderResponse, CustomersApi, CustomerResponse, UsersApi, UserResponse } from '../../core/api';
 
 interface StatusConfig {
   label: string;
@@ -103,10 +104,21 @@ export class DispatchesView implements OnInit {
   protected readonly store = inject(AppStore);
   private readonly dispatchesApi = inject(DispatchesApi);
   private readonly driversApi = inject(DriversApi);
+  private readonly ordersApi = inject(OrdersApi);
+  private readonly customersApi = inject(CustomersApi);
+  private readonly usersApi = inject(UsersApi);
 
   protected readonly dispatches = signal<DispatchResponse[]>([]);
   protected readonly drivers = signal<DeliveryDriverResponse[]>([]);
+  protected readonly availableOrders = signal<CustomerOrderResponse[]>([]);
+  protected readonly customers = signal<CustomerResponse[]>([]);
+  protected readonly deliveryUsers = signal<UserResponse[]>([]);
   protected readonly isLoading = signal(true);
+
+  protected readonly toastOpen = signal(false);
+  protected readonly toastMessage = signal('');
+  protected readonly toastType = signal<'success' | 'error'>('success');
+  private toastTimer: ReturnType<typeof setTimeout> | null = null;
 
   protected readonly activeRoleView = signal<RoleView>('dispatcher');
   protected readonly selectedDriverId = signal<number>(0);
@@ -118,9 +130,10 @@ export class DispatchesView implements OnInit {
   protected readonly assignModalDispatch = signal<DispatchResponse | null>(null);
   protected readonly assignModalAnimatingOut = signal(false);
   protected readonly assignMode = signal<'assign' | 'reassign'>('assign');
-  protected readonly targetDriverId = signal<number>(0);
+  protected readonly targetUserId = signal<number>(0);
   protected readonly targetPriority = signal<'NORMAL' | 'URGENTE'>('NORMAL');
   protected readonly assignNote = signal('');
+  protected readonly isAssigning = signal(false);
 
   protected readonly rejectModalDispatch = signal<DispatchResponse | null>(null);
   protected readonly rejectModalAnimatingOut = signal(false);
@@ -130,13 +143,16 @@ export class DispatchesView implements OnInit {
   protected readonly detailModalAnimatingOut = signal(false);
   protected readonly isNewDispatchModalOpen = signal(false);
   protected readonly newDispatchModalAnimatingOut = signal(false);
+  protected readonly isCreatingDispatch = signal(false);
 
+  protected readonly newOrderId = signal<number | null>(null);
   protected readonly newOrderNumber = signal('');
   protected readonly newClient = signal('');
   protected readonly newAddress = signal('');
   protected readonly newPhone = signal('');
   protected readonly newZone = signal('Zona Norte');
   protected readonly newUnits = signal(5);
+  protected readonly newTotalAmount = signal(0);
   protected readonly newDriverId = signal<number | null>(null);
   protected readonly newPriority = signal<'NORMAL' | 'URGENTE'>('NORMAL');
 
@@ -165,13 +181,17 @@ export class DispatchesView implements OnInit {
     })),
   );
 
-  protected readonly orderSelectOptions = computed(() => [
-    { value: '', label: '-- Seleccionar Pedido --' },
-    ...this.store.orders().map((o) => ({
-      value: o.id,
-      label: `${o.orderNumber} — ${o.client} (${o.units} uds)`,
-    })),
-  ]);
+  protected readonly orderSelectOptions = computed(() => {
+    const dispatchedOrderIds = new Set(
+      this.dispatches().map((d) => d.orderId).filter((id): id is number => id != null),
+    );
+    return this.availableOrders()
+      .filter((o) => !dispatchedOrderIds.has(o.id))
+      .map((o) => ({
+        value: o.id,
+        label: `${o.code} — ${o.customerName} (${o.totalUnits} uds)`,
+      }));
+  });
 
   protected readonly newDriverOptions = computed(() => [
     { value: 0, label: 'Dejar Por Asignar' },
@@ -194,6 +214,28 @@ export class DispatchesView implements OnInit {
       d.zone.toLowerCase().includes(q) ||
       (d.plate ?? '').toLowerCase().includes(q)
     );
+  });
+
+  protected readonly filteredDeliveryUsers = computed(() => {
+    const q = this.driverSearchTerm().toLowerCase().trim();
+    const users = this.deliveryUsers();
+    const filtered = !q
+      ? users
+      : users.filter((u) =>
+          (u.fullName ?? '').toLowerCase().includes(q) ||
+          (u.username ?? '').toLowerCase().includes(q) ||
+          (u.phone ?? '').toLowerCase().includes(q) ||
+          (u.positionName ?? '').toLowerCase().includes(q),
+        );
+    return filtered.map((u) => ({
+      id: u.id,
+      name: u.fullName || u.username,
+      phone: u.phone || '—',
+      vehicle: u.positionName || 'Domiciliario',
+      zone: '—',
+      status: u.status === 'ACTIVE' ? 'DISPONIBLE' : 'INACTIVO',
+      avatarInitials: this.getInitials(u.fullName || u.username),
+    }));
   });
 
   protected clearDriverSearch(): void {
@@ -267,6 +309,35 @@ export class DispatchesView implements OnInit {
       },
       error: () => this.isLoading.set(false),
     });
+    this.loadAvailableOrders();
+    this.loadCustomers();
+    this.loadDeliveryUsers();
+  }
+
+  private loadAvailableOrders(): void {
+    this.ordersApi.list({ size: 200 }).subscribe({
+      next: (page) => this.availableOrders.set(page.content),
+      error: () => this.availableOrders.set([]),
+    });
+  }
+
+  private loadCustomers(): void {
+    this.customersApi.list({ size: 500 }).subscribe({
+      next: (page) => this.customers.set(page.content),
+      error: () => this.customers.set([]),
+    });
+  }
+
+  private loadDeliveryUsers(): void {
+    this.usersApi.list({ size: 500 }).subscribe({
+      next: (page) => {
+        const delivery = page.content.filter(
+          (u) => (u.roleName ?? '').toLowerCase() === 'delivery' && u.status !== 'DEACTIVATED',
+        );
+        this.deliveryUsers.set(delivery);
+      },
+      error: () => this.deliveryUsers.set([]),
+    });
   }
 
   protected getDriverById(id: number | null): DeliveryDriverResponse | null {
@@ -284,6 +355,18 @@ export class DispatchesView implements OnInit {
     ).length;
   }
 
+  protected getDriverActiveLoadByName(name: string): number {
+    const normalized = name.trim().toLowerCase();
+    return this.dispatches().filter(
+      (d) => (d.driverName ?? '').trim().toLowerCase() === normalized && (d.status === 'ASIGNADO' || d.status === 'EN_CAMINO'),
+    ).length;
+  }
+
+  private getInitials(name: string): string {
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    return parts.slice(0, 2).map((p) => p[0]?.toUpperCase() ?? '').join('') || 'D';
+  }
+
   protected getStatusCount(status: StatusFilter): number {
     if (status === 'ALL') return this.dispatches().length;
     return this.dispatches().filter((d) => d.status === status).length;
@@ -293,10 +376,11 @@ export class DispatchesView implements OnInit {
     this.assignModalAnimatingOut.set(false);
     this.assignModalDispatch.set(dispatch);
     this.assignMode.set(mode);
-    const available = this.drivers().find((d) => d.id !== dispatch.driverId);
-    this.targetDriverId.set(available?.id ?? this.drivers()[0]?.id ?? 0);
+    const available = this.getAssignableDrivers();
+    this.targetUserId.set(available[0]?.id ?? 0);
     this.targetPriority.set(dispatch.priority as 'NORMAL' | 'URGENTE');
     this.assignNote.set('');
+    this.isAssigning.set(false);
   }
 
   protected closeAssignModal(): void {
@@ -308,14 +392,25 @@ export class DispatchesView implements OnInit {
   }
 
   protected handleConfirmAssign(): void {
+    if (this.isAssigning()) return;
     const dispatch = this.assignModalDispatch();
-    const driverId = this.targetDriverId();
-    if (!dispatch || !driverId) return;
+    const userId = this.targetUserId();
+    if (!dispatch || !userId) {
+      this.showToast('Selecciona un domiciliario', 'error');
+      return;
+    }
 
-    this.dispatchesApi.assignDriver(dispatch.id, { driverId }).subscribe({
+    this.isAssigning.set(true);
+    this.dispatchesApi.assignDriver(dispatch.id, { userId }).subscribe({
       next: () => {
+        this.isAssigning.set(false);
         this.closeAssignModal();
+        this.showToast('Domiciliario asignado correctamente', 'success');
         this.loadData();
+      },
+      error: (err) => {
+        this.isAssigning.set(false);
+        this.showToast(err?.error?.detail ?? 'Error al asignar domiciliario', 'error');
       },
     });
   }
@@ -363,6 +458,8 @@ export class DispatchesView implements OnInit {
 
   protected openNewDispatchModal(): void {
     this.newDispatchModalAnimatingOut.set(false);
+    this.resetNewDispatchForm();
+    this.loadAvailableOrders();
     this.isNewDispatchModalOpen.set(true);
   }
 
@@ -371,42 +468,88 @@ export class DispatchesView implements OnInit {
     setTimeout(() => {
       this.isNewDispatchModalOpen.set(false);
       this.newDispatchModalAnimatingOut.set(false);
+      this.resetNewDispatchForm();
     }, 220);
   }
 
-  protected handlePrefillFromOrder(orderId: string): void {
-    const ord = this.store.orders().find((o) => o.id === orderId);
+  private resetNewDispatchForm(): void {
+    this.newOrderId.set(null);
+    this.newOrderNumber.set('');
+    this.newClient.set('');
+    this.newAddress.set('');
+    this.newPhone.set('');
+    this.newZone.set('Zona Norte');
+    this.newUnits.set(5);
+    this.newTotalAmount.set(0);
+    this.newDriverId.set(null);
+    this.newPriority.set('NORMAL');
+    this.isCreatingDispatch.set(false);
+  }
+
+  protected handlePrefillFromOrder(orderId: unknown): void {
+    const id = Number(orderId);
+    const ord = this.availableOrders().find((o) => o.id === id);
     if (!ord) return;
-    this.newOrderNumber.set(ord.orderNumber);
-    this.newClient.set(ord.client);
-    this.newUnits.set(ord.units);
+    this.newOrderId.set(ord.id);
+    this.newOrderNumber.set(ord.code);
+    this.newClient.set(ord.customerName);
+    this.newUnits.set(ord.totalUnits || 1);
+    this.newTotalAmount.set(ord.totalAmount ?? 0);
+
+    const customer = ord.customerId ? this.customers().find((c) => c.id === ord.customerId) : undefined;
+    this.newAddress.set(customer?.address?.trim() || '');
+    this.newPhone.set(customer?.phone?.trim() || '');
   }
 
   protected handleCreateNewDispatch(): void {
-    if (!this.newClient().trim() || !this.newAddress().trim()) return;
+    if (this.isCreatingDispatch()) return;
+    if (!this.newClient().trim()) {
+      this.showToast('El cliente es obligatorio', 'error');
+      return;
+    }
+    if (!this.newAddress().trim()) {
+      this.showToast('La dirección de entrega es obligatoria', 'error');
+      return;
+    }
 
+    this.isCreatingDispatch.set(true);
     this.dispatchesApi.create({
+      orderId: this.newOrderId() ?? undefined,
       orderNumber: this.newOrderNumber().trim() || undefined,
       client: this.newClient().trim(),
       address: this.newAddress().trim(),
       phone: this.newPhone().trim() || undefined,
       zone: this.newZone(),
       units: this.newUnits(),
-      totalAmount: this.newUnits() * 400,
+      totalAmount: this.newTotalAmount() || undefined,
       driverId: this.newDriverId() || undefined,
       priority: this.newPriority(),
       scheduledDate: new Date().toISOString().slice(0, 10),
     }).subscribe({
       next: () => {
+        this.isCreatingDispatch.set(false);
         this.closeNewDispatchModal();
-        this.newOrderNumber.set('');
-        this.newClient.set('');
-        this.newAddress.set('');
-        this.newPhone.set('');
-        this.newDriverId.set(null);
+        this.showToast('Despacho creado exitosamente', 'success');
         this.loadData();
       },
+      error: (err) => {
+        this.isCreatingDispatch.set(false);
+        this.showToast(err?.error?.detail ?? 'Error al crear el despacho', 'error');
+      },
     });
+  }
+
+  private showToast(message: string, type: 'success' | 'error'): void {
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.toastMessage.set(message);
+    this.toastType.set(type);
+    this.toastOpen.set(true);
+    this.toastTimer = setTimeout(() => this.toastOpen.set(false), 4000);
+  }
+
+  protected closeToast(): void {
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.toastOpen.set(false);
   }
 
   protected handleUpdateStatus(dispatchId: number, status: string): void {
@@ -420,11 +563,31 @@ export class DispatchesView implements OnInit {
     this.activeRoleView.set('delivery');
   }
 
-  protected getAssignableDrivers(): DeliveryDriverResponse[] {
-    const dispatch = this.assignModalDispatch();
-    if (this.assignMode() === 'reassign' && dispatch) {
-      return this.drivers().filter((d) => d.id !== dispatch.driverId);
+  protected switchToDriverViewByName(name: string): void {
+    const normalized = name.trim().toLowerCase();
+    const driver = this.drivers().find((d) => d.name.trim().toLowerCase() === normalized);
+    if (driver) {
+      this.switchToDriverView(driver.id);
     }
-    return this.drivers();
+  }
+
+  protected getAssignableDrivers() {
+    const dispatch = this.assignModalDispatch();
+    const currentName = (dispatch?.driverName ?? '').trim().toLowerCase();
+    return this.deliveryUsers()
+      .filter((u) => {
+        if (this.assignMode() === 'reassign' && currentName) {
+          const name = (u.fullName || u.username).trim().toLowerCase();
+          return name !== currentName;
+        }
+        return true;
+      })
+      .map((u) => ({
+        id: u.id,
+        name: u.fullName || u.username,
+        vehicle: u.positionName || 'Domiciliario',
+        zone: u.phone || '—',
+        status: u.status === 'ACTIVE' ? 'DISPONIBLE' : 'INACTIVO',
+      }));
   }
 }

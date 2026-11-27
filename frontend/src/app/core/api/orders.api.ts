@@ -3,6 +3,16 @@ import { Injectable, inject } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { PageResponse } from './api.types';
 
+export interface CustomerOrderItemResponse {
+  id: number;
+  productId: number;
+  productName: string;
+  productCode: string | null;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+}
+
 export interface CustomerOrderResponse {
   id: number;
   code: string;
@@ -10,18 +20,30 @@ export interface CustomerOrderResponse {
   customerName: string;
   date: string;
   status: string;
+  paymentStatus: string | null;
   totalUnits: number;
   totalAmount: number;
   itemsSummary: string | null;
+  comments: string | null;
+  items: CustomerOrderItemResponse[];
   saleIds: number[];
   createdAt: string;
+}
+
+export interface CreateOrderItemRequest {
+  productId: number;
+  quantity: number;
+  unitPrice: number;
 }
 
 export interface CreateOrderRequest {
   customerId?: number;
   customerName: string;
   date: string;
+  paymentStatus?: string;
+  comments?: string;
   itemsSummary?: string;
+  items?: CreateOrderItemRequest[];
 }
 
 @Injectable({ providedIn: 'root' })

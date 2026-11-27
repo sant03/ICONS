@@ -76,6 +76,9 @@ export interface OrderItem {
   units: number;
   totalAmount?: number;
   itemsSummary?: string;
+  paymentStatus?: string;
+  comments?: string;
+  items?: { productId: number; productName: string; productCode?: string | null; quantity: number; unitPrice: number; total: number }[];
 }
 
 /**

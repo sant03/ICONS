@@ -1,4 +1,5 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CustomSelectComponent } from '../../shared/ui/custom-select/custom-select';
 import {
@@ -11,6 +12,8 @@ import {
   LucideFilter,
   LucidePlus,
   LucideSearch,
+  LucideShoppingBag,
+  LucideTrash2,
   LucideUser,
   LucideX,
 } from '@lucide/angular';
@@ -18,12 +21,24 @@ import { OrderItem } from '../../core/models/types';
 import { AppStore } from '../../core/state/app-store';
 import { OrdersApi, CustomerOrderResponse } from '../../core/api';
 import { CustomersApi, CustomerResponse } from '../../core/api/customers.api';
+import { ProductsApi, ProductResponse } from '../../core/api/products.api';
 
 type SortOption = 'date_desc' | 'date_asc' | 'alpha_asc' | 'alpha_desc';
+
+interface OrderLineItem {
+  productId: number;
+  name: string;
+  code: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+type ModalPaymentStatus = 'Pagado' | 'Pendiente' | 'Abono';
 
 @Component({
   selector: 'app-orders-view',
   imports: [
+    DecimalPipe,
     FormsModule,
     CustomSelectComponent,
     LucideAlertCircle,
@@ -35,6 +50,8 @@ type SortOption = 'date_desc' | 'date_asc' | 'alpha_asc' | 'alpha_desc';
     LucideFilter,
     LucidePlus,
     LucideSearch,
+    LucideShoppingBag,
+    LucideTrash2,
     LucideUser,
     LucideX,
   ],
@@ -44,6 +61,7 @@ export class OrdersView implements OnInit {
   protected readonly store = inject(AppStore);
   private readonly api = inject(OrdersApi);
   private readonly customersApi = inject(CustomersApi);
+  private readonly productsApi = inject(ProductsApi);
 
   protected readonly isLoading = signal(true);
   protected readonly orders = signal<OrderItem[]>([]);
@@ -74,11 +92,54 @@ export class OrdersView implements OnInit {
   ];
 
   protected readonly statusOptions = ['PENDING', 'SHIPPED', 'COMPLETED', 'CANCELLED'];
+  protected readonly filterStatus = signal<string>('all');
+  protected readonly isFilterModalOpen = signal(false);
+
+  protected readonly filterStatusOptions: { value: string; label: string }[] = [
+    { value: 'all', label: 'Todos' },
+    { value: 'PENDING', label: 'Pendiente' },
+    { value: 'SHIPPED', label: 'Enviado' },
+    { value: 'COMPLETED', label: 'Completado' },
+    { value: 'CANCELLED', label: 'Cancelado' },
+  ];
+
+  // ── Multi-product create modal state ──
+  protected readonly apiProducts = signal<ProductResponse[]>([]);
+  protected readonly modalClientName = signal('');
+  protected readonly modalOrderDate = signal(new Date().toISOString().split('T')[0]);
+  protected readonly modalOrderCode = signal('');
+  protected readonly modalPaymentStatus = signal<ModalPaymentStatus>('Pagado');
+  protected readonly modalComments = signal('');
+  protected readonly modalSelectedProductId = signal<number | null>(null);
+  protected readonly modalItemQty = signal(1);
+  protected readonly modalOrderLineItems = signal<OrderLineItem[]>([]);
+
+  protected readonly productOptions = computed(() =>
+    this.apiProducts()
+      .filter((p) => !p.blocked && p.stock > 0)
+      .map((p) => ({ value: p.id, label: `${p.reference} / ${p.code} ($${p.salePrice.toLocaleString()})` })),
+  );
+
+  protected readonly modalSelectedProduct = computed(() => {
+    const id = this.modalSelectedProductId();
+    return id != null ? this.apiProducts().find((p) => p.id === Number(id)) : undefined;
+  });
+
+  protected readonly modalComputedTotalUnits = computed(() =>
+    this.modalOrderLineItems().reduce((sum, i) => sum + i.quantity, 0),
+  );
+
+  protected readonly modalComputedTotalAmount = computed(() =>
+    this.modalOrderLineItems().reduce((sum, i) => sum + i.quantity * i.unitPrice, 0),
+  );
 
   ngOnInit(): void {
     this.loadOrders();
     this.customersApi.list({ size: 500 }).subscribe({
       next: (page) => this.apiCustomers.set(page.content),
+    });
+    this.productsApi.list({ size: 500 }).subscribe({
+      next: (page) => this.apiProducts.set(page.content),
     });
   }
 
@@ -105,14 +166,28 @@ export class OrdersView implements OnInit {
       units: o.totalUnits,
       totalAmount: o.totalAmount,
       itemsSummary: o.itemsSummary ?? undefined,
+      paymentStatus: o.paymentStatus ?? undefined,
+      comments: o.comments ?? undefined,
+      items: (o.items ?? []).map((i) => ({
+        productId: i.productId,
+        productName: i.productName,
+        productCode: i.productCode,
+        quantity: i.quantity,
+        unitPrice: i.unitPrice,
+        total: i.total,
+      })),
     };
   }
 
   protected readonly filteredOrders = computed(() => {
     const term = this.searchTerm().toLowerCase();
-    const list = this.orders().filter(
-      (o) => o.orderNumber.toLowerCase().includes(term) || o.client.toLowerCase().includes(term),
-    );
+    const status = this.filterStatus();
+    const list = this.orders().filter((o) => {
+      const matchesTerm =
+        o.orderNumber.toLowerCase().includes(term) || o.client.toLowerCase().includes(term);
+      const matchesStatus = status === 'all' || o.status === status;
+      return matchesTerm && matchesStatus;
+    });
     return this.sortOrders(list);
   });
 
@@ -133,22 +208,39 @@ export class OrdersView implements OnInit {
   }
 
   protected handleCreateOrderSubmit(): void {
-    if (!this.clientName().trim()) return;
+    if (!this.modalClientName().trim()) {
+      this.showToast('Selecciona un cliente', 'error');
+      return;
+    }
+    if (this.modalOrderLineItems().length === 0) {
+      this.showToast('Añade al menos un producto al pedido', 'error');
+      return;
+    }
     if (this.submitting()) return;
 
     this.submitting.set(true);
 
-    const customer = this.apiCustomers().find((c) => c.name === this.clientName().trim());
+    const customer = this.apiCustomers().find((c) => c.name === this.modalClientName().trim());
+    const lineItems = this.modalOrderLineItems();
+    const itemsSummary = lineItems.map((i) => `${i.name} × ${i.quantity}`).join(', ');
+    const date = this.modalOrderDate() || new Date().toISOString().split('T')[0];
 
     this.api.create({
       customerId: customer?.id,
-      customerName: this.clientName().trim(),
-      date: new Date().toISOString().slice(0, 10),
+      customerName: this.modalClientName().trim(),
+      date,
+      paymentStatus: this.modalPaymentStatus(),
+      comments: this.modalComments().trim() || undefined,
+      itemsSummary,
+      items: lineItems.map((i) => ({
+        productId: i.productId,
+        quantity: i.quantity,
+        unitPrice: i.unitPrice,
+      })),
     }).subscribe({
       next: () => {
         this.showToast('Pedido creado exitosamente', 'success');
         this.loadOrders();
-        this.clientName.set('');
         this.isModalOpen.set(false);
         this.submitting.set(false);
       },
@@ -157,6 +249,58 @@ export class OrdersView implements OnInit {
         this.submitting.set(false);
       },
     });
+  }
+
+  protected openCreateModal(): void {
+    this.modalClientName.set('');
+    this.modalOrderDate.set(new Date().toISOString().split('T')[0]);
+    this.modalOrderCode.set(String(this.orders().length + 1));
+    this.modalPaymentStatus.set('Pagado');
+    this.modalComments.set('');
+    this.modalSelectedProductId.set(null);
+    this.modalItemQty.set(1);
+    this.modalOrderLineItems.set([]);
+    this.isModalOpen.set(true);
+  }
+
+  protected setModalItemQty(value: number): void {
+    this.modalItemQty.set(Math.max(1, value));
+  }
+
+  protected handleAddLineItem(): void {
+    const prod = this.modalSelectedProduct();
+    if (!prod) {
+      this.showToast('Selecciona un producto antes de añadir', 'error');
+      return;
+    }
+    if (this.modalItemQty() <= 0) {
+      this.showToast('La cantidad debe ser mayor a 0', 'error');
+      return;
+    }
+
+    this.modalOrderLineItems.update((prev) => {
+      const existing = prev.find((i) => i.productId === prod.id);
+      if (existing) {
+        return prev.map((i) =>
+          i.productId === prod.id ? { ...i, quantity: i.quantity + this.modalItemQty() } : i
+        );
+      }
+      return [
+        ...prev,
+        {
+          productId: prod.id,
+          name: prod.reference,
+          code: prod.code,
+          quantity: this.modalItemQty(),
+          unitPrice: prod.salePrice,
+        },
+      ];
+    });
+    this.modalItemQty.set(1);
+  }
+
+  protected handleRemoveLineItem(productId: number): void {
+    this.modalOrderLineItems.update((prev) => prev.filter((i) => i.productId !== productId));
   }
 
   protected updateOrderStatus(order: OrderItem, newStatus: string): void {

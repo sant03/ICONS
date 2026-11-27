@@ -1,4 +1,4 @@
-<div class="h-full overflow-y-auto overflow-x-hidden md:overflow-hidden md:flex md:flex-col md:min-h-0 p-4 lg:p-8 space-y-6 relative">
+<div class="h-full overflow-y-auto overflow-x-clip md:overflow-hidden md:flex md:flex-col md:min-h-0 p-4 lg:p-8 space-y-6 relative">
   <!-- Breadcrumb & Title Header -->
   <div class="shrink-0 space-y-1 border-b border-[var(--border-color)] pb-4 animate-fade-down">
     <div class="flex items-center gap-2 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
@@ -48,37 +48,61 @@
         />
       </div>
 
-      <button
-        type="button"
-        (click)="isSortModalOpen.set(!isSortModalOpen())"
-        class="p-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-primary)] hover:border-cyan-500 transition-colors cursor-pointer"
-      >
-        <svg lucideArrowUpDown class="w-4 h-4 text-[var(--text-muted)]"></svg>
-      </button>
-
-      <button
-        type="button"
-        class="p-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-primary)] hover:border-cyan-500 transition-colors cursor-pointer"
-      >
-        <svg lucideFilter class="w-4 h-4 text-[var(--text-muted)]"></svg>
-      </button>
-    </div>
-  </div>
-
-  <!-- Sort Dropdown -->
-  @if (isSortModalOpen()) {
-    <div class="absolute right-8 top-40 z-30 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl shadow-xl p-2 space-y-1 min-w-[180px] animate-fade-down">
-      @for (opt of sortOptions; track opt.value) {
+      <!-- Sort Popover -->
+      <div class="relative">
         <button
           type="button"
-          (click)="sortOption.set(opt.value); isSortModalOpen.set(false)"
-          [class]="'w-full text-left px-3 py-1.5 text-xs rounded-lg cursor-pointer transition-colors ' + (sortOption() === opt.value ? 'bg-cyan-500/10 text-cyan-500 font-semibold' : 'text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]')"
+          (click)="isSortModalOpen.set(!isSortModalOpen()); isFilterModalOpen.set(false)"
+          [class]="'relative z-50 p-2 rounded-xl border transition-colors cursor-pointer ' + (isSortModalOpen() ? 'bg-cyan-500/10 border-cyan-500 text-cyan-500' : 'bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-primary)] hover:border-cyan-500')"
         >
-          {{ opt.label }}
+          <svg lucideArrowUpDown [class]="'w-4 h-4 ' + (isSortModalOpen() ? 'text-cyan-500' : 'text-[var(--text-muted)]')"></svg>
         </button>
-      }
+
+        @if (isSortModalOpen()) {
+          <div class="fixed inset-0 z-40" (click)="isSortModalOpen.set(false)"></div>
+          <div class="absolute right-0 top-full mt-2 z-50 bg-[var(--bg-card)] opacity-100 border border-[var(--border-color)] rounded-xl shadow-xl p-2 space-y-1 min-w-[180px]">
+            <p class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Ordenar por</p>
+            @for (opt of sortOptions; track opt.value) {
+              <button
+                type="button"
+                (click)="sortOption.set(opt.value); isSortModalOpen.set(false)"
+                [class]="'w-full text-left px-3 py-1.5 text-xs rounded-lg cursor-pointer transition-colors ' + (sortOption() === opt.value ? 'bg-cyan-500/10 text-cyan-500 font-semibold' : 'text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]')"
+              >
+                {{ opt.label }}
+              </button>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Filter Popover -->
+      <div class="relative">
+        <button
+          type="button"
+          (click)="isFilterModalOpen.set(!isFilterModalOpen()); isSortModalOpen.set(false)"
+          [class]="'relative z-50 p-2 rounded-xl border transition-colors cursor-pointer ' + (isFilterModalOpen() || filterStatus() !== 'all' ? 'bg-cyan-500/10 border-cyan-500 text-cyan-500' : 'bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-primary)] hover:border-cyan-500')"
+        >
+          <svg lucideFilter [class]="'w-4 h-4 ' + (isFilterModalOpen() || filterStatus() !== 'all' ? 'text-cyan-500' : 'text-[var(--text-muted)]')"></svg>
+        </button>
+
+        @if (isFilterModalOpen()) {
+          <div class="fixed inset-0 z-40" (click)="isFilterModalOpen.set(false)"></div>
+          <div class="absolute right-0 top-full mt-2 z-50 bg-[var(--bg-card)] opacity-100 border border-[var(--border-color)] rounded-xl shadow-xl p-2 space-y-1 min-w-[180px]">
+            <p class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Filtrar por estado</p>
+            @for (opt of filterStatusOptions; track opt.value) {
+              <button
+                type="button"
+                (click)="filterStatus.set(opt.value); isFilterModalOpen.set(false)"
+                [class]="'w-full text-left px-3 py-1.5 text-xs rounded-lg cursor-pointer transition-colors ' + (filterStatus() === opt.value ? 'bg-cyan-500/10 text-cyan-500 font-semibold' : 'text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]')"
+              >
+                {{ opt.label }}
+              </button>
+            }
+          </div>
+        }
+      </div>
     </div>
-  }
+  </div>
 
   <!-- Loading State -->
   @if (isLoading()) {
@@ -179,7 +203,7 @@
               </p>
               <button
                 type="button"
-                (click)="isModalOpen.set(true)"
+                (click)="openCreateModal()"
                 class="mt-5 px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white text-xs sm:text-sm font-semibold shadow-lg shadow-cyan-500/25 flex items-center gap-2 transition-all cursor-pointer hover:scale-105 active:scale-95"
               >
                 <svg lucidePlus class="w-4 h-4"></svg>
@@ -197,14 +221,20 @@
                 No se encontraron pedidos
               </h3>
               <p class="mt-1.5 text-xs sm:text-sm text-[var(--text-muted)] max-w-sm">
-                No encontramos ningún pedido que coincida con <span class="font-semibold text-cyan-500">"{{ searchTerm() }}"</span>. Intenta con otro código o nombre de cliente.
+                @if (searchTerm() && filterStatus() !== 'all') {
+                  No hay pedidos que coincidan con <span class="font-semibold text-cyan-500">"{{ searchTerm() }}"</span> y el filtro seleccionado.
+                } @else if (searchTerm()) {
+                  No encontramos ningún pedido que coincida con <span class="font-semibold text-cyan-500">"{{ searchTerm() }}"</span>. Intenta con otro código o nombre de cliente.
+                } @else {
+                  No hay pedidos con el estado seleccionado.
+                }
               </p>
               <button
                 type="button"
-                (click)="searchTerm.set('')"
+                (click)="searchTerm.set(''); filterStatus.set('all')"
                 class="mt-5 px-4 py-2 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border-color)] border border-[var(--border-color)] text-xs font-semibold text-[var(--text-primary)] transition-colors cursor-pointer"
               >
-                Limpiar búsqueda
+                Limpiar filtros
               </button>
             }
           </div>
@@ -228,56 +258,227 @@
   <!-- Floating Action (+) Button -->
   <button
     type="button"
-    (click)="isModalOpen.set(true)"
+    (click)="openCreateModal()"
     class="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-cyan-500 hover:bg-cyan-600 text-white shadow-2xl shadow-cyan-500/50 flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-pointer z-40 border-2 border-white/20"
   >
     <svg lucidePlus class="w-7 h-7"></svg>
   </button>
 
-  <!-- Modal for creating new Order -->
+  <!-- Modal for creating new multi-product Order -->
   @if (isModalOpen()) {
     <div
-      class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-150"
+      class="fixed inset-0 z-[60] flex flex-col sm:bg-black/60 sm:backdrop-blur-sm sm:flex-row sm:items-center sm:justify-center sm:p-4"
       (click)="$event.target === $event.currentTarget && isModalOpen.set(false)"
     >
-      <div class="bg-[var(--bg-card)] rounded-3xl border border-[var(--border-color)] shadow-2xl w-full max-w-md p-6 space-y-5">
-        <div class="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
-          <h3 class="text-lg font-bold text-[var(--text-primary)]">Nuevo Pedido</h3>
+      <div class="w-full h-screen overflow-y-auto bg-[var(--bg-card)] rounded-t-3xl border-t border-[var(--border-color)] p-6 sm:p-7 space-y-6 sm:h-auto sm:max-w-3xl sm:rounded-3xl sm:border sm:shadow-2xl">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between border-b border-[var(--border-color)] pb-3.5">
+          <div class="flex items-center gap-2.5">
+            <div class="p-2 rounded-xl bg-cyan-500/10 text-cyan-500">
+              <svg lucideShoppingBag class="w-4 h-4"></svg>
+            </div>
+            <div>
+              <h3 class="text-lg font-extrabold text-[var(--text-primary)]">Crear Pedido</h3>
+              <p class="text-[11px] text-[var(--text-muted)]">
+                Registra un pedido con múltiples productos a la vez
+              </p>
+            </div>
+          </div>
           <button
             type="button"
             (click)="isModalOpen.set(false)"
-            class="text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer"
+            class="p-1.5 rounded-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] cursor-pointer"
           >
             <svg lucideX class="w-5 h-5"></svg>
           </button>
         </div>
 
-        <form (ngSubmit)="handleCreateOrderSubmit()" class="space-y-4">
-          <div class="space-y-1">
-            <label class="text-xs font-semibold text-[var(--text-primary)]">Cliente</label>
-            <app-select
-              name="clientName"
-              [options]="customerOptions()"
-              [ngModel]="clientName()"
-              (ngModelChange)="clientName.set($event)"
-              placeholder="Seleccionar cliente..."
-            />
+        <form (ngSubmit)="handleCreateOrderSubmit()" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+            <!-- Left Column: Cliente, Fecha, Pedido, Estado de pago, Comentarios -->
+            <div class="md:col-span-5 space-y-3.5">
+              <div class="grid grid-cols-12 items-center gap-2">
+                <label class="col-span-4 text-xs font-semibold text-[var(--text-primary)]">
+                  Cliente
+                </label>
+                <div class="col-span-8">
+                  <app-select
+                    name="modalClientName"
+                    [options]="customerOptions()"
+                    [ngModel]="modalClientName()"
+                    (ngModelChange)="modalClientName.set($event)"
+                    placeholder="Seleccionar cliente..."
+                  />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-12 items-center gap-2">
+                <label class="col-span-4 text-xs font-semibold text-[var(--text-primary)]">
+                  Fecha
+                </label>
+                <input
+                  type="date"
+                  name="modalOrderDate"
+                  [ngModel]="modalOrderDate()"
+                  (ngModelChange)="modalOrderDate.set($event)"
+                  class="col-span-8 px-3 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] font-mono focus:outline-none focus:border-cyan-500"
+                  required
+                />
+              </div>
+
+              <div class="grid grid-cols-12 items-center gap-2">
+                <label class="col-span-4 text-xs font-semibold text-[var(--text-primary)]">
+                  Pedido
+                </label>
+                <input
+                  type="text"
+                  name="modalOrderCode"
+                  [ngModel]="modalOrderCode()"
+                  (ngModelChange)="modalOrderCode.set($event)"
+                  placeholder="1"
+                  class="col-span-8 px-3 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] font-mono font-bold focus:outline-none focus:border-cyan-500"
+                />
+              </div>
+
+              <div class="grid grid-cols-12 items-center gap-2">
+                <label class="col-span-4 text-xs font-semibold text-[var(--text-primary)]">
+                  Estado de pago
+                </label>
+                <div class="col-span-8">
+                  <app-select
+                    name="modalPaymentStatus"
+                    [options]="['Pagado', 'Pendiente', 'Abono']"
+                    [ngModel]="modalPaymentStatus()"
+                    (ngModelChange)="modalPaymentStatus.set($event)"
+                  />
+                </div>
+              </div>
+
+              <div class="space-y-1.5 pt-1">
+                <label class="text-xs font-semibold text-[var(--text-primary)] block">
+                  Comentarios
+                </label>
+                <textarea
+                  rows="4"
+                  name="modalComments"
+                  [ngModel]="modalComments()"
+                  (ngModelChange)="modalComments.set($event)"
+                  placeholder="Notas de entrega, empaque o instrucciones especiales..."
+                  class="w-full px-3 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] focus:outline-none focus:border-cyan-500 resize-none"
+                ></textarea>
+              </div>
+            </div>
+
+            <!-- Right Column: Producto, Cantidad + Añadir, Tabla, Total -->
+            <div class="md:col-span-7 flex flex-col justify-between space-y-3.5">
+              <!-- Product & Quantity Selector Row -->
+              <div class="space-y-2.5">
+                <div class="grid grid-cols-12 items-center gap-2">
+                  <label class="col-span-3 text-xs font-semibold text-[var(--text-primary)]">
+                    Producto
+                  </label>
+                  <div class="col-span-9">
+                    <app-select
+                      name="modalProduct"
+                      [options]="productOptions()"
+                      [ngModel]="modalSelectedProductId()"
+                      (ngModelChange)="modalSelectedProductId.set($event)"
+                      placeholder="Seleccionar producto..."
+                    />
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-12 items-center gap-2">
+                  <label class="col-span-3 text-xs font-semibold text-[var(--text-primary)]">
+                    Cantidad
+                  </label>
+                  <div class="col-span-9 flex items-center gap-2.5">
+                    <input
+                      type="number"
+                      min="1"
+                      name="modalItemQty"
+                      [ngModel]="modalItemQty()"
+                      (ngModelChange)="setModalItemQty(+$event)"
+                      class="w-24 px-3 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] font-mono font-bold focus:outline-none focus:border-cyan-500"
+                    />
+                    <button
+                      type="button"
+                      (click)="handleAddLineItem()"
+                      class="flex-1 py-2 px-4 rounded-xl bg-[#0f172a] hover:bg-[#1e293b] text-white text-xs font-bold shadow-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                    >
+                      <svg lucidePlus class="w-3.5 h-3.5"></svg>
+                      <span>Añadir</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Scrollable Products Table -->
+              <div class="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-tertiary)]/30 overflow-hidden flex flex-col h-48">
+                <div class="grid grid-cols-12 px-3.5 py-2 bg-[var(--bg-tertiary)] border-b border-[var(--border-color)] text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                  <span class="col-span-6">PRODUCTO</span>
+                  <span class="col-span-3 text-center">CANTIDAD</span>
+                  <span class="col-span-3 text-right">ACCIÓN</span>
+                </div>
+
+                <div class="flex-1 overflow-y-auto divide-y divide-[var(--border-color)]/60">
+                  @if (modalOrderLineItems().length === 0) {
+                    <div class="h-full flex items-center justify-center text-xs text-[var(--text-muted)] px-4 text-center">
+                      Selecciona un producto y haz clic en "+ Añadir" para armar el pedido.
+                    </div>
+                  } @else {
+                    @for (item of modalOrderLineItems(); track item.productId) {
+                      <div class="grid grid-cols-12 items-center px-3.5 py-2.5 text-xs hover:bg-[var(--bg-tertiary)]/70 transition-colors">
+                        <div class="col-span-6 min-w-0 pr-2">
+                          <p class="font-semibold text-[var(--text-primary)] truncate">{{ item.name }}</p>
+                          <p class="text-[10px] font-mono text-[var(--text-muted)]">${{ (item.quantity * item.unitPrice) | number:'1.0-0' }}</p>
+                        </div>
+                        <div class="col-span-3 text-center font-mono font-bold text-[var(--text-primary)]">{{ item.quantity }}</div>
+                        <div class="col-span-3 flex justify-end">
+                          <button
+                            type="button"
+                            (click)="handleRemoveLineItem(item.productId)"
+                            class="px-2 py-1 rounded-lg bg-[var(--bg-card)] hover:bg-rose-500/15 border border-[var(--border-color)] hover:border-rose-500/30 text-[10px] font-semibold text-rose-500 flex items-center gap-1 transition-all cursor-pointer"
+                          >
+                            <svg lucideTrash2 class="w-3 h-3"></svg>
+                            <span>Quitar</span>
+                          </button>
+                        </div>
+                      </div>
+                    }
+                  }
+                </div>
+              </div>
+
+              <!-- TOTAL Box (green/emerald accent matching mockup) -->
+              <div class="flex items-center justify-between gap-4 pt-1">
+                <span class="text-xs font-extrabold uppercase tracking-wider text-[var(--text-muted)]">
+                  TOTAL ({{ modalComputedTotalUnits() }} uds)
+                </span>
+                <div class="flex-1 max-w-[200px] px-4 py-2 rounded-xl border-2 border-emerald-500/70 bg-emerald-500/5 flex items-center justify-between">
+                  <span class="text-sm font-black text-emerald-500">$</span>
+                  <span class="text-base font-black font-mono text-emerald-500">{{ modalComputedTotalAmount() | number:'1.0-0' }}</span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div class="pt-3 flex gap-3">
+          <!-- Footer Buttons -->
+          <div class="pt-4 border-t border-[var(--border-color)] flex items-center justify-between gap-4">
             <button
               type="button"
               (click)="isModalOpen.set(false)"
-              class="flex-1 py-2.5 rounded-xl border border-[var(--border-color)] text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] cursor-pointer"
+              class="px-6 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-tertiary)] hover:bg-[var(--border-color)] text-xs font-bold text-[var(--text-primary)] transition-colors cursor-pointer"
             >
               Cancelar
             </button>
             <button
-              type="submit"
+              type="button"
+              (click)="handleCreateOrderSubmit()"
               [disabled]="submitting()"
-              [class]="'flex-1 py-2.5 rounded-xl text-white text-xs font-semibold shadow-md shadow-cyan-500/20 cursor-pointer transition-colors ' + (submitting() ? 'bg-cyan-500/50' : 'bg-cyan-500 hover:bg-cyan-600')"
+              class="px-7 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold shadow-lg shadow-cyan-500/20 transition-all cursor-pointer"
             >
-              {{ submitting() ? 'Creando...' : 'Crear Pedido' }}
+              {{ submitting() ? 'Creando...' : 'Crear pedido' }}
             </button>
           </div>
         </form>
@@ -333,13 +534,33 @@
             <span class="font-mono text-[var(--text-primary)]">{{ order.date }}</span>
           </div>
           <div class="flex justify-between py-2 border-b border-[var(--border-color)]">
+            <span class="text-[var(--text-muted)]">Estado de pago:</span>
+            <span class="font-semibold text-[var(--text-primary)]">{{ order.paymentStatus || '—' }}</span>
+          </div>
+          <div class="flex justify-between py-2 border-b border-[var(--border-color)]">
             <span class="text-[var(--text-muted)]">Unidades Solicitadas:</span>
             <span class="font-bold text-[var(--text-primary)]">{{ order.units }} Unidades</span>
           </div>
-          @if (order.itemsSummary) {
+          @if (order.items?.length) {
+            <div class="py-2 border-b border-[var(--border-color)] space-y-1.5">
+              <span class="text-[var(--text-muted)] block">Productos:</span>
+              @for (item of order.items; track item.productId) {
+                <div class="flex justify-between text-[11px]">
+                  <span class="text-[var(--text-primary)] truncate pr-2">{{ item.productName }} × {{ item.quantity }}</span>
+                  <span class="font-mono text-[var(--text-muted)] shrink-0">{{ formatMoney(item.total) }}</span>
+                </div>
+              }
+            </div>
+          } @else if (order.itemsSummary) {
             <div class="flex justify-between py-2 border-b border-[var(--border-color)]">
               <span class="text-[var(--text-muted)]">Resumen:</span>
               <span class="font-semibold text-[var(--text-primary)] text-right max-w-[60%]">{{ order.itemsSummary }}</span>
+            </div>
+          }
+          @if (order.comments) {
+            <div class="flex justify-between py-2 border-b border-[var(--border-color)]">
+              <span class="text-[var(--text-muted)]">Comentarios:</span>
+              <span class="font-semibold text-[var(--text-primary)] text-right max-w-[60%]">{{ order.comments }}</span>
             </div>
           }
           <div class="flex justify-between py-2">
