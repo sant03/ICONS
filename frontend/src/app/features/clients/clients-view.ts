@@ -20,6 +20,7 @@ import {
 } from '@lucide/angular';
 import { AvatarConfig, Client } from '../../core/models/types';
 import { AppStore } from '../../core/state/app-store';
+import { AuthService } from '../../core/auth/auth.service';
 import { CustomersApi, CustomerResponse } from '../../core/api';
 import { UploadPhotoModalComponent } from '../../shared/ui/upload-photo-modal/upload-photo-modal';
 import { StorageUrlPipe } from '../../shared/pipes/resolve-storage-url.pipe';
@@ -54,6 +55,17 @@ import { SwipeDismissDirective } from '../../shared/directives/swipe-dismiss.dir
 export class ClientsView implements OnInit {
   protected readonly store = inject(AppStore);
   private readonly api = inject(CustomersApi);
+  private readonly auth = inject(AuthService);
+
+  protected readonly canCreate = computed(() =>
+    this.auth.currentUser()?.permissions?.includes('CUSTOMERS_CREATE') ?? false
+  );
+  protected readonly canEdit = computed(() =>
+    this.auth.currentUser()?.permissions?.includes('CUSTOMERS_EDIT') ?? false
+  );
+  protected readonly canDelete = computed(() =>
+    this.auth.currentUser()?.permissions?.includes('CUSTOMERS_DELETE') ?? false
+  );
 
   protected readonly clients = signal<Client[]>([]);
   protected readonly isLoading = signal(true);

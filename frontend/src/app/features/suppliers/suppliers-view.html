@@ -33,14 +33,16 @@
           class="w-full sm:w-56 pl-9 pr-3 py-2 text-xs rounded-xl bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-color)] focus:outline-none focus:border-cyan-500"
         />
       </div>
-      <button
-        type="button"
-        (click)="openCreate()"
-        class="hidden sm:flex px-5 py-2.5 rounded-xl bg-[var(--text-primary)] text-[var(--bg-card)] hover:opacity-90 text-sm font-bold items-center gap-2 transition-opacity cursor-pointer shadow-md"
-      >
-        <svg lucidePlus class="w-4 h-4"></svg>
-        <span>Añadir proveedor</span>
-      </button>
+      @if (canCreate()) {
+        <button
+          type="button"
+          (click)="openCreate()"
+          class="hidden sm:flex px-5 py-2.5 rounded-xl bg-[var(--text-primary)] text-[var(--bg-card)] hover:opacity-90 text-sm font-bold items-center gap-2 transition-opacity cursor-pointer shadow-md"
+        >
+          <svg lucidePlus class="w-4 h-4"></svg>
+          <span>Añadir proveedor</span>
+        </button>
+      }
     </div>
   </div>
 
@@ -139,14 +141,16 @@
                 <p class="mt-1.5 text-xs sm:text-sm text-[var(--text-muted)] max-w-sm">
                   Registra a tu primer proveedor para gestionar compras, pedidos de stock y suministros.
                 </p>
-                <button
-                  type="button"
-                  (click)="openCreate()"
-                  class="mt-5 px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white text-xs sm:text-sm font-semibold shadow-lg shadow-cyan-500/25 flex items-center gap-2 transition-all cursor-pointer hover:scale-105 active:scale-95"
-                >
-                  <svg lucidePlus class="w-4 h-4"></svg>
-                  <span>Añadir proveedor</span>
-                </button>
+                @if (canCreate()) {
+                  <button
+                    type="button"
+                    (click)="openCreate()"
+                    class="mt-5 px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white text-xs sm:text-sm font-semibold shadow-lg shadow-cyan-500/25 flex items-center gap-2 transition-all cursor-pointer hover:scale-105 active:scale-95"
+                  >
+                    <svg lucidePlus class="w-4 h-4"></svg>
+                    <span>Añadir proveedor</span>
+                  </button>
+                }
               </div>
             } @else {
               <!-- No coincidencia: búsqueda sin resultados -->
@@ -229,24 +233,30 @@
         <div
           class="lg:p-6 lg:rounded-3xl lg:bg-[var(--bg-card)] lg:border lg:border-[var(--border-color)] lg:shadow-sm relative animate-fade-up stagger-1"
         >
-          <div class="absolute top-5 right-5 flex items-center gap-1">
-            <button
-              type="button"
-              (click)="openEdit()"
-              aria-label="Editar proveedor"
-              class="p-2 rounded-xl text-[var(--text-muted)] hover:text-cyan-500 hover:bg-cyan-500/10 transition-colors cursor-pointer"
-            >
-              <svg lucideSquarePen class="w-4 h-4"></svg>
-            </button>
-            <button
-              type="button"
-              (click)="openDeletePopup()"
-              aria-label="Eliminar proveedor"
-              class="p-2 rounded-xl text-[var(--text-muted)] hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
-            >
-              <svg lucideTrash2 class="w-4 h-4"></svg>
-            </button>
-          </div>
+          @if (canEdit() || canDelete()) {
+            <div class="absolute top-5 right-5 flex items-center gap-1">
+              @if (canEdit()) {
+                <button
+                  type="button"
+                  (click)="openEdit()"
+                  aria-label="Editar proveedor"
+                  class="p-2 rounded-xl text-[var(--text-muted)] hover:text-cyan-500 hover:bg-cyan-500/10 transition-colors cursor-pointer"
+                >
+                  <svg lucideSquarePen class="w-4 h-4"></svg>
+                </button>
+              }
+              @if (canDelete()) {
+                <button
+                  type="button"
+                  (click)="openDeletePopup()"
+                  aria-label="Eliminar proveedor"
+                  class="p-2 rounded-xl text-[var(--text-muted)] hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                >
+                  <svg lucideTrash2 class="w-4 h-4"></svg>
+                </button>
+              }
+            </div>
+          }
 
           <div class="flex flex-col items-center text-center pt-2 animate-scale-in stagger-2">
             <div
@@ -542,14 +552,16 @@
 }
 
 <!-- FAB (mobile only) -->
-<button
-  type="button"
-  (click)="openCreate()"
-  aria-label="Añadir nuevo proveedor"
-  class="sm:hidden fixed bottom-6 right-6 w-14 h-14 rounded-full bg-cyan-500 hover:bg-cyan-600 text-white shadow-2xl shadow-cyan-500/50 flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-pointer z-40 border-2 border-white/20 animate-spring-bounce stagger-4"
->
-  <svg lucidePlus class="w-6 h-6"></svg>
-</button>
+@if (canCreate()) {
+  <button
+    type="button"
+    (click)="openCreate()"
+    aria-label="Añadir nuevo proveedor"
+    class="sm:hidden fixed bottom-6 right-6 w-14 h-14 rounded-full bg-cyan-500 hover:bg-cyan-600 text-white shadow-2xl shadow-cyan-500/50 flex items-center justify-center transition-transform hover:scale-110 active:scale-95 cursor-pointer z-40 border-2 border-white/20 animate-spring-bounce stagger-4"
+  >
+    <svg lucidePlus class="w-6 h-6"></svg>
+  </button>
+}
 
 <app-upload-photo-modal
   [isOpen]="isPhotoModalOpen()"

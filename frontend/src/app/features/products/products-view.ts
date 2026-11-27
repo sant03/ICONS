@@ -29,6 +29,7 @@ import { UploadPhotoModalComponent } from '../../shared/ui/upload-photo-modal/up
 import { SwipeDismissDirective } from '../../shared/directives/swipe-dismiss.directive';
 import { StorageUrlPipe } from '../../shared/pipes/resolve-storage-url.pipe';
 import { AppStore } from '../../core/state/app-store';
+import { AuthService } from '../../core/auth/auth.service';
 import { ProductsApi, ProductResponse, CategoriesApi, CategoryResponse } from '../../core/api';
 
 @Component({
@@ -67,6 +68,18 @@ export class ProductsView implements OnInit {
   protected readonly store = inject(AppStore);
   private readonly productsApi = inject(ProductsApi);
   private readonly categoriesApi = inject(CategoriesApi);
+  private readonly auth = inject(AuthService);
+
+  protected readonly canCreate = computed(() =>
+    this.auth.currentUser()?.permissions?.includes('PRODUCTS_CREATE') ?? false
+  );
+  protected readonly canEdit = computed(() =>
+    this.auth.currentUser()?.permissions?.includes('PRODUCTS_EDIT') ?? false
+  );
+  protected readonly canDelete = computed(() =>
+    this.auth.currentUser()?.permissions?.includes('PRODUCTS_DELETE') ?? false
+  );
+  protected readonly canWrite = computed(() => this.canCreate() || this.canEdit() || this.canDelete());
 
   protected readonly isLoading = signal(true);
   protected readonly products = signal<ProductCatalogItem[]>([]);

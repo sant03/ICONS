@@ -24,6 +24,7 @@ import {
 } from '@lucide/angular';
 import { OrderItem, PaymentStatus, SaleRecord } from '../../core/models/types';
 import { AppStore } from '../../core/state/app-store';
+import { AuthService } from '../../core/auth/auth.service';
 import { SalesApi, SaleResponse } from '../../core/api';
 
 type SortOption =
@@ -64,6 +65,19 @@ type SortOption =
 export class SalesView implements OnInit {
   protected readonly store = inject(AppStore);
   private readonly api = inject(SalesApi);
+  private readonly auth = inject(AuthService);
+
+  protected readonly canCreate = computed(() =>
+    this.auth.currentUser()?.permissions?.includes('SALES_CREATE') ?? false
+  );
+  protected readonly canEdit = computed(() =>
+    this.auth.currentUser()?.permissions?.includes('SALES_EDIT') ?? false
+  );
+  protected readonly canCancel = computed(() =>
+    this.auth.currentUser()?.permissions?.includes('SALES_CANCEL') ?? false
+  );
+  protected readonly canExport = computed(() => this.canCreate());
+  protected readonly canWrite = computed(() => this.canCreate() || this.canEdit() || this.canCancel());
 
   protected readonly isLoading = signal(true);
   protected readonly allSales = signal<SaleRecord[]>([]);

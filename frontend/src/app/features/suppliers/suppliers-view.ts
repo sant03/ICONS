@@ -19,6 +19,7 @@ import {
 } from '@lucide/angular';
 import { AvatarConfig, Supplier } from '../../core/models/types';
 import { AppStore } from '../../core/state/app-store';
+import { AuthService } from '../../core/auth/auth.service';
 import { SuppliersApi, SupplierResponse } from '../../core/api';
 import { UploadPhotoModalComponent } from '../../shared/ui/upload-photo-modal/upload-photo-modal';
 import { StorageUrlPipe } from '../../shared/pipes/resolve-storage-url.pipe';
@@ -52,6 +53,17 @@ import { SwipeDismissDirective } from '../../shared/directives/swipe-dismiss.dir
 export class SuppliersView implements OnInit {
   protected readonly store = inject(AppStore);
   private readonly api = inject(SuppliersApi);
+  private readonly auth = inject(AuthService);
+
+  protected readonly canCreate = computed(() =>
+    this.auth.currentUser()?.permissions?.includes('SUPPLIERS_CREATE') ?? false
+  );
+  protected readonly canEdit = computed(() =>
+    this.auth.currentUser()?.permissions?.includes('SUPPLIERS_EDIT') ?? false
+  );
+  protected readonly canDelete = computed(() =>
+    this.auth.currentUser()?.permissions?.includes('SUPPLIERS_DELETE') ?? false
+  );
 
   protected readonly suppliers = signal<Supplier[]>([]);
   protected readonly isLoading = signal(true);
